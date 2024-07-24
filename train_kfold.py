@@ -24,6 +24,7 @@ random.seed(init_seed)
 torch.backends.cudnn.deterministic = True
 
 
+# sd 2024/07/24推送
 if __name__ == "__main__":
     kfold = 5
     # for i in range(kfold):
