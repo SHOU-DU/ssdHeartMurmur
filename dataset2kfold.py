@@ -15,7 +15,7 @@ from spafe.features.gfcc import erb_spectrogram
 from spafe.utils.vis import show_spectrogram
 from spafe.utils.preprocessing import SlidingWindow
 import time
-
+import csv
 
 '''
 目标：输入原始数据集路径datafolder，折数num_fold，切割后的数据时长duration,将原始数据集分成对应折，存在相应文件夹下。
@@ -105,9 +105,9 @@ def dataset_split_kfold(data_folder, kfold_folder, kfold=int):
         # 第i折训练集
         if not os.path.exists(os.path.join(kfold_out_dir, "train_data")):
             os.makedirs(os.path.join(kfold_out_dir, "train_data"))
-            for index in tqdm(train_idx):
+            for index in tqdm(train_idx, desc='calibrated train set double s1s2:'):
                 f = pIDs[index]  # 获取patientID
-                my_cut_copy_files(
+                cut_copy_files_double_s1s2(
                     data_folder,
                     f,
                     os.path.join(kfold_out_dir, "train_data/"),
@@ -116,9 +116,9 @@ def dataset_split_kfold(data_folder, kfold_folder, kfold=int):
         # 第i折测试集
         if not os.path.exists(os.path.join(kfold_out_dir, "vali_data")):
             os.makedirs(os.path.join(kfold_out_dir, "vali_data"))
-            for index in tqdm(val_idx):
+            for index in tqdm(val_idx, desc='calibrated vali set double s1s2:'):
                 f = pIDs[index]  # 获取patientID
-                my_cut_copy_files(
+                cut_copy_files_double_s1s2(
                     data_folder,
                     f,
                     os.path.join(kfold_out_dir, "vali_data/"),
@@ -215,10 +215,784 @@ def my_cut_copy_files(data_directory: str, patient_id: str, out_directory: str) 
                         end = start + 3 * fs
 
 
+# 切掉为0的部分和s1, s2部分
+def cut_copy_files_s1_s2(data_directory: str, patient_id: str, out_directory: str) -> None:
+    files = os.listdir(data_directory)
+    s1_start = []
+    s1_end = []
+    s2_start = []
+    s2_end = []
+    zero_start = []
+    zero_end = []
+    total_start = []
+    total_end = []
+    new_recording = []
+
+    for f in files:
+        root, extension = os.path.splitext(f)
+        if f.startswith(patient_id):
+            if extension == '.txt':
+                _ = shutil.copy(os.path.join(data_directory, f), out_directory)
+
+            elif extension == '.tsv':  # 获取S1，S2位置
+                file_path = os.path.join(data_directory, f)
+                with open(file_path, mode='r', encoding='utf-8') as tsv_file:
+                    tsv_reader = csv.reader(tsv_file, delimiter='\t')
+                    for row in tsv_reader:
+                        if row[2] == '1':
+                            s1_start.append(float(row[0]))  # 为string类型，需要类型转换
+                            s1_end.append(float(row[1]))
+                        elif row[2] == '3':
+                            s2_start.append(float(row[0]))
+                            s2_end.append(float(row[1]))
+                        elif row[2] == '0':
+                            zero_start.append(float(row[0]))
+                            zero_end.append(float(row[1]))
+                total_start = s1_start + s2_start  # 存储起始位置
+                total_end = s1_end + s2_end  # 存储结束位置
+                zero_start = zero_start[1:]  # 移除第一个未标注起始点
+                zero_end = zero_end[:-1]  # 移除最后一个未标注终点
+
+            elif extension == '.wav':
+                # 获取当前wav文件的ID 听诊区 等级
+                with open(os.path.join(data_directory, patient_id+'.txt'), 'r') as txt_f:
+                    txt_data = txt_f.read()
+                    patient_ID = txt_data.split('\n')[0].split()[0]  # 获取病人ID
+                    murmur = get_murmur(txt_data)
+                    murmur_locations = (get_murmur_locations(txt_data)).split("+")  # 获取murmur存在的locations
+                    grade = get_grade(txt_data)
+                    location = root.split('_')[1]
+                if murmur == 'Absent':  # Absent所有.wav文件均切片3s
+                    recording, fs = librosa.load(os.path.join(data_directory, f), sr=4000)  # 分割（3s不重叠）
+                    for start_pos, end_pos in zip(total_start, total_end):
+                        start_pos_int = int(start_pos*fs)
+                        end_pos_int = int(end_pos*fs)
+                        recording[start_pos_int: end_pos_int] = 0.0
+                    for zero_s, zero_e in zip(zero_start, zero_end):
+                        zero_s_int = int(zero_s*fs)
+                        zero_e_int = int(zero_e*fs)
+                        new_recording.extend(recording[zero_e_int:zero_s_int])  # 拼接标注非0的recording
+                    recording = new_recording
+
+                    num_cut = len(recording) / (3 * 4000)  # 每个记录的片段数量
+                    # time = len(recording)/fs
+                    if num_cut >= 2:
+                        recording = recording[2 * fs:len(recording) - fs]
+                    # recording = (recording- np.mean(recording))/ np.max(np.abs(recording)) #幅值归一化
+                    # recording = schmidt_spike_removal(recording) #去尖峰
+                    start = 0
+                    end = start + 3 * fs
+                    cut = list()
+                    num_cut = len(recording) / (3 * 4000)
+                    for num in range(int(num_cut)):  # 将每个片段写入对应的听诊区文件夹,int()小数部分被截断
+                        small = recording[start:end]
+                        cut.append(small)
+                        soundfile.write(
+                            out_directory + '/' + patient_ID + '_' + str(location) + '_' + str(grade) + '_' + str(
+                                num) + '.wav', cut[num], fs)
+                        start += 3 * fs
+                        end = start + 3 * fs
+                elif location in murmur_locations:
+                    recording, fs = librosa.load(os.path.join(data_directory, f), sr=4000)  # 分割（3s不重叠）
+                    for start_pos, end_pos in zip(total_start, total_end):
+                        recording[int(start_pos*fs): int(end_pos*fs)] = 0.0
+                    for zero_s, zero_e in zip(zero_start, zero_end):
+                        zero_s_int = int(zero_s * fs)
+                        zero_e_int = int(zero_e * fs)
+                        new_recording.extend(recording[zero_e_int:zero_s_int])  # 拼接标注非0的recording
+                    recording = new_recording
+                    num_cut = len(recording) / (3 * 4000)  # 每个记录的片段数量
+                    # time = len(recording)/fs
+                    if num_cut >= 2:
+                        recording = recording[2*fs:len(recording)-fs]
+                    # recording = (recording- np.mean(recording))/ np.max(np.abs(recording)) #幅值归一化
+                    # recording = schmidt_spike_removal(recording) #去尖峰
+                    start = 0
+                    end = start+3*fs
+                    cut = list()
+                    num_cut = len(recording) / (3 * 4000)
+                    for num in range(int(num_cut)):  # 将每个片段写入对应的听诊区文件夹,int()小数部分被截断
+                        small = recording[start:end]
+                        cut.append(small)
+                        soundfile.write(out_directory + '/' + patient_ID + '_'+str(location)+'_' + str(grade) + '_' +
+                                        str(num) + '.wav', cut[num], fs)
+                        start += 3 * fs
+                        end = start + 3 * fs
+                s1_start.clear()  # 清空先前存储的S1,S2起止点
+                s1_end.clear()
+                s2_start.clear()
+                s2_end.clear()
+                total_start.clear()
+                total_end.clear()
+                zero_start.clear()
+                zero_end.clear()
+                new_recording.clear()
+
+
+# 切掉为0的部分和s1部分
+def cut_copy_files_s1(data_directory: str, patient_id: str, out_directory: str) -> None:
+    files = os.listdir(data_directory)
+    s1_start = []
+    s1_end = []
+    zero_start = []
+    zero_end = []
+    new_recording = []
+
+    for f in files:
+        root, extension = os.path.splitext(f)
+        if f.startswith(patient_id):
+            if extension == '.txt':
+                _ = shutil.copy(os.path.join(data_directory, f), out_directory)
+
+            elif extension == '.tsv':  # 获取S1，S2位置
+                file_path = os.path.join(data_directory, f)
+                with open(file_path, mode='r', encoding='utf-8') as tsv_file:
+                    tsv_reader = csv.reader(tsv_file, delimiter='\t')
+                    for row in tsv_reader:
+                        if row[2] == '1':
+                            s1_start.append(float(row[0]))  # 为string类型，需要类型转换
+                            s1_end.append(float(row[1]))
+                        elif row[2] == '0':
+                            zero_start.append(float(row[0]))
+                            zero_end.append(float(row[1]))
+                zero_start = zero_start[1:]  # 移除第一个未标注起始点
+                zero_end = zero_end[:-1]  # 移除最后一个未标注终点
+
+            elif extension == '.wav':
+                # 获取当前wav文件的ID 听诊区 等级
+                with open(os.path.join(data_directory, patient_id+'.txt'), 'r') as txt_f:
+                    txt_data = txt_f.read()
+                    patient_ID = txt_data.split('\n')[0].split()[0]  # 获取病人ID
+                    murmur = get_murmur(txt_data)
+                    murmur_locations = (get_murmur_locations(txt_data)).split("+")  # 获取murmur存在的locations
+                    grade = get_grade(txt_data)
+                    location = root.split('_')[1]
+                if murmur == 'Absent':  # Absent所有.wav文件均切片3s
+                    recording, fs = librosa.load(os.path.join(data_directory, f), sr=4000)  # 分割（3s不重叠）
+                    for start_pos, end_pos in zip(s1_start, s1_end):
+                        start_pos_int = int(start_pos*fs)
+                        end_pos_int = int(end_pos*fs)
+                        recording[start_pos_int: end_pos_int] = 0.0
+                    for zero_s, zero_e in zip(zero_start, zero_end):
+                        zero_s_int = int(zero_s*fs)
+                        zero_e_int = int(zero_e*fs)
+                        new_recording.extend(recording[zero_e_int:zero_s_int])  # 拼接标注非0的recording
+                    recording = new_recording
+
+                    num_cut = len(recording) / (3 * 4000)  # 每个记录的片段数量
+                    # time = len(recording)/fs
+                    if num_cut >= 2:
+                        recording = recording[2 * fs:len(recording) - fs]
+                    # recording = (recording- np.mean(recording))/ np.max(np.abs(recording)) #幅值归一化
+                    # recording = schmidt_spike_removal(recording) #去尖峰
+                    start = 0
+                    end = start + 3 * fs
+                    cut = list()
+                    num_cut = len(recording) / (3 * 4000)
+                    for num in range(int(num_cut)):  # 将每个片段写入对应的听诊区文件夹,int()小数部分被截断
+                        small = recording[start:end]
+                        cut.append(small)
+                        soundfile.write(
+                            out_directory + '/' + patient_ID + '_' + str(location) + '_' + str(grade) + '_' + str(
+                                num) + '.wav', cut[num], fs)
+                        start += 3 * fs
+                        end = start + 3 * fs
+                elif location in murmur_locations:
+                    recording, fs = librosa.load(os.path.join(data_directory, f), sr=4000)  # 分割（3s不重叠）
+                    for start_pos, end_pos in zip(s1_start, s1_end):
+                        recording[int(start_pos*fs): int(end_pos*fs)] = 0.0
+                    for zero_s, zero_e in zip(zero_start, zero_end):
+                        zero_s_int = int(zero_s * fs)
+                        zero_e_int = int(zero_e * fs)
+                        new_recording.extend(recording[zero_e_int:zero_s_int])  # 拼接标注非0的recording
+                    recording = new_recording
+                    num_cut = len(recording) / (3 * 4000)  # 每个记录的片段数量
+                    # time = len(recording)/fs
+                    if num_cut >= 2:
+                        recording = recording[2*fs:len(recording)-fs]
+                    # recording = (recording- np.mean(recording))/ np.max(np.abs(recording)) #幅值归一化
+                    # recording = schmidt_spike_removal(recording) #去尖峰
+                    start = 0
+                    end = start+3*fs
+                    cut = list()
+                    num_cut = len(recording) / (3 * 4000)
+                    for num in range(int(num_cut)):  # 将每个片段写入对应的听诊区文件夹,int()小数部分被截断
+                        small = recording[start:end]
+                        cut.append(small)
+                        soundfile.write(out_directory + '/' + patient_ID + '_'+str(location)+'_' + str(grade) + '_' +
+                                        str(num) + '.wav', cut[num], fs)
+                        start += 3 * fs
+                        end = start + 3 * fs
+                s1_start.clear()  # 清空先前存储的S1,S2起止点
+                s1_end.clear()
+                zero_start.clear()
+                zero_end.clear()
+                new_recording.clear()
+
+
+# 切掉为0的部分和s2部分
+def cut_copy_files_s2(data_directory: str, patient_id: str, out_directory: str) -> None:
+    files = os.listdir(data_directory)
+    s2_start = []
+    s2_end = []
+    zero_start = []
+    zero_end = []
+    new_recording = []
+
+    for f in files:
+        root, extension = os.path.splitext(f)
+        if f.startswith(patient_id):
+            if extension == '.txt':
+                _ = shutil.copy(os.path.join(data_directory, f), out_directory)
+
+            elif extension == '.tsv':  # 获取S1，S2位置
+                file_path = os.path.join(data_directory, f)
+                with open(file_path, mode='r', encoding='utf-8') as tsv_file:
+                    tsv_reader = csv.reader(tsv_file, delimiter='\t')
+                    for row in tsv_reader:
+                        if row[2] == '3':
+                            s2_start.append(float(row[0]))  # 为string类型，需要类型转换
+                            s2_end.append(float(row[1]))
+                        elif row[2] == '0':
+                            zero_start.append(float(row[0]))
+                            zero_end.append(float(row[1]))
+                zero_start = zero_start[1:]  # 移除第一个未标注起始点
+                zero_end = zero_end[:-1]  # 移除最后一个未标注终点
+
+            elif extension == '.wav':
+                # 获取当前wav文件的ID 听诊区 等级
+                with open(os.path.join(data_directory, patient_id+'.txt'), 'r') as txt_f:
+                    txt_data = txt_f.read()
+                    patient_ID = txt_data.split('\n')[0].split()[0]  # 获取病人ID
+                    murmur = get_murmur(txt_data)
+                    murmur_locations = (get_murmur_locations(txt_data)).split("+")  # 获取murmur存在的locations
+                    grade = get_grade(txt_data)
+                    location = root.split('_')[1]
+                if murmur == 'Absent':  # Absent所有.wav文件均切片3s
+                    recording, fs = librosa.load(os.path.join(data_directory, f), sr=4000)  # 分割（3s不重叠）
+                    for start_pos, end_pos in zip(s2_start, s2_end):
+                        start_pos_int = int(start_pos*fs)
+                        end_pos_int = int(end_pos*fs)
+                        recording[start_pos_int: end_pos_int] = 0.0
+                    for zero_s, zero_e in zip(zero_start, zero_end):
+                        zero_s_int = int(zero_s*fs)
+                        zero_e_int = int(zero_e*fs)
+                        new_recording.extend(recording[zero_e_int:zero_s_int])  # 拼接标注非0的recording
+                    recording = new_recording
+
+                    num_cut = len(recording) / (3 * 4000)  # 每个记录的片段数量
+                    # time = len(recording)/fs
+                    if num_cut >= 2:
+                        recording = recording[2 * fs:len(recording) - fs]
+                    # recording = (recording- np.mean(recording))/ np.max(np.abs(recording)) #幅值归一化
+                    # recording = schmidt_spike_removal(recording) #去尖峰
+                    start = 0
+                    end = start + 3 * fs
+                    cut = list()
+                    num_cut = len(recording) / (3 * 4000)
+                    for num in range(int(num_cut)):  # 将每个片段写入对应的听诊区文件夹,int()小数部分被截断
+                        small = recording[start:end]
+                        cut.append(small)
+                        soundfile.write(
+                            out_directory + '/' + patient_ID + '_' + str(location) + '_' + str(grade) + '_' + str(
+                                num) + '.wav', cut[num], fs)
+                        start += 3 * fs
+                        end = start + 3 * fs
+                elif location in murmur_locations:
+                    recording, fs = librosa.load(os.path.join(data_directory, f), sr=4000)  # 分割（3s不重叠）
+                    for start_pos, end_pos in zip(s2_start, s2_end):
+                        recording[int(start_pos*fs): int(end_pos*fs)] = 0.0
+                    for zero_s, zero_e in zip(zero_start, zero_end):
+                        zero_s_int = int(zero_s * fs)
+                        zero_e_int = int(zero_e * fs)
+                        new_recording.extend(recording[zero_e_int:zero_s_int])  # 拼接标注非0的recording
+                    recording = new_recording
+                    num_cut = len(recording) / (3 * 4000)  # 每个记录的片段数量
+                    # time = len(recording)/fs
+                    if num_cut >= 2:
+                        recording = recording[2*fs:len(recording)-fs]
+                    # recording = (recording- np.mean(recording))/ np.max(np.abs(recording)) #幅值归一化
+                    # recording = schmidt_spike_removal(recording) #去尖峰
+                    start = 0
+                    end = start+3*fs
+                    cut = list()
+                    num_cut = len(recording) / (3 * 4000)
+                    for num in range(int(num_cut)):  # 将每个片段写入对应的听诊区文件夹,int()小数部分被截断
+                        small = recording[start:end]
+                        cut.append(small)
+                        soundfile.write(out_directory + '/' + patient_ID + '_'+str(location)+'_' + str(grade) + '_' +
+                                        str(num) + '.wav', cut[num], fs)
+                        start += 3 * fs
+                        end = start + 3 * fs
+                s2_start.clear()  # 清空先前存储的S1,S2起止点
+                s2_end.clear()
+                zero_start.clear()
+                zero_end.clear()
+                new_recording.clear()
+
+
+# 切掉为0的部分
+def cut_copy_files_zero(data_directory: str, patient_id: str, out_directory: str) -> None:
+    files = os.listdir(data_directory)
+    zero_start = []
+    zero_end = []
+    new_recording = []
+
+    for f in files:
+        root, extension = os.path.splitext(f)
+        if f.startswith(patient_id):
+            if extension == '.txt':
+                _ = shutil.copy(os.path.join(data_directory, f), out_directory)
+
+            elif extension == '.tsv':  # 获取S1，S2位置
+                file_path = os.path.join(data_directory, f)
+                with open(file_path, mode='r', encoding='utf-8') as tsv_file:
+                    tsv_reader = csv.reader(tsv_file, delimiter='\t')
+                    for row in tsv_reader:
+                        if row[2] == '0':
+                            zero_start.append(float(row[0]))
+                            zero_end.append(float(row[1]))
+                zero_start = zero_start[1:]  # 移除第一个未标注起始点
+                zero_end = zero_end[:-1]  # 移除最后一个未标注终点
+
+            elif extension == '.wav':
+                # 获取当前wav文件的ID 听诊区 等级
+                with open(os.path.join(data_directory, patient_id+'.txt'), 'r') as txt_f:
+                    txt_data = txt_f.read()
+                    patient_ID = txt_data.split('\n')[0].split()[0]  # 获取病人ID
+                    murmur = get_murmur(txt_data)
+                    murmur_locations = (get_murmur_locations(txt_data)).split("+")  # 获取murmur存在的locations
+                    grade = get_grade(txt_data)
+                    location = root.split('_')[1]
+                if murmur == 'Absent':  # Absent所有.wav文件均切片3s
+                    recording, fs = librosa.load(os.path.join(data_directory, f), sr=4000)  # 分割（3s不重叠）
+
+                    for zero_s, zero_e in zip(zero_start, zero_end):
+                        zero_s_int = int(zero_s*fs)
+                        zero_e_int = int(zero_e*fs)
+                        new_recording.extend(recording[zero_e_int:zero_s_int])  # 拼接标注非0的recording
+                    recording = new_recording
+
+                    num_cut = len(recording) / (3 * 4000)  # 每个记录的片段数量
+                    # time = len(recording)/fs
+                    if num_cut >= 2:
+                        recording = recording[2 * fs:len(recording) - fs]
+                    # recording = (recording- np.mean(recording))/ np.max(np.abs(recording)) #幅值归一化
+                    # recording = schmidt_spike_removal(recording) #去尖峰
+                    start = 0
+                    end = start + 3 * fs
+                    cut = list()
+                    num_cut = len(recording) / (3 * 4000)
+                    for num in range(int(num_cut)):  # 将每个片段写入对应的听诊区文件夹,int()小数部分被截断
+                        small = recording[start:end]
+                        cut.append(small)
+                        soundfile.write(
+                            out_directory + '/' + patient_ID + '_' + str(location) + '_' + str(grade) + '_' + str(
+                                num) + '.wav', cut[num], fs)
+                        start += 3 * fs
+                        end = start + 3 * fs
+                elif location in murmur_locations:
+                    recording, fs = librosa.load(os.path.join(data_directory, f), sr=4000)  # 分割（3s不重叠）
+
+                    for zero_s, zero_e in zip(zero_start, zero_end):
+                        zero_s_int = int(zero_s * fs)
+                        zero_e_int = int(zero_e * fs)
+                        new_recording.extend(recording[zero_e_int:zero_s_int])  # 拼接标注非0的recording
+                    recording = new_recording
+                    num_cut = len(recording) / (3 * 4000)  # 每个记录的片段数量
+                    # time = len(recording)/fs
+                    if num_cut >= 2:
+                        recording = recording[2*fs:len(recording)-fs]
+                    # recording = (recording- np.mean(recording))/ np.max(np.abs(recording)) #幅值归一化
+                    # recording = schmidt_spike_removal(recording) #去尖峰
+                    start = 0
+                    end = start+3*fs
+                    cut = list()
+                    num_cut = len(recording) / (3 * 4000)
+                    for num in range(int(num_cut)):  # 将每个片段写入对应的听诊区文件夹,int()小数部分被截断
+                        small = recording[start:end]
+                        cut.append(small)
+                        soundfile.write(out_directory + '/' + patient_ID + '_'+str(location)+'_' + str(grade) + '_' +
+                                        str(num) + '.wav', cut[num], fs)
+                        start += 3 * fs
+                        end = start + 3 * fs
+
+                zero_start.clear()
+                zero_end.clear()
+                new_recording.clear()
+
+
+# 切掉为0的部分,将s2幅值加倍
+def cut_copy_files_double_s2(data_directory: str, patient_id: str, out_directory: str) -> None:
+    files = os.listdir(data_directory)
+    s2_start = []
+    s2_end = []
+    zero_start = []
+    zero_end = []
+    new_recording = []
+
+    for f in files:
+        root, extension = os.path.splitext(f)
+        if f.startswith(patient_id):
+            if extension == '.txt':
+                _ = shutil.copy(os.path.join(data_directory, f), out_directory)
+
+            elif extension == '.tsv':  # 获取S1，S2位置
+                file_path = os.path.join(data_directory, f)
+                with open(file_path, mode='r', encoding='utf-8') as tsv_file:
+                    tsv_reader = csv.reader(tsv_file, delimiter='\t')
+                    for row in tsv_reader:
+                        if row[2] == '3':
+                            s2_start.append(float(row[0]))  # 为string类型，需要类型转换
+                            s2_end.append(float(row[1]))
+                        elif row[2] == '0':
+                            zero_start.append(float(row[0]))
+                            zero_end.append(float(row[1]))
+                zero_start = zero_start[1:]  # 移除第一个未标注起始点
+                zero_end = zero_end[:-1]  # 移除最后一个未标注终点
+
+            elif extension == '.wav':
+                # 获取当前wav文件的ID 听诊区 等级
+                with open(os.path.join(data_directory, patient_id+'.txt'), 'r') as txt_f:
+                    txt_data = txt_f.read()
+                    patient_ID = txt_data.split('\n')[0].split()[0]  # 获取病人ID
+                    murmur = get_murmur(txt_data)
+                    murmur_locations = (get_murmur_locations(txt_data)).split("+")  # 获取murmur存在的locations
+                    grade = get_grade(txt_data)
+                    location = root.split('_')[1]
+                if murmur == 'Absent':  # Absent所有.wav文件均切片3s
+                    recording, fs = librosa.load(os.path.join(data_directory, f), sr=4000)  # 分割（3s不重叠）
+                    for start_pos, end_pos in zip(s2_start, s2_end):
+                        start_pos_int = int(start_pos*fs)
+                        end_pos_int = int(end_pos*fs)
+                        recording[start_pos_int: end_pos_int] = 2 * recording[start_pos_int: end_pos_int]
+                    for zero_s, zero_e in zip(zero_start, zero_end):
+                        zero_s_int = int(zero_s*fs)
+                        zero_e_int = int(zero_e*fs)
+                        new_recording.extend(recording[zero_e_int:zero_s_int])  # 拼接标注非0的recording
+                    recording = new_recording
+
+                    num_cut = len(recording) / (3 * 4000)  # 每个记录的片段数量
+                    # time = len(recording)/fs
+                    if num_cut >= 2:
+                        recording = recording[2 * fs:len(recording) - fs]
+                    # recording = (recording- np.mean(recording))/ np.max(np.abs(recording)) #幅值归一化
+                    # recording = schmidt_spike_removal(recording) #去尖峰
+                    start = 0
+                    end = start + 3 * fs
+                    cut = list()
+                    num_cut = len(recording) / (3 * 4000)
+                    for num in range(int(num_cut)):  # 将每个片段写入对应的听诊区文件夹,int()小数部分被截断
+                        small = recording[start:end]
+                        cut.append(small)
+                        soundfile.write(
+                            out_directory + '/' + patient_ID + '_' + str(location) + '_' + str(grade) + '_' + str(
+                                num) + '.wav', cut[num], fs)
+                        start += 3 * fs
+                        end = start + 3 * fs
+                elif location in murmur_locations:
+                    recording, fs = librosa.load(os.path.join(data_directory, f), sr=4000)  # 分割（3s不重叠）
+                    for start_pos, end_pos in zip(s2_start, s2_end):
+                        start_pos_int = int(start_pos * fs)
+                        end_pos_int = int(end_pos * fs)
+                        recording[start_pos_int: end_pos_int] = 2 * recording[start_pos_int: end_pos_int]
+                    for zero_s, zero_e in zip(zero_start, zero_end):
+                        zero_s_int = int(zero_s * fs)
+                        zero_e_int = int(zero_e * fs)
+                        new_recording.extend(recording[zero_e_int:zero_s_int])  # 拼接标注非0的recording
+                    recording = new_recording
+                    num_cut = len(recording) / (3 * 4000)  # 每个记录的片段数量
+                    # time = len(recording)/fs
+                    if num_cut >= 2:
+                        recording = recording[2*fs:len(recording)-fs]
+                    # recording = (recording- np.mean(recording))/ np.max(np.abs(recording)) #幅值归一化
+                    # recording = schmidt_spike_removal(recording) #去尖峰
+                    start = 0
+                    end = start+3*fs
+                    cut = list()
+                    num_cut = len(recording) / (3 * 4000)
+                    for num in range(int(num_cut)):  # 将每个片段写入对应的听诊区文件夹,int()小数部分被截断
+                        small = recording[start:end]
+                        cut.append(small)
+                        soundfile.write(out_directory + '/' + patient_ID + '_'+str(location)+'_' + str(grade) + '_' +
+                                        str(num) + '.wav', cut[num], fs)
+                        start += 3 * fs
+                        end = start + 3 * fs
+                s2_start.clear()  # 清空先前存储的S1,S2起止点
+                s2_end.clear()
+                zero_start.clear()
+                zero_end.clear()
+                new_recording.clear()
+
+
+# 切掉为0的部分,将s1幅值加倍
+def cut_copy_files_double_s1(data_directory: str, patient_id: str, out_directory: str) -> None:
+    files = os.listdir(data_directory)
+    s1_start = []
+    s1_end = []
+    zero_start = []
+    zero_end = []
+    new_recording = []
+
+    for f in files:
+        root, extension = os.path.splitext(f)
+        if f.startswith(patient_id):
+            if extension == '.txt':
+                _ = shutil.copy(os.path.join(data_directory, f), out_directory)
+
+            elif extension == '.tsv':  # 获取S1，S2位置
+                file_path = os.path.join(data_directory, f)
+                with open(file_path, mode='r', encoding='utf-8') as tsv_file:
+                    tsv_reader = csv.reader(tsv_file, delimiter='\t')
+                    for row in tsv_reader:
+                        if row[2] == '1':
+                            s1_start.append(float(row[0]))  # 为string类型，需要类型转换
+                            s1_end.append(float(row[1]))
+                        elif row[2] == '0':
+                            zero_start.append(float(row[0]))
+                            zero_end.append(float(row[1]))
+                zero_start = zero_start[1:]  # 移除第一个未标注起始点
+                zero_end = zero_end[:-1]  # 移除最后一个未标注终点
+
+            elif extension == '.wav':
+                # 获取当前wav文件的ID 听诊区 等级
+                with open(os.path.join(data_directory, patient_id+'.txt'), 'r') as txt_f:
+                    txt_data = txt_f.read()
+                    patient_ID = txt_data.split('\n')[0].split()[0]  # 获取病人ID
+                    murmur = get_murmur(txt_data)
+                    murmur_locations = (get_murmur_locations(txt_data)).split("+")  # 获取murmur存在的locations
+                    grade = get_grade(txt_data)
+                    location = root.split('_')[1]
+                if murmur == 'Absent':  # Absent所有.wav文件均切片3s
+                    recording, fs = librosa.load(os.path.join(data_directory, f), sr=4000)  # 分割（3s不重叠）
+                    for start_pos, end_pos in zip(s1_start, s1_end):
+                        start_pos_int = int(start_pos*fs)
+                        end_pos_int = int(end_pos*fs)
+                        recording[start_pos_int: end_pos_int] = 2 * recording[start_pos_int: end_pos_int]
+                    for zero_s, zero_e in zip(zero_start, zero_end):
+                        zero_s_int = int(zero_s*fs)
+                        zero_e_int = int(zero_e*fs)
+                        new_recording.extend(recording[zero_e_int:zero_s_int])  # 拼接标注非0的recording
+                    recording = new_recording
+
+                    num_cut = len(recording) / (3 * 4000)  # 每个记录的片段数量
+                    # time = len(recording)/fs
+                    if num_cut >= 2:
+                        recording = recording[2 * fs:len(recording) - fs]
+                    # recording = (recording- np.mean(recording))/ np.max(np.abs(recording)) #幅值归一化
+                    # recording = schmidt_spike_removal(recording) #去尖峰
+                    start = 0
+                    end = start + 3 * fs
+                    cut = list()
+                    num_cut = len(recording) / (3 * 4000)
+                    for num in range(int(num_cut)):  # 将每个片段写入对应的听诊区文件夹,int()小数部分被截断
+                        small = recording[start:end]
+                        cut.append(small)
+                        soundfile.write(
+                            out_directory + '/' + patient_ID + '_' + str(location) + '_' + str(grade) + '_' + str(
+                                num) + '.wav', cut[num], fs)
+                        start += 3 * fs
+                        end = start + 3 * fs
+                elif location in murmur_locations:
+                    recording, fs = librosa.load(os.path.join(data_directory, f), sr=4000)  # 分割（3s不重叠）
+                    for start_pos, end_pos in zip(s1_start, s1_end):
+                        start_pos_int = int(start_pos * fs)
+                        end_pos_int = int(end_pos * fs)
+                        recording[start_pos_int: end_pos_int] = 2 * recording[start_pos_int: end_pos_int]
+                    for zero_s, zero_e in zip(zero_start, zero_end):
+                        zero_s_int = int(zero_s * fs)
+                        zero_e_int = int(zero_e * fs)
+                        new_recording.extend(recording[zero_e_int:zero_s_int])  # 拼接标注非0的recording
+                    recording = new_recording
+                    num_cut = len(recording) / (3 * 4000)  # 每个记录的片段数量
+                    # time = len(recording)/fs
+                    if num_cut >= 2:
+                        recording = recording[2*fs:len(recording)-fs]
+                    # recording = (recording- np.mean(recording))/ np.max(np.abs(recording)) #幅值归一化
+                    # recording = schmidt_spike_removal(recording) #去尖峰
+                    start = 0
+                    end = start+3*fs
+                    cut = list()
+                    num_cut = len(recording) / (3 * 4000)
+                    for num in range(int(num_cut)):  # 将每个片段写入对应的听诊区文件夹,int()小数部分被截断
+                        small = recording[start:end]
+                        cut.append(small)
+                        soundfile.write(out_directory + '/' + patient_ID + '_'+str(location)+'_' + str(grade) + '_' +
+                                        str(num) + '.wav', cut[num], fs)
+                        start += 3 * fs
+                        end = start + 3 * fs
+                s1_start.clear()  # 清空先前存储的S1,S2起止点
+                s1_end.clear()
+                zero_start.clear()
+                zero_end.clear()
+                new_recording.clear()
+
+
+# 切掉为0的部分,将s1, s2部分幅值加倍
+def cut_copy_files_double_s1s2(data_directory: str, patient_id: str, out_directory: str) -> None:
+    files = os.listdir(data_directory)
+    s1_start = []
+    s1_end = []
+    s2_start = []
+    s2_end = []
+    zero_start = []
+    zero_end = []
+    total_start = []
+    total_end = []
+    new_recording = []
+
+    for f in files:
+        root, extension = os.path.splitext(f)
+        if f.startswith(patient_id):
+            if extension == '.txt':
+                _ = shutil.copy(os.path.join(data_directory, f), out_directory)
+
+            elif extension == '.tsv':  # 获取S1，S2位置
+                file_path = os.path.join(data_directory, f)
+                with open(file_path, mode='r', encoding='utf-8') as tsv_file:
+                    tsv_reader = csv.reader(tsv_file, delimiter='\t')
+                    for row in tsv_reader:
+                        if row[2] == '1':
+                            s1_start.append(float(row[0]))  # 为string类型，需要类型转换
+                            s1_end.append(float(row[1]))
+                        elif row[2] == '3':
+                            s2_start.append(float(row[0]))
+                            s2_end.append(float(row[1]))
+                        elif row[2] == '0':
+                            zero_start.append(float(row[0]))
+                            zero_end.append(float(row[1]))
+                total_start = s1_start + s2_start  # 存储起始位置
+                total_end = s1_end + s2_end  # 存储结束位置
+                zero_start = zero_start[1:]  # 移除第一个未标注起始点
+                zero_end = zero_end[:-1]  # 移除最后一个未标注终点
+
+            elif extension == '.wav':
+                # 获取当前wav文件的ID 听诊区 等级
+                with open(os.path.join(data_directory, patient_id+'.txt'), 'r') as txt_f:
+                    txt_data = txt_f.read()
+                    patient_ID = txt_data.split('\n')[0].split()[0]  # 获取病人ID
+                    murmur = get_murmur(txt_data)
+                    murmur_locations = (get_murmur_locations(txt_data)).split("+")  # 获取murmur存在的locations
+                    grade = get_grade(txt_data)
+                    location = root.split('_')[1]
+                if murmur == 'Absent':  # Absent所有.wav文件均切片3s
+                    recording, fs = librosa.load(os.path.join(data_directory, f), sr=4000)  # 分割（3s不重叠）
+                    for start_pos, end_pos in zip(total_start, total_end):
+                        start_pos_int = int(start_pos*fs)
+                        end_pos_int = int(end_pos*fs)
+                        recording[start_pos_int: end_pos_int] = 2 * recording[start_pos_int: end_pos_int]
+                    for zero_s, zero_e in zip(zero_start, zero_end):
+                        zero_s_int = int(zero_s*fs)
+                        zero_e_int = int(zero_e*fs)
+                        new_recording.extend(recording[zero_e_int:zero_s_int])  # 拼接标注非0的recording
+                    recording = new_recording
+
+                    num_cut = len(recording) / (3 * 4000)  # 每个记录的片段数量
+                    # time = len(recording)/fs
+                    if num_cut >= 2:
+                        recording = recording[2 * fs:len(recording) - fs]
+                    # recording = (recording- np.mean(recording))/ np.max(np.abs(recording)) #幅值归一化
+                    # recording = schmidt_spike_removal(recording) #去尖峰
+                    start = 0
+                    end = start + 3 * fs
+                    cut = list()
+                    num_cut = len(recording) / (3 * 4000)
+                    for num in range(int(num_cut)):  # 将每个片段写入对应的听诊区文件夹,int()小数部分被截断
+                        small = recording[start:end]
+                        cut.append(small)
+                        soundfile.write(
+                            out_directory + '/' + patient_ID + '_' + str(location) + '_' + str(grade) + '_' + str(
+                                num) + '.wav', cut[num], fs)
+                        start += 3 * fs
+                        end = start + 3 * fs
+                elif location in murmur_locations:
+                    recording, fs = librosa.load(os.path.join(data_directory, f), sr=4000)  # 分割（3s不重叠）
+                    for start_pos, end_pos in zip(total_start, total_end):
+                        start_pos_int = int(start_pos * fs)
+                        end_pos_int = int(end_pos * fs)
+                        recording[start_pos_int: end_pos_int] = 2 * recording[start_pos_int: end_pos_int]
+                    for zero_s, zero_e in zip(zero_start, zero_end):
+                        zero_s_int = int(zero_s * fs)
+                        zero_e_int = int(zero_e * fs)
+                        new_recording.extend(recording[zero_e_int:zero_s_int])  # 拼接标注非0的recording
+                    recording = new_recording
+                    num_cut = len(recording) / (3 * 4000)  # 每个记录的片段数量
+                    # time = len(recording)/fs
+                    if num_cut >= 2:
+                        recording = recording[2*fs:len(recording)-fs]
+                    # recording = (recording- np.mean(recording))/ np.max(np.abs(recording)) #幅值归一化
+                    # recording = schmidt_spike_removal(recording) #去尖峰
+                    start = 0
+                    end = start+3*fs
+                    cut = list()
+                    num_cut = len(recording) / (3 * 4000)
+                    for num in range(int(num_cut)):  # 将每个片段写入对应的听诊区文件夹,int()小数部分被截断
+                        small = recording[start:end]
+                        cut.append(small)
+                        soundfile.write(out_directory + '/' + patient_ID + '_'+str(location)+'_' + str(grade) + '_' +
+                                        str(num) + '.wav', cut[num], fs)
+                        start += 3 * fs
+                        end = start + 3 * fs
+                s1_start.clear()  # 清空先前存储的S1,S2起止点
+                s1_end.clear()
+                s2_start.clear()
+                s2_end.clear()
+                total_start.clear()
+                total_end.clear()
+                zero_start.clear()
+                zero_end.clear()
+                new_recording.clear()
+
+
+# 检查tsv文件标注是否有问题
+def check_tsv(data_directory: str):
+    files = os.listdir(data_directory)
+    wrong_list = []
+    for f in files:
+        root, extension = os.path.splitext(f)
+        if extension == '.tsv':
+            file_path = os.path.join(data_directory, f)
+            with open(file_path, mode='r', encoding='utf-8') as tsv_file:
+                tsv_reader = csv.reader(tsv_file, delimiter='\t')
+                last_row = '0'  # 当前行的上一行
+                # next_row = '0'  # 当前行的下一行
+                # 逐行读取文件内容
+                for row in tsv_reader:
+                    # float_row = [float(x) for x in row]
+                    # print(float_row)
+                    if row[2] == '0':
+                        last_row = '0'  # 中间可能出现标注为0的情况
+                    elif row[2] == '1' and (last_row == '4' or last_row == '0'):
+                        last_row = row[2]
+                    elif row[2] == '2' and (last_row == '1' or last_row == '0'):
+                        last_row = row[2]
+                    elif row[2] == '3' and (last_row == '2' or last_row == '0'):
+                        last_row = row[2]
+                    elif row[2] == '4' and (last_row == '3' or last_row == '0'):
+                        last_row = row[2]
+                    else:
+                        patient_id = root
+                        wrong_list.append(patient_id)
+                        print(f'patient {patient_id} heart beats order are wrong')
+                        last_row = '0'
+                    # last_row = row[2]
+    return wrong_list
+
+
 if __name__ == '__main__':
     # tqdm_ex()
-    original_dataset_folder = r"E:\sdmurmur\thecircordataset\train_vali_data"
-    kfold_out = "data_kfold_out_grade_location"  # 对于present个体，只复制murmur存在的.wav文件
+    original_dataset_folder = r"D:\shoudu\calibrated_train_vali_dataset"
+    kfold_out = "data_kfold_double_s1s2"  # grade:soft和loud均匀分折。location:xaing对于present个体，只复制murmur存在的.wav文件
     dataset_split_kfold(original_dataset_folder, kfold_out, kfold=5)
-    # for i in tqdm(range(num_patient_files)):
-    #     print(patient_files[i])
+    # 检查tsv文件是否有标记错误
+    # calibrated_dataset = r"D:\shoudu\calibrated_train_vali_dataset"
+    # wrong = check_tsv(original_dataset_folder)
+    # new_wrong_list = r"D:\shoudu\original_wrong_list.txt"
+    # with open(new_wrong_list, 'w') as file:
+    #     for item in wrong:
+    #         file.write(item + '\n')
+    # 检查cut_copy_files_s1_s2函数是否正常工作
+    # patient_id = '14241'
+    # out_directory = r'D:\shoudu\checkout14241'
+    # cut_copy_files_s1_s2(original_dataset_folder, patient_id, out_directory)
+

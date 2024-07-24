@@ -34,13 +34,15 @@ def save_kfold_feature(kfold_folder, feature_folder, kfold=int):
         if not os.path.exists(feature_dir):
             os.makedirs(feature_dir)
 
-        # train_feature = Log_GF(kfold_folder_train)
-        train_feature = Aweight_Log_GF(kfold_folder_train)
+        train_feature = Log_GF(kfold_folder_train)
+        # train_feature = Aweight_Log_GF(kfold_folder_train)
+        # train_feature = Cweight_Log_GF(kfold_folder_train)
         train_label, train_location, train_id = get_label(kfold_folder_train)  # 获取各个3s片段label和听诊区位置和个体ID
         train_index = get_index(kfold_folder_train)
 
-        # test_feature = Log_GF(kfold_folder_test)
-        test_feature = Aweight_Log_GF(kfold_folder_test)  # 采用类似A计权
+        test_feature = Log_GF(kfold_folder_test)
+        # test_feature = Aweight_Log_GF(kfold_folder_test)  # 采用类似A计权
+        # test_feature = Cweight_Log_GF(kfold_folder_test)  # 采用类似A计权
         test_label, test_location, test_id = get_label(kfold_folder_test)
         test_index = get_index(kfold_folder_test)
         # 存储训练集特征和标签
@@ -161,8 +163,8 @@ def Aweight_Log_GF(data_directory):
         root, extension = os.path.splitext(f)
         if extension == '.wav':
             x, fs = librosa.load(os.path.join(data_directory, f), sr=4000)
-            x = x - np.mean(x)
-            x = x / np.max(np.abs(x))
+            x = x - np.mean(x)  # 将音信信号置为0均值
+            # x = x / np.max(np.abs(x))
             # gfreqs为经过gammatone滤波器后得到的傅里叶变换矩阵
             gSpec, gfreqs = erb_spectrogram(x,
                                             fs=fs,
@@ -180,9 +182,49 @@ def Aweight_Log_GF(data_directory):
                                                                    high_freq=2000)
             center_freqs = [erb2hz(freq) for freq in gcenfreqs]
             # print(center_freqs)
-            gSpecLog = np.log10(gSpec)  # 计算后的gammatone频谱取对数得到结果类似于声压级
+            gSpecLog = 20 * (np.log10(gSpec))  # 计算后的gammatone频谱取对数得到结果类似于声压级
             Aweight_gSpec = A_weight(gSpecLog, center_freqs)  # 进行类似A计算操作
             fbank_feat = Aweight_gSpec.T
+            # fbank_feat = np.log(fbank_feat)
+            fbank_feat = feature_norm(fbank_feat)
+
+            # fbank_feat = feature_norm(fbank_feat)
+            # fbank_feat = delt_feature(fbank_feat)
+            loggamma.append(fbank_feat)
+
+        else:
+            continue
+    return np.array(loggamma)
+
+
+def Cweight_Log_GF(data_directory):
+    loggamma = list()
+    for f in tqdm(sorted(os.listdir(data_directory)), desc=str(data_directory) + ' Cweight_Log_GF feature:'):  # 加tqdm可视化特征提取过程
+        root, extension = os.path.splitext(f)
+        if extension == '.wav':
+            x, fs = librosa.load(os.path.join(data_directory, f), sr=4000)
+            x = x - np.mean(x)  # 将音信信号置为0均值
+            # x = x / np.max(np.abs(x))
+            # gfreqs为经过gammatone滤波器后得到的傅里叶变换矩阵
+            gSpec, gfreqs = erb_spectrogram(x,
+                                            fs=fs,
+                                            pre_emph=0,
+                                            pre_emph_coeff=0.97,
+                                            window=SlidingWindow(0.025, 0.0125, "hamming"),
+                                            nfilts=64,
+                                            nfft=512,
+                                            low_freq=25,
+                                            high_freq=2000)
+            gamma_fbanks_mat, gcenfreqs = gammatone_filter_banks(nfilts=64,
+                                                                   nfft=512,
+                                                                   fs=fs,
+                                                                   low_freq=25,
+                                                                   high_freq=2000)
+            center_freqs = [erb2hz(freq) for freq in gcenfreqs]
+            # print(center_freqs)
+            gSpecLog = 20 * (np.log10(gSpec))  # 计算后的gammatone频谱取对数得到结果类似于声压级
+            Cweight_gSpec = C_weight(gSpecLog, center_freqs)  # 进行类似A计算操作
+            fbank_feat = Cweight_gSpec.T
             # fbank_feat = np.log(fbank_feat)
             fbank_feat = feature_norm(fbank_feat)
 
@@ -205,10 +247,24 @@ def A_weight(data, freq):
     f4 = 12200.0
     Aweighted = ((f4 ** 2) * (freq ** 4)) / ((freq ** 2 + f1 ** 2) * np.sqrt(freq ** 2 + f2 ** 2) *
                                              np.sqrt(freq ** 2 + f3 ** 2) * (freq ** 2 + f4 ** 2))
-    Aweighted = np.log10(Aweighted) + A1000/20.0
+    Aweighted = 20 * (np.log10(Aweighted)) + A1000
     for i in range(data.shape[0]):
         data[i] += Aweighted
+    return data
 
+
+def C_weight(data, freq):
+    freq = np.array(freq)
+    data = np.array(data)
+    C1000 = 0.062
+    f1 = 20.6
+    f2 = 107.7
+    f3 = 737.9
+    f4 = 12200.0
+    Cweighted = ((f4 ** 2) * (freq ** 2)) / ((freq ** 2 + f1 ** 2) * (freq ** 2 + f4 ** 2))
+    Cweighted = 20 * (np.log10(Cweighted)) + C1000
+    for i in range(data.shape[0]):
+        data[i] += Cweighted
     return data
 
 
@@ -222,13 +278,24 @@ def feature_norm(feat):
     return normalized_feat
 
 
+def RPF(data_directory):
+    loggamma = []
+    for f in tqdm(sorted(os.listdir(data_directory)), desc=str(data_directory) + ' Cweight_Log_GF feature:'):  # 加tqdm可视化特征提取过程
+        root, extension = os.path.splitext(f)
+        if extension == '.wav':
+            x, fs = librosa.load(os.path.join(data_directory, f), sr=4000)
+            x = x - np.mean(x)  # 将音信信号置为0均值
+            fbank_feat = feature_norm(fbank_feat)
+            loggamma.append(fbank_feat)
+        else:
+            continue
+    return np.array(loggamma)
+
+
 if __name__ == '__main__':
-    # kfold_festure_in = "data_kfold_out"  # 分好折的3s数据
-    kfold_festure_in = "data_kfold_out_grade_location"  # 对于present个体，只复制murmur存在的.wav文件
-    kfold_feature_folder = "data_kfold_feature"  # 存储每折特征文件夹
-    kfold_Aweight_feature_folder = "data_kfold_Aweight_feature"
-    kfold_Aweight_feature_folder_grade_location = "data_kfold_Aweight_feature_grade_location"
-    kfold_feature_folder_grade = "data_kfold_feature_grade"
-    kfold_feature_folder_grade_location = "data_kfold_feature_grade_location"
-    save_kfold_feature(kfold_festure_in, kfold_Aweight_feature_folder_grade_location, kfold=5)
+    kfold_festure_in = "data_kfold_double_s1s2"  # 切割好的数据，对于present个体，只复制murmur存在的.wav文件
+    kfold_feature_folder = "feature_double_s1s2_calibrated"  # 存储每折特征文件夹
+    kfold_Aweight_feature_location_folder = "data_kfold_Aweight_feature_location"
+    kfold_feature_location_folder = "data_kfold_Cweight_feature_location"
+    save_kfold_feature(kfold_festure_in, kfold_feature_folder, kfold=5)
     print('this is feature extraction file')

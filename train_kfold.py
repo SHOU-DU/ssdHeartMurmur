@@ -9,6 +9,7 @@ from Imbanlance_Loss import Focal_Loss, DiceLoss, PolyLoss
 import math
 import torch.optim as optim
 from CNN import AudioClassifier, AudioClassifier2
+from efficient_kan import KAN
 from My_Dataloader import NewDataset, TrainDataset, Dataset2, MyDataset
 from torch.utils.data import DataLoader, WeightedRandomSampler
 from patient_information import get_locations, cal_patient_acc, single_result, location_result
@@ -29,10 +30,10 @@ if __name__ == "__main__":
     #     fold = str(i) + '_fold'  # 训练第i折
     #     print(fold)
     fold = '4_fold'  # 训练第i折
-    feature_data_path = 'data_kfold_Aweight_feature_grade_location'  # 提取的特征和标签文件夹
+    feature_data_path = 'feature_double_s1s2_calibrated'  # 提取的特征和标签文件夹
     # feature_data_path = "data_kfold_Aweight_feature"  # Aweight提取的特征和标签文件夹
     # cut_data_kfold = r'data_kfold_out'
-    cut_data_kfold = r'data_kfold_out_grade_location'
+    cut_data_kfold = r'data_kfold_double_s1s2'
 
     fold_path = os.path.join(feature_data_path, fold)
     cut_data = os.path.join(cut_data_kfold, fold, 'vali_data')
@@ -41,16 +42,11 @@ if __name__ == "__main__":
     label_path = os.path.join(fold_path, 'label')
 
     train_data = np.load(feature_path + r'\train_loggamma.npy', allow_pickle=True)  # 加载训练集和验证集数据，验证集和测试集搞反了，test_loggamma.npy应该存为vali_loggamma.npy
-    # vali_data = np.load(feature_path + r'\test_loggamma.npy', allow_pickle=True)
     vali_data = np.load(feature_path + r'\vali_loggamma.npy', allow_pickle=True)
 
     train_label = np.load(label_path + r'\train_label.npy', allow_pickle=True)  # 加载训练集和测试集标签
-    # vali_label = np.load(label_path + r'\test_label.npy', allow_pickle=True)
     vali_label = np.load(label_path + r'\vali_label.npy', allow_pickle=True)
 
-    # vali_location = np.load(label_path + r'\test_location.npy', allow_pickle=True)
-    # vali_id = np.load(label_path + r'\test_id.npy', allow_pickle=True)
-    # vali_index = np.load(label_path + r'\test_index.npy', allow_pickle=True)
     vali_location = np.load(label_path + r'\vali_location.npy', allow_pickle=True)
     vali_id = np.load(label_path + r'\vali_id.npy', allow_pickle=True)
     vali_index = np.load(label_path + r'\vali_index.npy', allow_pickle=True)
@@ -76,10 +72,14 @@ if __name__ == "__main__":
     weights = [class_weights[label] for _, label in train_set]  # 类别占比低，权重高
     weighted_sampler = WeightedRandomSampler(weights, len(train_set), replacement=True)
 
+    # train_batch_size = 128
     train_batch_size = 128
+    # test_batch_size = 1
     test_batch_size = 1
     learning_rate = 0.005
+    # learning_rate = 0.002
     num_epochs = 20
+    # num_epochs = 60  # sd KAN 会过拟合
     img_size = (32, 240)
     patch_size = (8, 20)
     encoders = 1
@@ -92,20 +92,24 @@ if __name__ == "__main__":
     test_loader = DataLoader(vali_set, batch_size=test_batch_size)
     print("DataLoader is OK")
     # 模型选择
+    # model = KAN([64 * 239, 64, 3])  # sd KAN
     model = AudioClassifier()
-    model_result_path = os.path.join('TimeFreq_result_grade_location_Aweight', fold_path)
+    model_result_path = os.path.join('TimeFreq_result_calibrated_double_s1s2', fold_path)
     # model_result_path = os.path.join('Aweight_TimeFreq_result', fold_path)
     os.environ['CUDA_VISIBLE_DEVICES'] = '0'
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     model = model.to(device)  # 放到设备中
     # 设置优化器
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, betas=(0.9, 0.999), eps=1e-7)
+    # optimizer = optim.AdamW(model.parameters(), lr=1e-3, weight_decay=1e-4)  # sd KAN
     # 设置学习率调度器
     scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, [5, 10, 15, 20], gamma=0.1)
+    # scheduler = optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.95)  # sd KAN
+
     # 设置损失函数
     weight = torch.tensor([1, 1, 1]).to(device)
     criterion = Focal_Loss(gamma=2.5, weight=weight)
-
+    # criterion = nn.CrossEntropyLoss()  # sd KAN
     # 保存验证集准确率最大时的模型
     model_path = os.path.join(model_result_path, "model")
     if not os.path.exists(model_path):
@@ -137,6 +141,7 @@ if __name__ == "__main__":
     # train model
     no_better_epoch = 0
     torch.manual_seed(10)
+    model.train()  # sd KAN
     for epoch in range(num_epochs):
         train_loss = 0.0
         train_acc = 0.0
@@ -144,6 +149,7 @@ if __name__ == "__main__":
         for batch_idx, data in enumerate(train_loader):
             x, y = data
             x = x.to(device)
+            # x = x.view(-1, 64*239).to(device)  # sd KAN
             y = y.to(device)
 
             outputs = model(x)
@@ -177,6 +183,7 @@ if __name__ == "__main__":
             for i, data in enumerate(test_loader):
                 x, y, z = data
                 x = x.to(device)
+                # x = x.view(-1, 64 * 239).to(device)  # sd KAN
                 y = y.to(device)
                 z = z.to(device)
 
