@@ -17,6 +17,7 @@ from spafe.utils.preprocessing import SlidingWindow
 import time
 import csv
 
+# this is features02
 '''
 目标：输入原始数据集路径datafolder，折数num_fold，切割后的数据时长duration,将原始数据集分成对应折，存在相应文件夹下。
 每折包含相近的absent,present个体，记录present的murmur locations(AV\PV\TV\MV)，并为对应.wav文件打标签，present:0,unknown:1,absent:2
