@@ -21,7 +21,7 @@ import csv
 目标：输入原始数据集路径datafolder，折数num_fold，切割后的数据时长duration,将原始数据集分成对应折，存在相应文件夹下。
 每折包含相近的absent,present个体，记录present的murmur locations(AV\PV\TV\MV)，并为对应.wav文件打标签，present:0,unknown:1,absent:2
 
-结果：数据被分成了五折，每一折包含全部数据，分为了训练集和测试集，一次失败的分折尝试^……^
+结果：数据被分成了五折，每一折包含全部数据，分为了训练集和测试集
 '''
 def dataset_split_kfold(data_folder, kfold_folder, kfold=int):
 
@@ -123,6 +123,61 @@ def dataset_split_kfold(data_folder, kfold_folder, kfold=int):
                     f,
                     os.path.join(kfold_out_dir, "vali_data/"),
                 )
+
+
+# 为测试集做s1,s2幅值伸缩
+def test_dataset_scale(test_data_folder, scaled_test_folder):
+    patient_files = find_patient_files(test_data_folder)  # 获取升序排列后.txt文件路径列表
+    num_patient_files = len(patient_files)
+    # 检查是否读取到了原始数据
+    if num_patient_files == 0:
+        raise Exception('No data was provided.')
+    # classes = ['Present', 'Unknown', 'Absent']  # 杂音类别
+    grades = ['Soft', 'Loud', 'Absent']
+    pAbsentID = []
+    # pPresentID = []
+    pUnknowID = []
+    pSoftID = []
+    pLoudID = []
+    pIDs = []
+    plabel = []  # 个体标签
+    for i in range(num_patient_files):
+        current_patient_data = load_patient_data(patient_files[i])  # 加载对应个体.txt文件
+        # label = get_murmur(current_patient_data)  # 'Present', 'Unknown', 'Absent'
+        pID = get_patient_id(current_patient_data)  # 个体ID
+        grade = get_grade(current_patient_data)  # 'soft', 'loud', 'absent'
+
+        if grade == grades[0]:
+            pSoftID.append(pID)
+            pIDs.append(pID)
+            plabel.append(grades.index(grade))  # 按照ID读取顺序存储标签
+        elif grade == grades[1]:
+            pLoudID.append(pID)
+            pIDs.append(pID)
+            plabel.append(grades.index(grade))  # 按照ID读取顺序存储标签
+        elif grade == grades[2]:
+            pAbsentID.append(pID)
+            pIDs.append(pID)
+            plabel.append(grades.index(grade))  # 按照ID读取顺序存储标签
+            # print('Absent ID is:', pID)
+        else:
+            pUnknowID.append(pID)
+    print('Total patientID num(without Unknown):', len(pIDs))
+    print('SoftID num:', len(pSoftID))
+    print('LoudID num:', len(pLoudID))
+    print('AbsentID num:', len(pAbsentID))
+    print('UnknownID num:', len(pUnknowID))
+
+    if not os.path.exists(scaled_test_folder):
+        os.makedirs(scaled_test_folder)
+
+    for ID in tqdm(pIDs, desc='test set double s2:'):
+        # print(ID)  打印ID检查
+        cut_copy_files_double_s2(
+            test_data_folder,
+            ID,
+            scaled_test_folder,
+        )
 
 
 def cut_copy_files(data_directory: str, patient_id: str, out_directory: str) -> None:
@@ -981,16 +1036,24 @@ def check_tsv(data_directory: str):
 
 if __name__ == '__main__':
     # tqdm_ex()
-    original_dataset_folder = r"D:\shoudu\calibrated_train_vali_dataset"
-    kfold_out = "data_kfold_double_s1s2"  # grade:soft和loud均匀分折。location:xaing对于present个体，只复制murmur存在的.wav文件
-    dataset_split_kfold(original_dataset_folder, kfold_out, kfold=5)
-    # 检查tsv文件是否有标记错误
-    # calibrated_dataset = r"D:\shoudu\calibrated_train_vali_dataset"
+    # # 进行数据分折
+    # original_dataset_folder = r"D:\shoudu\calibrated_train_vali_dataset"
+    # kfold_out = "data_kfold_double_s1s2"  # grade:soft和loud均匀分折。location:xaing对于present个体，只复制murmur存在的.wav文件
+    # dataset_split_kfold(original_dataset_folder, kfold_out, kfold=5)
+
+    # 对测试集进行s1,s1幅值缩放操作
+    test_data_folder = r"D:\shoudu\calibrated_test_data"  # 校正过的测试集路径
+    scaled_test_folder = "test_data_double_s2"  # 指定幅值缩放后的路径
+    test_dataset_scale(test_data_folder, scaled_test_folder)
+
+    # # 检查tsv文件是否有标记错误
+    # original_dataset_folder = r"D:\shoudu\the-circor-digiscope-phonocardiogram-dataset-1.0.3\test_data"
     # wrong = check_tsv(original_dataset_folder)
-    # new_wrong_list = r"D:\shoudu\original_wrong_list.txt"
+    # new_wrong_list = r"D:\shoudu\original_test_wrong_list.txt"
     # with open(new_wrong_list, 'w') as file:
     #     for item in wrong:
     #         file.write(item + '\n')
+
     # 检查cut_copy_files_s1_s2函数是否正常工作
     # patient_id = '14241'
     # out_directory = r'D:\shoudu\checkout14241'

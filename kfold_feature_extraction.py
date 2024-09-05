@@ -1,6 +1,9 @@
 import os
 import math
 import shutil
+
+import torch
+
 from helper_code import *
 import numpy as np
 import pandas as pd
@@ -293,9 +296,15 @@ def RPF(data_directory):
 
 
 if __name__ == '__main__':
-    kfold_festure_in = "data_kfold_double_s1s2"  # 切割好的数据，对于present个体，只复制murmur存在的.wav文件
-    kfold_feature_folder = "feature_double_s1s2_calibrated"  # 存储每折特征文件夹
-    kfold_Aweight_feature_location_folder = "data_kfold_Aweight_feature_location"
-    kfold_feature_location_folder = "data_kfold_Cweight_feature_location"
-    save_kfold_feature(kfold_festure_in, kfold_feature_folder, kfold=5)
-    print('this is feature extraction file')
+    # kfold_festure_in = "data_kfold_double_s1s2"  # 切割好的数据，对于present个体，只复制murmur存在的.wav文件
+    # kfold_feature_folder = "feature_double_s1s2_calibrated"  # 存储每折特征文件夹
+    # kfold_Aweight_feature_location_folder = "data_kfold_Aweight_feature_location"
+    # kfold_feature_location_folder = "data_kfold_Cweight_feature_location"
+    # save_kfold_feature(kfold_festure_in, kfold_feature_folder, kfold=5)
+    # print('this is feature extraction file')
+
+    # 特征图拼接测试, 可尝试分帧时补零，
+    a = np.random.rand(12, 64, 150)
+    b = np.random.rand(12, 5, 150)
+    c = np.concatenate((a, b), axis=1)
+    print(c.shape)
