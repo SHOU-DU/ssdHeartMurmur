@@ -3,10 +3,76 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.nn import init
 import math
-# 2024/8/29 AM
+# 2024/8/29 AM  add this file
+
+
+# Heart sound diagnosis method based on multi-domain self-learning convolutional computation
+# scalable depth feature extractor
+# class MultiScale(nn.Module):
+#     def __init__(self, input_channels, num_channels,
+#                  use_1x1conv=False, strides=1):
+#
+#         super().__init__()
+#         kernel_sizes = [5, 7, 9]
+#         for kernel in kernel_sizes:
+#             self.convs.append(nn.Conv2d(input_channels, num_channels, kernel, padding=1, stride=strides))
+#
+#         self.pointwise_conv = nn.Conv2d(len(kernel_sizes)*num_channels, num_channels, kernel_size=1)
+#         self.conv1x1 = nn.Conv2d(num_channels, num_channels, kernel_size=1)
+#
+#     def forward(self, X):
+#         conv_outputs = []
+#         for conv in self.convs:
+#             conv_outputs.append(conv(X))
+#         X = torch.cat(conv_outputs, dim=1)
+#         Y = self.bn2(self.conv2(Y))
+#         if self.conv3:
+#             X = self.conv3(X)
+#         Y += X
+#         return F.relu(Y)
+
+
+class Residual(nn.Module):  # 残差网络
+    def __init__(self, input_channels, num_channels,
+                 use_1x1conv=False, strides=1):
+
+        super().__init__()
+
+        self.conv1 = nn.Conv2d(input_channels, num_channels,
+                       kernel_size=3, padding=1, stride=strides)  # 3x3卷积层
+        self.conv2 = nn.Conv2d(num_channels, num_channels,
+                               kernel_size=3, padding=1)  # 第二个3x3卷积层
+        if use_1x1conv:  # 如果使用1x1卷积层则输入通过1x1卷积层调整通道和分辨率后再相加
+            self.conv3 = nn.Conv2d(input_channels, num_channels,
+                                   kernel_size=1, stride=strides)
+        else:
+            self.conv3 = None
+        self.bn1 = nn.BatchNorm2d(num_channels)
+        self.bn2 = nn.BatchNorm2d(num_channels)
+
+    def forward(self, X):
+        Y = F.relu(self.bn1(self.conv1(X)))
+        Y = self.bn2(self.conv2(Y))
+        if self.conv3:
+            X = self.conv3(X)
+        Y += X
+        return F.relu(Y)
+
+
+# ResNet模型
+def resnet_block(input_channels, num_channels, num_residuals, first_block=False):
+    blk = []
+    for i in range(num_residuals):
+        if i == 0 and not first_block:
+            blk.append(Residual(input_channels, num_channels, use_1x1conv=True, strides=2))
+        else:
+            blk.append(Residual(num_channels, num_channels))
+    return blk
+
+
 class depthwise_separable_conv(nn.Module):
     def __init__(self, ch_in, ch_out):
-        super(depthwise_separable_conv, self).__init__()
+        super(depthwise_separable_conv, self).__init__()  # super函数调用父类nn.Module的__init__方法
         self.ch_in = ch_in
         self.ch_out = ch_out
         self.depth_conv = nn.Conv2d(ch_in, ch_in, kernel_size=3, padding=1, groups=ch_in)
@@ -19,26 +85,13 @@ class depthwise_separable_conv(nn.Module):
         return x
 
 
-class depthwise_separable_1Dconv(nn.Module):
-    def __init__(self, ch_in, ch_out):
-        super(depthwise_separable_1Dconv, self).__init__()
-        self.ch_in = ch_in
-        self.ch_out = ch_out
-        self.depth_conv = nn.Conv1d(ch_in, ch_in, kernel_size=3, padding=1, groups=ch_in)
-        self.point_conv = nn.Conv1d(ch_in, ch_out, kernel_size=1)
-
-    def forward(self, x):
-        x = self.depth_conv(x)
-        x = self.point_conv(x)
-        # print(x.shape)
-        return x
-
 class SKConv(nn.Module):
     def __init__(self, inchannels,channels, branches=3, reduce=2, stride=1, len=64):
         super(SKConv, self).__init__()
         len = max(int(inchannels // reduce), len)
         self.convs = nn.ModuleList([])
         for i in range(branches):
+            # dilation:空洞卷积，在保持计算量的情况下扩大感受野
             self.convs.append(nn.Sequential(
                 nn.Conv2d(inchannels, channels, kernel_size=3, stride=stride, padding=1 + i, dilation=1 + i,
                           bias=False),
@@ -54,7 +107,7 @@ class SKConv(nn.Module):
         self.fcs = nn.ModuleList([])
         for i in range(branches):
             self.fcs.append(
-                nn.Conv2d(len, channels, kernel_size=1, stride=1,bias=False)
+                nn.Conv2d(len, channels, kernel_size=1, stride=1, bias=False)
             )
         self.softmax = nn.Softmax(dim=1)
 
@@ -298,10 +351,10 @@ class AudioClassifier2(nn.Module):
             nn.MaxPool1d(2)
         )
         #batch_first=True时，LSTM接受的数据维度为input(batch_size,特征数，通道数)
-        self.lstm1 = nn.LSTM(128,128,batch_first=True)
+        self.lstm1 = nn.LSTM(128, 128, batch_first=True)
         # self.lstm2 = nn.LSTM(256,128,batch_first=True)
         self.eca = ECANet(128)
-        self.ap2 =  nn.AdaptiveAvgPool1d(output_size=1)
+        self.ap2 = nn.AdaptiveAvgPool1d(output_size=1)
 
         self.lin = nn.Linear(in_features=128+128, out_features=3)
 
@@ -363,17 +416,47 @@ class ECANet(nn.Module):
 
 
 if __name__ == "__main__":
-    input1 = torch.rand(10,12000)
-    input2 =  torch.rand(10, 64, 239)
+    input1 = torch.rand(8, 1, 64, 239)  # (batch_size, channel, width, height
+    TDF = torch.rand(8, 1, 150, 5)  # 时域特征
+    b1 = nn.Sequential(nn.ReLU(),
+                       nn.Conv2d(1, 16, kernel_size=7, stride=2, padding=3, bias=False),
+                       nn.BatchNorm2d(16), nn.ReLU(inplace=True))
+    b2 = nn.Sequential(SKConv(16, 16))
+    b3 = nn.Sequential(
+            depthwise_separable_conv(16, 16),
+            nn.BatchNorm2d(16),
+            nn.ReLU(),
+            nn.MaxPool2d(2)
+        )
+    b4 = nn.Sequential(
+            depthwise_separable_conv(16, 32),
+            nn.BatchNorm2d(32),
+            nn.ReLU(),
+            nn.MaxPool2d(2)
+        )
+    b5 = nn.Sequential(
+            depthwise_separable_conv(32, 64),
+            nn.BatchNorm2d(64),
+            nn.ReLU(),
+            nn.MaxPool2d(2)
+        )
+    b6 = nn.Sequential(
+            depthwise_separable_conv(64, 128),
+            nn.BatchNorm2d(128),
+            nn.ReLU(),
+            nn.MaxPool2d(2)
+        )
+    upconv = nn.ConvTranspose2d(128, 128, kernel_size=3, stride=2, padding=1, output_padding=1)
 
-    model = AudioClassifier2()
-    # y = torch.rand(128, 8)
-    output = model(input1,input2)
-    total = sum(p.numel() for p in model.parameters())
-    print("Total params: %.2fK" %(total/1e3))
-    # input = torch.rand(128,1,12000)
-    # model = nn.Conv1d(7,32,3)
-    # model = nn.LSTM(256,128,batch_first=True,bidirectional=False)
-    # output,_ = model(input)
-    print(output.shape)
-
+    net = nn.Sequential(b1, b2, b3, b4, b5, b6,
+                        upconv,
+                        nn.AdaptiveAvgPool2d(output_size=1), nn.Flatten(),  # Flatten层将输出展平
+                        nn.Linear(in_features=128, out_features=3))
+    c1 = nn.AdaptiveAvgPool2d(output_size=(2, 7))
+    TDFout = c1(TDF)
+    x = net(input1)
+    print('x shape:', x.shape)
+    print('TDF reshape:', TDFout.shape)
+    for layer in net:
+        input1 = layer(input1)
+        print(layer.__class__.__name__, 'output shape:\t', input1.shape)

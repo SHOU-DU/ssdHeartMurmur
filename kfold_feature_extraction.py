@@ -34,13 +34,13 @@ def save_kfold_feature(kfold_folder, feature_folder, kfold=int):
         if not os.path.exists(feature_dir):
             os.makedirs(feature_dir)
 
-        train_feature = Log_GF(kfold_folder_train)
+        train_feature = Log_GF(kfold_folder_train)  # 提取第i折训练集特征
         # train_feature = Aweight_Log_GF(kfold_folder_train)
         # train_feature = Cweight_Log_GF(kfold_folder_train)
         train_label, train_location, train_id = get_label(kfold_folder_train)  # 获取各个3s片段label和听诊区位置和个体ID
         train_index = get_index(kfold_folder_train)
 
-        test_feature = Log_GF(kfold_folder_test)
+        test_feature = Log_GF(kfold_folder_test)  # 提取第i折验证集特征
         # test_feature = Aweight_Log_GF(kfold_folder_test)  # 采用类似A计权
         # test_feature = Cweight_Log_GF(kfold_folder_test)  # 采用类似A计权
         test_label, test_location, test_id = get_label(kfold_folder_test)
