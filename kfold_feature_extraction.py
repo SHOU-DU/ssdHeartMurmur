@@ -22,11 +22,13 @@ from spafe.utils.preprocessing import SlidingWindow
 from dataset2kfold import *
 
 
-def save_kfold_feature(kfold_folder, feature_folder, kfold=int):
+def save_kfold_feature(kfold_folder, tdf_feature, feature_folder, kfold=int):
     for i in range(kfold):
         kfold_feature_out = os.path.join(feature_folder, str(i) + "_fold")  #
         kfold_folder_train = os.path.join(kfold_folder, str(i) + "_fold" + r"\train_data")
-        kfold_folder_test = os.path.join(kfold_folder, str(i) + "_fold" + r"\vali_data")  # 五折交叉验证，最后通过测试集测试
+        kfold_folder_vali = os.path.join(kfold_folder, str(i) + "_fold" + r"\vali_data")  # 五折交叉验证，最后通过测试集测试
+        tdf_train_folder = os.path.join(tdf_feature, str(i) + "_fold" + r"\train_data")  # 时域特征
+        tdf_vali_folder = os.path.join(tdf_feature, str(i) + "_fold" + r"\vali_data")
         label_dir = os.path.join(kfold_feature_out, "label")
         feature_dir = os.path.join(kfold_feature_out, "feature")
         # 制作存储特征和标签的文件夹
@@ -37,17 +39,19 @@ def save_kfold_feature(kfold_folder, feature_folder, kfold=int):
         if not os.path.exists(feature_dir):
             os.makedirs(feature_dir)
 
-        train_feature = Log_GF(kfold_folder_train)
+        # train_feature = Log_GF(kfold_folder_train)
+        train_feature = Log_GF_TDF(kfold_folder_train, tdf_train_folder)
         # train_feature = Aweight_Log_GF(kfold_folder_train)
         # train_feature = Cweight_Log_GF(kfold_folder_train)
         train_label, train_location, train_id = get_label(kfold_folder_train)  # 获取各个3s片段label和听诊区位置和个体ID
         train_index = get_index(kfold_folder_train)
 
-        test_feature = Log_GF(kfold_folder_test)
-        # test_feature = Aweight_Log_GF(kfold_folder_test)  # 采用类似A计权
-        # test_feature = Cweight_Log_GF(kfold_folder_test)  # 采用类似A计权
-        test_label, test_location, test_id = get_label(kfold_folder_test)
-        test_index = get_index(kfold_folder_test)
+        # vali_feature = Log_GF(kfold_folder_test)
+        vali_feature = Log_GF_TDF(kfold_folder_vali, tdf_vali_folder)
+        # vali_feature = Aweight_Log_GF(kfold_folder_test)  # 采用类似A计权
+        # vali_feature = Cweight_Log_GF(kfold_folder_test)  # 采用类似C计权
+        vali_label, vali_location, vali_id = get_label(kfold_folder_vali)
+        vali_index = get_index(kfold_folder_vali)
         # 存储训练集特征和标签
         np.save(feature_dir + r'\train_loggamma.npy', train_feature)
         np.save(label_dir + r'\train_label.npy', train_label)
@@ -55,15 +59,15 @@ def save_kfold_feature(kfold_folder, feature_folder, kfold=int):
         np.save(label_dir + r'\train_id.npy', train_id)
         np.save(label_dir + r'\train_index.npy', train_index)
         # 存储验证集特征标签等信息
-        np.save(feature_dir + r'\vali_loggamma.npy', test_feature)
-        np.save(label_dir + r'\vali_label.npy', test_label)
-        np.save(label_dir + r'\vali_location.npy', test_location)
-        np.save(label_dir + r'\vali_id.npy', test_id)
-        np.save(label_dir + r'\vali_index.npy', test_index)
+        np.save(feature_dir + r'\vali_loggamma.npy', vali_feature)
+        np.save(label_dir + r'\vali_label.npy', vali_label)
+        np.save(label_dir + r'\vali_location.npy', vali_location)
+        np.save(label_dir + r'\vali_id.npy', vali_id)
+        np.save(label_dir + r'\vali_index.npy', vali_index)
         print("train_feature shape:", train_feature.shape)  # train_feature shape: (样本数：14649, 滤波器数：64, 3s段数据帧数：239)
         print("train_label shape:", train_label.shape)
-        print("vali_feature shape:", test_feature.shape)  # train_feature shape: (样本数：14649, 滤波器数：64, 3s段数据帧数：239)
-        print("vali_label shape:", test_label.shape)
+        print("vali_feature shape:", vali_feature.shape)  # train_feature shape: (样本数：14649, 滤波器数：64, 3s段数据帧数：239)
+        print("vali_label shape:", vali_label.shape)
         print(f"第{i}折特征提取完毕")
 
 
@@ -92,6 +96,53 @@ def Log_GF(data_directory):
             # fbank_feat = feature_norm(fbank_feat)
             # fbank_feat = delt_feature(fbank_feat)
             loggamma.append(fbank_feat)
+
+        else:
+            continue
+    return np.array(loggamma)
+
+
+def Log_GF_TDF(data_directory, TDF_directory):
+    loggamma = list()
+    tdfnum = 0
+    for f in tqdm(sorted(os.listdir(data_directory)), desc=str(data_directory) + ' Log_GF and TDF feature:'):  # 加tqdm可视化特征提取过程
+        tdfnum = tdfnum + 1
+        root, extension = os.path.splitext(f)
+        if extension == '.wav':
+            x, fs = librosa.load(os.path.join(data_directory, f), sr=4000)
+            x = x - np.mean(x)
+            x = x / np.max(np.abs(x))
+            # gfreqs为经过gammatone滤波器后得到的傅里叶变换矩阵
+            gSpec, gfreqs = erb_spectrogram(x,
+                                            fs=fs,
+                                            pre_emph=0,
+                                            pre_emph_coeff=0.97,
+                                            window=SlidingWindow(0.025, 0.0125, "hamming"),
+                                            nfilts=64,
+                                            nfft=512,
+                                            low_freq=25,
+                                            high_freq=2000)
+            fbank_feat = gSpec.T
+            fbank_feat = np.log(fbank_feat)
+            fbank_feat = feature_norm(fbank_feat)
+            # 读取对应的.csv文件
+            csv_file = os.path.join(TDF_directory, root + '.csv')
+            if os.path.exists(csv_file):
+                # csv_data = np.genfromtxt(csv_file, delimiter=',', dtype=None, encoding='utf-8')
+                csv_data = np.loadtxt(csv_file, delimiter=',')
+                num_cols_to_add = fbank_feat.shape[1] - csv_data.shape[1]
+                csv_data_pad = np.pad(csv_data, ((0, 0), (0, num_cols_to_add)), mode='constant', constant_values=0)
+                # 拼接.wav文件特征和.csv文件数据
+                combined_feat = np.concatenate((fbank_feat, csv_data_pad), axis=0)
+                loggamma.append(combined_feat)
+                csv_data = None
+                csv_data_pad = None
+                combined_feat = None
+
+            else:
+                print(f"CSV file not found for {f}")
+
+            # loggamma.append(fbank_feat)
 
         else:
             continue
@@ -296,15 +347,37 @@ def RPF(data_directory):
 
 
 if __name__ == '__main__':
-    # kfold_festure_in = "data_kfold_double_s1s2"  # 切割好的数据，对于present个体，只复制murmur存在的.wav文件
-    # kfold_feature_folder = "feature_double_s1s2_calibrated"  # 存储每折特征文件夹
-    # kfold_Aweight_feature_location_folder = "data_kfold_Aweight_feature_location"
-    # kfold_feature_location_folder = "data_kfold_Cweight_feature_location"
-    # save_kfold_feature(kfold_festure_in, kfold_feature_folder, kfold=5)
-    # print('this is feature extraction file')
+    # 特征提取
+    kfold_festure_in = "data_kfold_cut_zero"  # 切割好的数据，对于present个体，只复制murmur存在的.wav文件
+    kfold_feature_folder = "feature_TF_TDF_cut_zero"  # 存储每折特征文件夹
+    kfold_Aweight_feature_location_folder = "data_kfold_Aweight_feature_location"
+    kfold_feature_location_folder = "data_kfold_Cweight_feature_location"
+    tdf_feature_folder = r"E:\sdmurmur\EnvelopeandSE\data_kfold_cut_zero"  # 时域特征存储文件夹
+    save_kfold_feature(kfold_festure_in, tdf_feature_folder, kfold_feature_folder, kfold=5)
+    print('this is feature extraction file')
 
     # 特征图拼接测试, 可尝试分帧时补零，
-    a = np.random.rand(12, 64, 150)
-    b = np.random.rand(12, 5, 150)
-    c = np.concatenate((a, b), axis=1)
-    print(c.shape)
+    # a = np.random.rand(12, 64, 150)
+    # b = np.random.rand(12, 5, 150)
+    # c = np.concatenate((a, b), axis=1)
+    # print(c.shape)
+    # arr = np.array([[1, 2], [3, 4]])
+    # a1 = np.random.rand(64, 239)
+    # print(a1.shape)
+    # a2 = np.random.rand(5, 150)
+    # print(a2.shape)
+    # # 使用常数值0填充数组，第一轴（行）前后各填充1个元素，第二轴（列）前后各填充2个元素
+    # padded_arr = np.pad(a2, ((0, 0), (0, 89)), mode='constant', constant_values=0)
+    # a3 = np.concatenate((a1, padded_arr), axis=0)
+    # print(a3.shape)
+
+    # csv文件转换为ndarray测试
+    # TDF_folder = r"E:\sdmurmur\EnvelopeandSE\data_kfold_cut_zero\0_fold\train_data"
+    # data = np.genfromtxt(TDF_folder+r'\2530_AV_Absent_0.csv', delimiter=',', dtype=None, encoding='utf-8')
+    # # 检查读取的数据形状是否为5x150
+    # if data.shape == (5, 150):
+    #     print("数据已成功读取为5x150的ndarray")
+    # else:
+    #     print("数据形状不符合预期，请检查CSV文件内容")
+    # padded_arr = np.pad(data, ((0, 0), (0, 89)), mode='constant', constant_values=0)
+    # print(padded_arr)

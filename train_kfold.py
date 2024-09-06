@@ -8,8 +8,8 @@ from datetime import datetime
 from Imbanlance_Loss import Focal_Loss, DiceLoss, PolyLoss
 import math
 import torch.optim as optim
-from CNN import AudioClassifier, AudioClassifier2
-from efficient_kan import KAN
+from CNN import AudioClassifier, AudioClassifier2, AudioClassifierFuse
+# from efficient_kan import KAN
 from My_Dataloader import NewDataset, TrainDataset, Dataset2, MyDataset
 from torch.utils.data import DataLoader, WeightedRandomSampler
 from patient_information import get_locations, cal_patient_acc, single_result, location_result
@@ -31,10 +31,10 @@ if __name__ == "__main__":
     #     fold = str(i) + '_fold'  # 训练第i折
     #     print(fold)
     fold = '4_fold'  # 训练第i折
-    feature_data_path = 'feature_double_s1s2_calibrated'  # 提取的特征和标签文件夹
+    feature_data_path = 'feature_TF_TDF_cut_zero'  # 提取的特征和标签文件夹
     # feature_data_path = "data_kfold_Aweight_feature"  # Aweight提取的特征和标签文件夹
     # cut_data_kfold = r'data_kfold_out'
-    cut_data_kfold = r'data_kfold_double_s1s2'
+    cut_data_kfold = r'data_kfold_cut_zero'
 
     fold_path = os.path.join(feature_data_path, fold)
     cut_data = os.path.join(cut_data_kfold, fold, 'vali_data')
@@ -80,6 +80,7 @@ if __name__ == "__main__":
     learning_rate = 0.005
     # learning_rate = 0.002
     num_epochs = 20
+    # num_epochs = 40  # sd Fuse
     # num_epochs = 60  # sd KAN 会过拟合
     img_size = (32, 240)
     patch_size = (8, 20)
@@ -94,8 +95,9 @@ if __name__ == "__main__":
     print("DataLoader is OK")
     # 模型选择
     # model = KAN([64 * 239, 64, 3])  # sd KAN
-    model = AudioClassifier()
-    model_result_path = os.path.join('TimeFreq_result_calibrated_double_s1s2', fold_path)
+    model = AudioClassifierFuse()  # sd Fuse
+    # model = AudioClassifier()
+    model_result_path = os.path.join('TF_TDF_result_calibrated_cut_zero_without_attention', fold_path)
     # model_result_path = os.path.join('Aweight_TimeFreq_result', fold_path)
     os.environ['CUDA_VISIBLE_DEVICES'] = '0'
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -105,6 +107,7 @@ if __name__ == "__main__":
     # optimizer = optim.AdamW(model.parameters(), lr=1e-3, weight_decay=1e-4)  # sd KAN
     # 设置学习率调度器
     scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, [5, 10, 15, 20], gamma=0.1)
+    # scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, [5, 10, 15, 20, 25, 30, 35, 40], gamma=0.5)  # sd Fuse 会过拟合
     # scheduler = optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.95)  # sd KAN
 
     # 设置损失函数
