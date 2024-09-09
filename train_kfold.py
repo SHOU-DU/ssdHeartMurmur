@@ -8,7 +8,8 @@ from datetime import datetime
 from Imbanlance_Loss import Focal_Loss, DiceLoss, PolyLoss
 import math
 import torch.optim as optim
-from CNN import AudioClassifier, AudioClassifierFuse, AudioClassifierFuseODconv
+from CNN import (AudioClassifier, AudioClassifierFuse, AudioClassifierFuseODconv, AudioClassifierODconv,
+                 AudioClassifierConcatODconv)
 # from efficient_kan import KAN
 from My_Dataloader import NewDataset, TrainDataset, Dataset2, MyDataset
 from torch.utils.data import DataLoader, WeightedRandomSampler
@@ -25,6 +26,7 @@ torch.backends.cudnn.deterministic = True
 
 
 # sd 2024/07/24推送
+# sd 2024/09/08 add ODConv
 if __name__ == "__main__":
     kfold = 5
     for i in range(kfold):
@@ -97,9 +99,9 @@ if __name__ == "__main__":
         # 模型选择
         # model = KAN([64 * 239, 64, 3])  # sd KAN
         # model = AudioClassifierFuse()  # sd Fuse
-        model = AudioClassifierFuseODconv()  # sd Fuse ODconv
+        model = AudioClassifierConcatODconv()  # sd Fuse ODconv concat
         # model = AudioClassifier()
-        model_result_path = os.path.join('TF_TDF_result_calibrated_cut_zero_ODconv', fold_path)
+        model_result_path = os.path.join('TF_TDF_cut_zero_ODconv_k3_concat', fold_path)
         # model_result_path = os.path.join('Aweight_TimeFreq_result', fold_path)
         os.environ['CUDA_VISIBLE_DEVICES'] = '0'
         device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
