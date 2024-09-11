@@ -3,7 +3,7 @@ import math
 import shutil
 
 import torch
-
+import torch.nn as nn
 from helper_code import *
 import numpy as np
 import pandas as pd
@@ -103,9 +103,7 @@ def Log_GF(data_directory):
 
 def Log_GF_TDF(data_directory, TDF_directory):  # 提取时频域和时域特征
     loggamma = list()
-    tdfnum = 0
     for f in tqdm(sorted(os.listdir(data_directory)), desc=str(data_directory) + ' Log_GF and TDF feature:'):  # 加tqdm可视化特征提取过程
-        tdfnum = tdfnum + 1
         root, extension = os.path.splitext(f)
         if extension == '.wav':
             x, fs = librosa.load(os.path.join(data_directory, f), sr=4000)
@@ -142,6 +140,54 @@ def Log_GF_TDF(data_directory, TDF_directory):  # 提取时频域和时域特征
                 print(f"CSV file not found for {f}")
 
             # loggamma.append(fbank_feat)
+
+        else:
+            continue
+    return np.array(loggamma)
+
+
+def Log_GF_CWT(data_directory, CWT_directory):  # 提取时频域和时域特征
+    # 定义适应性平均池化层
+    ap = nn.AdaptiveAvgPool2d(output_size=(107, 239))
+    loggamma = list()
+    for f in tqdm(sorted(os.listdir(data_directory)), desc=str(data_directory) + ' Log_GF and CWT feature:'):  # 加tqdm可视化特征提取过程
+        root, extension = os.path.splitext(f)
+        if extension == '.wav':
+            x, fs = librosa.load(os.path.join(data_directory, f), sr=4000)
+            x = x - np.mean(x)
+            x = x / np.max(np.abs(x))
+            # gfreqs为经过gammatone滤波器后得到的傅里叶变换矩阵
+            gSpec, gfreqs = erb_spectrogram(x,
+                                            fs=fs,
+                                            pre_emph=0,
+                                            pre_emph_coeff=0.97,
+                                            window=SlidingWindow(0.025, 0.0125, "hamming"),
+                                            nfilts=64,
+                                            nfft=512,
+                                            low_freq=25,
+                                            high_freq=2000)
+            fbank_feat = gSpec.T
+            fbank_feat = np.log(fbank_feat)
+            fbank_feat = feature_norm(fbank_feat)
+            # 读取对应的.csv文件
+            csv_file = os.path.join(CWT_directory, root + '.csv')
+            if os.path.exists(csv_file):
+                csv_data = np.loadtxt(csv_file, delimiter=',')
+                # 将 NumPy 数组转换为 PyTorch 张量
+                csv_data_tensor = torch.from_numpy(csv_data)
+                # 调用 unsqueeze 方法
+                csv_data_tensor = csv_data_tensor.unsqueeze(0)
+                # 使用avgpool
+                csv_data_avg = ap(csv_data_tensor)
+                # 还原为np.array
+                csv_output = np.array(csv_data_avg.squeeze(0))
+
+                # 拼接.wav文件特征和.csv文件数据
+                combined_feat = np.concatenate((fbank_feat, csv_output), axis=0)
+                loggamma.append(combined_feat)
+
+            else:
+                print(f"CSV file not found for {f}")
 
         else:
             continue
@@ -187,179 +233,6 @@ def Log_GF_GAF(data_directory):  # 提取时频域和GAF特征
     return np.array(loggamma)
 
 
-def GF(data_directory):
-    loggamma = list()
-    for f in tqdm(sorted(os.listdir(data_directory)), desc=str(data_directory) + ' GF feature:'):  # 加tqdm可视化特征提取过程
-        root, extension = os.path.splitext(f)
-        if extension == '.wav':
-            x, fs = librosa.load(os.path.join(data_directory, f), sr=4000)
-            x = x - np.mean(x)
-            x = x / np.max(np.abs(x))
-            # gfreqs为经过gammatone滤波器后得到的傅里叶变换矩阵
-            gSpec, gfreqs = erb_spectrogram(x,
-                                            fs=fs,
-                                            pre_emph=0,
-                                            pre_emph_coeff=0.97,
-                                            window=SlidingWindow(0.025, 0.0125, "hamming"),
-                                            nfilts=64,
-                                            nfft=512,
-                                            low_freq=25,
-                                            high_freq=2000)
-            fbank_feat = gSpec.T
-            # fbank_feat = np.log(fbank_feat)
-            fbank_feat = feature_norm(fbank_feat)
-
-            # fbank_feat = feature_norm(fbank_feat)
-            # fbank_feat = delt_feature(fbank_feat)
-            loggamma.append(fbank_feat)
-
-        else:
-            continue
-    return np.array(loggamma)
-
-
-def log10_GF(data_directory):
-    loggamma = list()
-    for f in tqdm(sorted(os.listdir(data_directory)), desc=str(data_directory) + ' Log10_GF feature:'):  # 加tqdm可视化特征提取过程
-        root, extension = os.path.splitext(f)
-        if extension == '.wav':
-            x, fs = librosa.load(os.path.join(data_directory, f), sr=4000)
-            x = x - np.mean(x)
-            x = x / np.max(np.abs(x))
-            # gfreqs为经过gammatone滤波器后得到的傅里叶变换矩阵
-            gSpec, gfreqs = erb_spectrogram(x,
-                                            fs=fs,
-                                            pre_emph=0,
-                                            pre_emph_coeff=0.97,
-                                            window=SlidingWindow(0.025, 0.0125, "hamming"),
-                                            nfilts=64,
-                                            nfft=512,
-                                            low_freq=25,
-                                            high_freq=2000)
-            fbank_feat = gSpec.T
-            fbank_feat = np.log10(fbank_feat)
-            fbank_feat = feature_norm(fbank_feat)
-
-            # fbank_feat = feature_norm(fbank_feat)
-            # fbank_feat = delt_feature(fbank_feat)
-            loggamma.append(fbank_feat)
-
-        else:
-            continue
-    return np.array(loggamma)
-
-
-def Aweight_Log_GF(data_directory):
-    loggamma = list()
-    for f in tqdm(sorted(os.listdir(data_directory)), desc=str(data_directory) + 'Aweight_Log_GF feature:'):  # 加tqdm可视化特征提取过程
-        root, extension = os.path.splitext(f)
-        if extension == '.wav':
-            x, fs = librosa.load(os.path.join(data_directory, f), sr=4000)
-            x = x - np.mean(x)  # 将音信信号置为0均值
-            # x = x / np.max(np.abs(x))
-            # gfreqs为经过gammatone滤波器后得到的傅里叶变换矩阵
-            gSpec, gfreqs = erb_spectrogram(x,
-                                            fs=fs,
-                                            pre_emph=0,
-                                            pre_emph_coeff=0.97,
-                                            window=SlidingWindow(0.025, 0.0125, "hamming"),
-                                            nfilts=64,
-                                            nfft=512,
-                                            low_freq=25,
-                                            high_freq=2000)
-            gamma_fbanks_mat, gcenfreqs = gammatone_filter_banks(nfilts=64,
-                                                                   nfft=512,
-                                                                   fs=fs,
-                                                                   low_freq=25,
-                                                                   high_freq=2000)
-            center_freqs = [erb2hz(freq) for freq in gcenfreqs]
-            # print(center_freqs)
-            gSpecLog = 20 * (np.log10(gSpec))  # 计算后的gammatone频谱取对数得到结果类似于声压级
-            Aweight_gSpec = A_weight(gSpecLog, center_freqs)  # 进行类似A计算操作
-            fbank_feat = Aweight_gSpec.T
-            # fbank_feat = np.log(fbank_feat)
-            fbank_feat = feature_norm(fbank_feat)
-
-            # fbank_feat = feature_norm(fbank_feat)
-            # fbank_feat = delt_feature(fbank_feat)
-            loggamma.append(fbank_feat)
-
-        else:
-            continue
-    return np.array(loggamma)
-
-
-def Cweight_Log_GF(data_directory):
-    loggamma = list()
-    for f in tqdm(sorted(os.listdir(data_directory)), desc=str(data_directory) + ' Cweight_Log_GF feature:'):  # 加tqdm可视化特征提取过程
-        root, extension = os.path.splitext(f)
-        if extension == '.wav':
-            x, fs = librosa.load(os.path.join(data_directory, f), sr=4000)
-            x = x - np.mean(x)  # 将音信信号置为0均值
-            # x = x / np.max(np.abs(x))
-            # gfreqs为经过gammatone滤波器后得到的傅里叶变换矩阵
-            gSpec, gfreqs = erb_spectrogram(x,
-                                            fs=fs,
-                                            pre_emph=0,
-                                            pre_emph_coeff=0.97,
-                                            window=SlidingWindow(0.025, 0.0125, "hamming"),
-                                            nfilts=64,
-                                            nfft=512,
-                                            low_freq=25,
-                                            high_freq=2000)
-            gamma_fbanks_mat, gcenfreqs = gammatone_filter_banks(nfilts=64,
-                                                                   nfft=512,
-                                                                   fs=fs,
-                                                                   low_freq=25,
-                                                                   high_freq=2000)
-            center_freqs = [erb2hz(freq) for freq in gcenfreqs]
-            # print(center_freqs)
-            gSpecLog = 20 * (np.log10(gSpec))  # 计算后的gammatone频谱取对数得到结果类似于声压级
-            Cweight_gSpec = C_weight(gSpecLog, center_freqs)  # 进行类似A计算操作
-            fbank_feat = Cweight_gSpec.T
-            # fbank_feat = np.log(fbank_feat)
-            fbank_feat = feature_norm(fbank_feat)
-
-            # fbank_feat = feature_norm(fbank_feat)
-            # fbank_feat = delt_feature(fbank_feat)
-            loggamma.append(fbank_feat)
-
-        else:
-            continue
-    return np.array(loggamma)
-
-
-def A_weight(data, freq):
-    freq = np.array(freq)
-    data = np.array(data)
-    A1000 = 2.0
-    f1 = 20.6
-    f2 = 107.7
-    f3 = 737.9
-    f4 = 12200.0
-    Aweighted = ((f4 ** 2) * (freq ** 4)) / ((freq ** 2 + f1 ** 2) * np.sqrt(freq ** 2 + f2 ** 2) *
-                                             np.sqrt(freq ** 2 + f3 ** 2) * (freq ** 2 + f4 ** 2))
-    Aweighted = 20 * (np.log10(Aweighted)) + A1000
-    for i in range(data.shape[0]):
-        data[i] += Aweighted
-    return data
-
-
-def C_weight(data, freq):
-    freq = np.array(freq)
-    data = np.array(data)
-    C1000 = 0.062
-    f1 = 20.6
-    f2 = 107.7
-    f3 = 737.9
-    f4 = 12200.0
-    Cweighted = ((f4 ** 2) * (freq ** 2)) / ((freq ** 2 + f1 ** 2) * (freq ** 2 + f4 ** 2))
-    Cweighted = 20 * (np.log10(Cweighted)) + C1000
-    for i in range(data.shape[0]):
-        data[i] += Cweighted
-    return data
-
-
 # 对得到的特征进行归一化
 def feature_norm(feat):
     normalized_feat = (feat - feat.min()) / (feat.max() - feat.min())
@@ -373,11 +246,10 @@ def feature_norm(feat):
 if __name__ == '__main__':
     # 特征提取
     kfold_festure_in = "data_kfold_cut_zero"  # 切割好的数据，对于present个体，只复制murmur存在的.wav文件
-    kfold_feature_folder = "feature_TF_GAF_cut_zero"  # 存储每折特征文件夹
-    kfold_Aweight_feature_location_folder = "data_kfold_Aweight_feature_location"
-    kfold_feature_location_folder = "data_kfold_Cweight_feature_location"
+    kfold_feature_folder = "feature_TF_CWT_cut_zero"  # 存储每折特征文件夹
     tdf_feature_folder = r"E:\sdmurmur\EnvelopeandSE\data_kfold_cut_zero"  # 时域特征存储文件夹
-    save_kfold_feature(kfold_festure_in, tdf_feature_folder, kfold_feature_folder, kfold=5)
+    cwt_feature_folder = r"E:\sdmurmur\wavelets\data_kfold_cut_zero"  # cwt特征存储文件夹
+    save_kfold_feature(kfold_festure_in, cwt_feature_folder, kfold_feature_folder, kfold=5)
     print('this is feature extraction file')
 
     # 特征图拼接测试, 可尝试分帧时补零，
@@ -395,9 +267,32 @@ if __name__ == '__main__':
     # a3 = np.concatenate((a1, padded_arr), axis=0)
     # print(a3.shape)
 
-    # csv文件转换为ndarray测试
-    # TDF_folder = r"E:\sdmurmur\EnvelopeandSE\data_kfold_cut_zero\0_fold\train_data"
-    # data = np.genfromtxt(TDF_folder+r'\2530_AV_Absent_0.csv', delimiter=',', dtype=None, encoding='utf-8')
+    # # csv文件转换为ndarray测试
+    # cwt = []
+    # CWT_folder = r"E:\sdmurmur\wavelets\data_kfold_cut_zero\0_fold\train_data"
+    # csv_file = CWT_folder+r'\2530_AV_Absent_0.csv'
+    # csv_file2 = CWT_folder + r'\2530_AV_Absent_0.csv'
+    # csv_data = np.loadtxt(csv_file, delimiter=',')
+    # csv_data2 = np.loadtxt(csv_file, delimiter=',')
+    # cwt.append(csv_data)
+    # cwt.append(csv_data2)
+    # cwt = np.array(cwt)
+    # print(cwt.shape)
+    # # 将 NumPy 数组转换为 PyTorch 张量
+    # # csv_data_tensor = torch.from_numpy(cwt)
+    # csv_data_tensor = torch.from_numpy(csv_data)
+    # # 调用 unsqueeze 方法
+    # csv_data_tensor = csv_data_tensor.unsqueeze(0)
+    # # 创建 AdaptiveAvgPool2d 层
+    # ap = nn.AdaptiveAvgPool2d(output_size=(107, 239))
+    # # 应用池化层
+    # output = ap(csv_data_tensor)
+    # # 打印输出张量的形状
+    # print(output.shape)
+    # output2 = output.squeeze(0)
+    # print(output2.shape)
+    # output3 = np.array(output2)
+    # print(output3.shape)
     # # 检查读取的数据形状是否为5x150
     # if data.shape == (5, 150):
     #     print("数据已成功读取为5x150的ndarray")

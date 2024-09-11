@@ -39,8 +39,7 @@ if __name__ == "__main__":
         print(f'this is {fold}')
 
         # fold = '4_fold'  # 训练第i折
-        feature_data_path = 'feature_TF_TDF_cut_zero'  # 提取的特征和标签文件夹
-        # feature_data_path = "data_kfold_Aweight_feature"  # Aweight提取的特征和标签文件夹
+        feature_data_path = 'feature_TF_GAF_cut_zero'  # 提取的特征和标签文件夹
         # cut_data_kfold = r'data_kfold_out'
         cut_data_kfold = r'data_kfold_cut_zero'
         if not test_flag:
@@ -90,7 +89,7 @@ if __name__ == "__main__":
         learning_rate = 0.005
         # learning_rate = 0.002
         num_epochs = 20
-        # num_epochs = 40  # sd Fuse
+        # num_epochs = 30  # sd Fuse
         # num_epochs = 60  # sd KAN 会过拟合
         img_size = (32, 240)
         patch_size = (8, 20)
@@ -108,7 +107,7 @@ if __name__ == "__main__":
         # model = AudioClassifierFuse()  # sd Fuse
         model = AudioClassifierConcatFeatureODconv()  # sd Fuse ODconv gamma=2.5
         # model = AudioClassifier()
-        model_result_path = os.path.join('TF_TDF_cut_zero_fuse_ODconv_k3_cat3', fold_path)
+        model_result_path = os.path.join('TF_GAF_cut_zero_ODconv_k3_con', fold_path)
         # model_result_path = os.path.join('Aweight_TimeFreq_result', fold_path)
         os.environ['CUDA_VISIBLE_DEVICES'] = '0'
         device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -118,8 +117,8 @@ if __name__ == "__main__":
         # optimizer = optim.AdamW(model.parameters(), lr=1e-3, weight_decay=1e-4)  # sd KAN
         # 设置学习率调度器
         scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, [5, 10, 15, 20], gamma=0.1)
-        # scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, [5, 10, 15, 20, 25, 30, 35, 40], gamma=0.5)  # sd Fuse 会过拟合
-        # scheduler = optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.95)  # sd KAN
+        # scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, [5, 10, 15, 20, 25, 30], gamma=0.2)  # sd Fuse 会过拟合
+        # scheduler = optim.lr_scheduler.ExponentialLR(optimizer, [5, 10, 15, 20, 25], gamma=0.2)  # sd KAN
 
         # 设置损失函数
         weight = torch.tensor([1, 1, 1]).to(device)
