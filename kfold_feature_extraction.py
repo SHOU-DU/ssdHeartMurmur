@@ -20,6 +20,7 @@ from spafe.utils.converters import erb2hz
 from spafe.utils.vis import show_spectrogram
 from spafe.utils.preprocessing import SlidingWindow
 from dataset2kfold import *
+from pyts.image import GramianAngularField
 
 
 def save_kfold_feature(kfold_folder, tdf_feature, feature_folder, kfold=int):
@@ -39,17 +40,15 @@ def save_kfold_feature(kfold_folder, tdf_feature, feature_folder, kfold=int):
         if not os.path.exists(feature_dir):
             os.makedirs(feature_dir)
 
-        # train_feature = Log_GF(kfold_folder_train)
-        train_feature = Log_GF_TDF(kfold_folder_train, tdf_train_folder)
-        # train_feature = Aweight_Log_GF(kfold_folder_train)
-        # train_feature = Cweight_Log_GF(kfold_folder_train)
+        train_feature = Log_GF_GAF(kfold_folder_train)
+        # train_feature = Log_GF_TDF(kfold_folder_train, tdf_train_folder)
+
         train_label, train_location, train_id = get_label(kfold_folder_train)  # 获取各个3s片段label和听诊区位置和个体ID
         train_index = get_index(kfold_folder_train)
 
-        # vali_feature = Log_GF(kfold_folder_test)
-        vali_feature = Log_GF_TDF(kfold_folder_vali, tdf_vali_folder)
-        # vali_feature = Aweight_Log_GF(kfold_folder_test)  # 采用类似A计权
-        # vali_feature = Cweight_Log_GF(kfold_folder_test)  # 采用类似C计权
+        vali_feature = Log_GF_GAF(kfold_folder_vali)
+        # vali_feature = Log_GF_TDF(kfold_folder_vali, tdf_vali_folder)
+
         vali_label, vali_location, vali_id = get_label(kfold_folder_vali)
         vali_index = get_index(kfold_folder_vali)
         # 存储训练集特征和标签
@@ -102,7 +101,7 @@ def Log_GF(data_directory):
     return np.array(loggamma)
 
 
-def Log_GF_TDF(data_directory, TDF_directory):
+def Log_GF_TDF(data_directory, TDF_directory):  # 提取时频域和时域特征
     loggamma = list()
     tdfnum = 0
     for f in tqdm(sorted(os.listdir(data_directory)), desc=str(data_directory) + ' Log_GF and TDF feature:'):  # 加tqdm可视化特征提取过程
@@ -143,6 +142,45 @@ def Log_GF_TDF(data_directory, TDF_directory):
                 print(f"CSV file not found for {f}")
 
             # loggamma.append(fbank_feat)
+
+        else:
+            continue
+    return np.array(loggamma)
+
+
+def Log_GF_GAF(data_directory):  # 提取时频域和GAF特征
+    loggamma = list()
+    tdfnum = 0
+    for f in tqdm(sorted(os.listdir(data_directory)), desc=str(data_directory) + ' Log_GF and GAF feature:'):  # 加tqdm可视化特征提取过程
+        tdfnum = tdfnum + 1
+        root, extension = os.path.splitext(f)
+        if extension == '.wav':
+            x, fs = librosa.load(os.path.join(data_directory, f), sr=4000)  # 心音信号已归一化为[-1, 1]
+
+            # GAF特征参数设置
+            image_size = 239  # 图像（数组）大小与提取gammatone特征后的帧数匹配
+            gasf = GramianAngularField(image_size=image_size, method='summation')
+            x_data = np.array([x])  # 将x转化成1x12000的二维形式
+            x_gasf = gasf.fit_transform(x_data)  # 得到[sample_num, img_size, img_size]形式GAF特征
+
+            x = x - np.mean(x)
+            x = x / np.max(np.abs(x))
+            # gfreqs为经过gammatone滤波器后得到的傅里叶变换矩阵
+            gSpec, gfreqs = erb_spectrogram(x,
+                                            fs=fs,
+                                            pre_emph=0,
+                                            pre_emph_coeff=0.97,
+                                            window=SlidingWindow(0.025, 0.0125, "hamming"),
+                                            nfilts=64,
+                                            nfft=512,
+                                            low_freq=25,
+                                            high_freq=2000)
+            fbank_feat = gSpec.T
+            fbank_feat = np.log(fbank_feat)
+            fbank_feat = feature_norm(fbank_feat)
+
+            combined_feat = np.concatenate((fbank_feat, x_gasf[0]), axis=0)
+            loggamma.append(combined_feat)
 
         else:
             continue
@@ -332,24 +370,10 @@ def feature_norm(feat):
     return normalized_feat
 
 
-def RPF(data_directory):
-    loggamma = []
-    for f in tqdm(sorted(os.listdir(data_directory)), desc=str(data_directory) + ' Cweight_Log_GF feature:'):  # 加tqdm可视化特征提取过程
-        root, extension = os.path.splitext(f)
-        if extension == '.wav':
-            x, fs = librosa.load(os.path.join(data_directory, f), sr=4000)
-            x = x - np.mean(x)  # 将音信信号置为0均值
-            fbank_feat = feature_norm(fbank_feat)
-            loggamma.append(fbank_feat)
-        else:
-            continue
-    return np.array(loggamma)
-
-
 if __name__ == '__main__':
     # 特征提取
     kfold_festure_in = "data_kfold_cut_zero"  # 切割好的数据，对于present个体，只复制murmur存在的.wav文件
-    kfold_feature_folder = "feature_TF_TDF_cut_zero"  # 存储每折特征文件夹
+    kfold_feature_folder = "feature_TF_GAF_cut_zero"  # 存储每折特征文件夹
     kfold_Aweight_feature_location_folder = "data_kfold_Aweight_feature_location"
     kfold_feature_location_folder = "data_kfold_Cweight_feature_location"
     tdf_feature_folder = r"E:\sdmurmur\EnvelopeandSE\data_kfold_cut_zero"  # 时域特征存储文件夹

@@ -2,50 +2,19 @@
 import numpy as np
 from kfold_feature_extraction import *
 import matplotlib.pyplot as plt
+from matplotlib import image
 import os
 from spafe.utils.converters import erb2hz
-from pyts.image import RecurrencePlot
-
-
-def extract_recurrence_plot_features(audio_file):
-    # 加载音频文件
-    audio, fs = librosa.load(audio_file, sr=None)
-    audio = np.array([audio])
-    audio = (audio - np.min(audio)) / (np.max(audio) - np.min(audio))
-    # 计算递归图
-    rp = RecurrencePlot(threshold='point', percentage=20)
-    X_rp = rp.transform(audio)[0]
-
-    # 计算递归图特征：确定率（DET）、平均对角线长度（L）和熵（ENT）
-    # det = rp.recurrence_rate_[0]
-    # l = rp.mean_diagonal_[0]
-    # ent = rp.recurrence_entropy_[0]
-
-    return X_rp
-
-
-def myRPF(audio_file):
-    audio, fs = librosa.load(audio_file, sr=None)
-    audio = np.array([audio])
-    audio = (audio - np.min(audio)) / (np.max(audio) - np.min(audio))
-    N = len(audio)
-    S = np.column_stack((audio[:-1], audio[1:]))
-
-    R = np.zeros((N - 1, N - 1))
-    for i in range(N - 1):
-        for j in range(N - 1):
-            R[i, j] = np.sum((S[i, :] - S[j, :]) ** 2)
-    R = (R - np.min(np.min(R))) / (np.max(np.max(R)) - np.min(np.min(R))) * 4
-    plt.figure()
-    plt.imshow(R)
-    plt.title('imaging time series of RP')
-
+# from pyts.image import RecurrencePlot
+import pywt
+from pyts.image import GramianAngularField
+import librosa
 
 
 if __name__ == '__main__':
-    fig_path = 'feature_fig'
-    if not os.path.exists(fig_path):
-        os.makedirs(fig_path)
+    # fig_path = 'feature_fig'
+    # if not os.path.exists(fig_path):
+    #     os.makedirs(fig_path)
     # kfold_festure_in = "data_kfold_out_grade_location"  # 分好折的3s数据
     # kfold_folder_vali = os.path.join(kfold_festure_in, "0_fold" + r"\vali_data")  # 五折交叉验证，最后通过测试集测试
     #
@@ -62,16 +31,77 @@ if __name__ == '__main__':
     # plt.title('100_Cweight_Log_GF')
     # plt.savefig(fig_path + r'\100_Cweight_Log_GF.png')
     # plt.show()
-    # sd RPF
-    audio_file = r'D:\shoudu\pycharmssdHeartMurmur\data_kfold_out_grade_location\0_fold\train_data\14241_AV_Soft_0.wav'
-    X_rp = extract_recurrence_plot_features(audio_file)
-    # X_rp = np.log(abs(X_rp) + 1)
-    X_rp = np.resize(X_rp, [256, 256])
-    print(X_rp.shape)
-    # 可视化递归图
-    plt.imshow(X_rp, cmap='binary', origin='lower')
-    plt.title('RP_point_14241')
-    # plt.savefig(fig_path + r'\RP_None_14241.png')
-    plt.show()
-    # myRPF(audio_file)
 
+    # GAF特征
+    wavefile = r"E:\sdmurmur\ssdHeartMurmur\data_kfold_cut_zero\0_fold\train_data\2530_AV_Absent_0.wav"
+    wavefile2 = r"E:\sdmurmur\ssdHeartMurmur\data_kfold_cut_zero\0_fold\train_data\14241_AV_Soft_0.wav"
+    wavefile3 = r"E:\sdmurmur\ssdHeartMurmur\data_kfold_cut_zero\0_fold\train_data\9979_AV_Loud_0.wav"
+
+    wave_data, fs = librosa.load(wavefile, sr=4000)
+    wave_data = np.array([wave_data])
+    wave_data2, fs2 = librosa.load(wavefile2, sr=4000)
+    wave_data2 = np.array([wave_data2])
+    wave_data3, fs3 = librosa.load(wavefile3, sr=4000)
+    wave_data3 = np.array([wave_data3])
+    image_size = 239
+    gasf = GramianAngularField(image_size=image_size, method='summation')
+    wave_gasf = gasf.fit_transform(wave_data)
+    wave_gasf = wave_gasf - np.mean(wave_gasf)
+
+    wave_gasf2 = gasf.fit_transform(wave_data2)
+    wave_gasf3 = gasf.fit_transform(wave_data3)
+    gadf = GramianAngularField(image_size=image_size, method='difference')
+    wave_gadf = gadf.fit_transform(wave_data)
+    wave_gadf2 = gadf.fit_transform(wave_data2)
+    wave_gadf3 = gadf.fit_transform(wave_data3)
+
+    print(wave_gasf.shape)
+
+    imges = [wave_gasf[0], wave_gadf[0]]
+    titles = ['Summation', 'Difference']
+    # 两种方法的可视化差异对比
+    # Comparison of two different methods
+    fig, axs = plt.subplots(1, 2, constrained_layout=True)
+    for img, title, ax in zip(imges, titles, axs):
+        ax.imshow(img)
+        ax.set_title(title)
+    fig.suptitle('GramianAngularField', y=0.94, fontsize=16)
+    plt.margins(0, 0)
+    # plt.savefig("./GramianAngularField.pdf", pad_inches=0)
+    # plt.show()
+
+    imges2 = [wave_gasf2[0], wave_gadf2[0]]
+    titles = ['Summation', 'Difference']
+    # 两种方法的可视化差异对比
+    # Comparison of two different methods
+    fig, axs = plt.subplots(1, 2, constrained_layout=True)
+    for img, title, ax in zip(imges2, titles, axs):
+        ax.imshow(img)
+        ax.set_title(title)
+    fig.suptitle('GramianAngularField', y=0.94, fontsize=16)
+    plt.margins(0, 0)
+    # plt.savefig("./GramianAngularField.pdf", pad_inches=0)
+    # plt.show()
+
+    imges3 = [wave_gasf3[0], wave_gadf3[0]]
+    titles = ['Summation', 'Difference']
+    # 两种方法的可视化差异对比
+    # Comparison of two different methods
+    fig, axs = plt.subplots(1, 2, constrained_layout=True)
+    for img, title, ax in zip(imges3, titles, axs):
+        ax.imshow(img)
+        ax.set_title(title)
+    fig.suptitle('GramianAngularField', y=0.94, fontsize=16)
+    plt.margins(0, 0)
+    # plt.savefig("./GramianAngularField.pdf", pad_inches=0)
+    plt.show()
+
+    a = np.random.rand(16, 32)
+    b = np.random.rand(16, 32)
+
+    a_list = [a]
+    a_list.append(b)
+
+    print(len(a_list))  # 打印列表长度
+    print(a_list[0].shape)  # 打印第一个数组的形状
+    print(a_list[1].shape)  # 打印第二个数组的形状

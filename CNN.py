@@ -4,7 +4,7 @@ import torch.nn.functional as F
 from torch.nn import init
 import math
 from odconv import ODConv2d
-
+import numpy as np
 
 class depthwise_separable_conv(nn.Module):
     def __init__(self, ch_in, ch_out):
@@ -381,11 +381,11 @@ class AudioClassifierFuseODconv(nn.Module):
         # outputs['conv5'] = xf2.shape
 
         # 特征融合
-        x_fuse = xf1 + xf2 + torch.mul(xf1, xf2)
+        # x_fuse = xf1 + xf2 + torch.mul(xf1, xf2)
+        x_fuse = xf1 + xf2
         # outputs['fuse'] = x_fuse.shape
 
         # Adaptive pool and flatten for input to linear layer
-        # x_attn = self.ap(x_attn)
         x_fuse = self.ap(x_fuse)
         # outputs['ap'] = x_fuse.shape
         x_all = x_fuse.view(x_fuse.shape[0], -1)
@@ -506,7 +506,7 @@ class AudioClassifierODconv(nn.Module):
         return x_all
 
 
-class AudioClassifierConcatODconv(nn.Module):
+class AudioClassifierConcatFeatureODconv(nn.Module):
     # ----------------------------
     # Build the model architecture
     # ----------------------------
@@ -533,7 +533,7 @@ class AudioClassifierConcatODconv(nn.Module):
             nn.MaxPool2d(2)
         )
         self.conv4 = nn.Sequential(
-            depthwise_separable_conv(64, 128),
+            depthwise_separable_conv(65, 128),
             nn.BatchNorm2d(128),
             nn.ReLU(),
             nn.MaxPool2d(2)
@@ -549,7 +549,7 @@ class AudioClassifierConcatODconv(nn.Module):
         )
 
         self.ap = nn.AdaptiveAvgPool2d(output_size=1)
-        self.ap2 = nn.AdaptiveAvgPool2d(output_size=(2, 7))
+        self.ap2 = nn.AdaptiveAvgPool2d(output_size=(4, 15))
         self.lin = nn.Linear(in_features=128, out_features=3)
 
 
@@ -569,31 +569,26 @@ class AudioClassifierConcatODconv(nn.Module):
         # Run the convolutional blocks
         x = x.unsqueeze(1)  # 为输入特征添加通道，变为(batch_size, 1, height, width)
         # outputs['input'] = x.shape
-        # xf1 = x[:, :, : 64, :]  # 时频域
-        # xf2 = x[:, :, 64:, :]  # 时域
-        x = self.pre(x)
+        xf1 = x[:, :, : 64, :]  # 时频域
+        xf2 = x[:, :, 64:, :]  # 时域
+        xf1 = self.pre(xf1)
         # outputs['pre'] = x.shape
-        x = self.ODconv(x)
-        # outputs['ODconv'] = x.shape
-        x = self.conv1(x)
-        # outputs['conv1'] = x.shape
-        x = self.conv2(x)
-        # outputs['conv2'] = x.shape
-        x = self.conv3(x)
-        # outputs['conv3'] = x.shape
-        x = self.conv4(x)
-        # outputs['conv4'] = x.shape
-        # xf2 = self.ap2(xf2)
+        xf1 = self.ODconv(xf1)
+        # outputs['ODconv'] = xf1.shape
+        xf1 = self.conv1(xf1)
+        # outputs['conv1'] = xf1.shape
+        xf1 = self.conv2(xf1)
+        # outputs['conv2'] = xf1.shape
+        xf1 = self.conv3(xf1)
+        # outputs['conv3'] = xf1.shape
+        xf2 = self.ap2(xf2)
         # outputs['ap2'] = xf2.shape
-        # xf2 = self.conv5(xf2)
-        # outputs['conv5'] = xf2.shape
-
-        # 特征融合
-        # x_fuse = xf1 + xf2 + torch.mul(xf1, xf2)
+        x_fuse = torch.cat((xf1, xf2), dim=1)
         # outputs['fuse'] = x_fuse.shape
+        x_fuse = self.conv4(x_fuse)
 
         # Adaptive pool and flatten for input to linear layer
-        x_fuse = self.ap(x)
+        x_fuse = self.ap(x_fuse)
         # outputs['ap'] = x_fuse.shape
         x_all = x_fuse.view(x_fuse.shape[0], -1)
         # outputs['flatten'] = x_all.shape
@@ -647,7 +642,7 @@ if __name__ == "__main__":
         )
     net = nn.Sequential(b1, b2, b3, b4, b5, b6, nn.AdaptiveAvgPool2d(output_size=1), nn.Flatten(),
                         nn.Linear(in_features=128, out_features=3))
-    model = AudioClassifierConcatODconv()
+    model = AudioClassifierConcatFeatureODconv()
     X = torch.rand(10, 1, 64, 239)
     X2 = torch.rand(10, 69, 239)
     # for layer in net:

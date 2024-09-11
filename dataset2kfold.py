@@ -171,9 +171,9 @@ def test_dataset_scale(test_data_folder, scaled_test_folder):
     if not os.path.exists(scaled_test_folder):
         os.makedirs(scaled_test_folder)
 
-    for ID in tqdm(pIDs, desc='test set double s2:'):
+    for ID in tqdm(pIDs, desc='test set cut zero:'):
         # print(ID)  打印ID检查
-        cut_copy_files_double_s2(
+        cut_copy_files_zero(
             test_data_folder,
             ID,
             scaled_test_folder,
@@ -1036,15 +1036,15 @@ def check_tsv(data_directory: str):
 
 if __name__ == '__main__':
 
-    # 进行数据分折
-    original_dataset_folder = r"E:\sdmurmur\calibrated_train_vali_dataset"
-    kfold_out = "data_kfold_cut_zero"  # grade:soft和loud均匀分折。location:对于present个体，只复制murmur存在的.wav文件
-    dataset_split_kfold(original_dataset_folder, kfold_out, kfold=5)
+    # # 进行数据分折
+    # original_dataset_folder = r"E:\sdmurmur\calibrated_train_vali_dataset"
+    # kfold_out = "data_kfold_cut_zero"  # grade:soft和loud均匀分折。location:对于present个体，只复制murmur存在的.wav文件
+    # dataset_split_kfold(original_dataset_folder, kfold_out, kfold=5)
 
-    # # 对测试集进行切分和s1,s1幅值缩放操作
-    # test_data_folder = r"D:\shoudu\calibrated_test_data"  # 校正过的测试集路径
-    # scaled_test_folder = "test_data_double_s2"  # 指定幅值缩放后的路径
-    # test_dataset_scale(test_data_folder, scaled_test_folder)
+    # 对测试集进行切分和s1,s1幅值缩放操作
+    test_data_folder = r"E:\sdmurmur\calibrated_test_data"  # 校正过的测试集路径
+    scaled_test_folder = "test_data_cut_zero"  # 指定幅值缩放后的路径
+    test_dataset_scale(test_data_folder, scaled_test_folder)
 
     # # 检查tsv文件是否有标记错误
     # original_dataset_folder = r"D:\shoudu\the-circor-digiscope-phonocardiogram-dataset-1.0.3\test_data"

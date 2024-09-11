@@ -30,7 +30,6 @@ class Focal_Loss(nn.Module):
         return torch.mean(floss)
 
 
-
 class BinaryDiceLoss(nn.Module):
     """Dice loss of binary class
     Args:

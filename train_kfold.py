@@ -9,7 +9,7 @@ from Imbanlance_Loss import Focal_Loss, DiceLoss, PolyLoss
 import math
 import torch.optim as optim
 from CNN import (AudioClassifier, AudioClassifierFuse, AudioClassifierFuseODconv, AudioClassifierODconv,
-                 AudioClassifierConcatODconv)
+                 AudioClassifierConcatFeatureODconv)
 # from efficient_kan import KAN
 from My_Dataloader import NewDataset, TrainDataset, Dataset2, MyDataset
 from torch.utils.data import DataLoader, WeightedRandomSampler
@@ -27,21 +27,28 @@ torch.backends.cudnn.deterministic = True
 
 # sd 2024/07/24推送
 # sd 2024/09/08 add ODConv
+# sd 2024/09/09 add ODConv concat model
 if __name__ == "__main__":
     kfold = 5
+    test_flag = False
+    # 若使用测试集，则test_flag = True
+    if test_flag:
+        kfold = 0
     for i in range(kfold):
         fold = str(i) + '_fold'  # 训练第i折
         print(f'this is {fold}')
 
-    # fold = '4_fold'  # 训练第i折
+        # fold = '4_fold'  # 训练第i折
         feature_data_path = 'feature_TF_TDF_cut_zero'  # 提取的特征和标签文件夹
         # feature_data_path = "data_kfold_Aweight_feature"  # Aweight提取的特征和标签文件夹
         # cut_data_kfold = r'data_kfold_out'
         cut_data_kfold = r'data_kfold_cut_zero'
-
-        fold_path = os.path.join(feature_data_path, fold)
-        cut_data = os.path.join(cut_data_kfold, fold, 'vali_data')
-
+        if not test_flag:
+            fold_path = os.path.join(feature_data_path, fold)
+            cut_data = os.path.join(cut_data_kfold, fold, 'vali_data')
+        else:
+            fold_path = feature_data_path
+            cut_data = cut_data_kfold
         feature_path = os.path.join(fold_path, 'feature')
         label_path = os.path.join(fold_path, 'label')
 
@@ -99,9 +106,9 @@ if __name__ == "__main__":
         # 模型选择
         # model = KAN([64 * 239, 64, 3])  # sd KAN
         # model = AudioClassifierFuse()  # sd Fuse
-        model = AudioClassifierConcatODconv()  # sd Fuse ODconv concat
+        model = AudioClassifierConcatFeatureODconv()  # sd Fuse ODconv gamma=2.5
         # model = AudioClassifier()
-        model_result_path = os.path.join('TF_TDF_cut_zero_ODconv_k3_concat', fold_path)
+        model_result_path = os.path.join('TF_TDF_cut_zero_fuse_ODconv_k3_cat3', fold_path)
         # model_result_path = os.path.join('Aweight_TimeFreq_result', fold_path)
         os.environ['CUDA_VISIBLE_DEVICES'] = '0'
         device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -116,7 +123,9 @@ if __name__ == "__main__":
 
         # 设置损失函数
         weight = torch.tensor([1, 1, 1]).to(device)
-        criterion = Focal_Loss(gamma=2.5, weight=weight)
+        # weight = torch.tensor([0.83, 0.25, 0.20]).to(device)  # sd 改变权重值
+        # criterion = Focal_Loss(gamma=2.5, weight=weight)
+        criterion = Focal_Loss(gamma=2.5, weight=weight)  # sd 增大gamma
         # criterion = nn.CrossEntropyLoss()  # sd KAN
         # 保存验证集准确率最大时的模型
         model_path = os.path.join(model_result_path, "model")
