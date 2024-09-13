@@ -23,13 +23,13 @@ from dataset2kfold import *
 from pyts.image import GramianAngularField
 
 
-def save_kfold_feature(kfold_folder, tdf_feature, feature_folder, kfold=int):
+def save_kfold_feature(kfold_folder, cwt_feature, feature_folder, kfold=int):
     for i in range(kfold):
         kfold_feature_out = os.path.join(feature_folder, str(i) + "_fold")  #
         kfold_folder_train = os.path.join(kfold_folder, str(i) + "_fold" + r"\train_data")
         kfold_folder_vali = os.path.join(kfold_folder, str(i) + "_fold" + r"\vali_data")  # 五折交叉验证，最后通过测试集测试
-        tdf_train_folder = os.path.join(tdf_feature, str(i) + "_fold" + r"\train_data")  # 时域特征
-        tdf_vali_folder = os.path.join(tdf_feature, str(i) + "_fold" + r"\vali_data")
+        cwt_train_folder = os.path.join(cwt_feature, str(i) + "_fold" + r"\train_data")  # cwt特征
+        cwt_vali_folder = os.path.join(cwt_feature, str(i) + "_fold" + r"\vali_data")
         label_dir = os.path.join(kfold_feature_out, "label")
         feature_dir = os.path.join(kfold_feature_out, "feature")
         # 制作存储特征和标签的文件夹
@@ -40,13 +40,15 @@ def save_kfold_feature(kfold_folder, tdf_feature, feature_folder, kfold=int):
         if not os.path.exists(feature_dir):
             os.makedirs(feature_dir)
 
-        train_feature = Log_GF_GAF(kfold_folder_train)
+        # train_feature = Log_GF_GAF(kfold_folder_train)
+        train_feature = Log_GF_CWT(kfold_folder_train, cwt_train_folder)
         # train_feature = Log_GF_TDF(kfold_folder_train, tdf_train_folder)
 
         train_label, train_location, train_id = get_label(kfold_folder_train)  # 获取各个3s片段label和听诊区位置和个体ID
         train_index = get_index(kfold_folder_train)
 
-        vali_feature = Log_GF_GAF(kfold_folder_vali)
+        # vali_feature = Log_GF_GAF(kfold_folder_vali)
+        vali_feature = Log_GF_CWT(kfold_folder_vali, cwt_vali_folder)
         # vali_feature = Log_GF_TDF(kfold_folder_vali, tdf_vali_folder)
 
         vali_label, vali_location, vali_id = get_label(kfold_folder_vali)
@@ -148,7 +150,7 @@ def Log_GF_TDF(data_directory, TDF_directory):  # 提取时频域和时域特征
 
 def Log_GF_CWT(data_directory, CWT_directory):  # 提取时频域和时域特征
     # 定义适应性平均池化层
-    ap = nn.AdaptiveAvgPool2d(output_size=(107, 239))
+    ap = nn.AdaptiveMaxPool2d(output_size=(107, 239))  # max/avg两种
     loggamma = list()
     for f in tqdm(sorted(os.listdir(data_directory)), desc=str(data_directory) + ' Log_GF and CWT feature:'):  # 加tqdm可视化特征提取过程
         root, extension = os.path.splitext(f)
@@ -246,7 +248,7 @@ def feature_norm(feat):
 if __name__ == '__main__':
     # 特征提取
     kfold_festure_in = "data_kfold_cut_zero"  # 切割好的数据，对于present个体，只复制murmur存在的.wav文件
-    kfold_feature_folder = "feature_TF_CWT_cut_zero"  # 存储每折特征文件夹
+    kfold_feature_folder = "feature_TF_CWT_max_cut_zero"  # 存储每折特征文件夹
     tdf_feature_folder = r"E:\sdmurmur\EnvelopeandSE\data_kfold_cut_zero"  # 时域特征存储文件夹
     cwt_feature_folder = r"E:\sdmurmur\wavelets\data_kfold_cut_zero"  # cwt特征存储文件夹
     save_kfold_feature(kfold_festure_in, cwt_feature_folder, kfold_feature_folder, kfold=5)
