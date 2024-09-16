@@ -21,6 +21,8 @@ from spafe.utils.vis import show_spectrogram
 from spafe.utils.preprocessing import SlidingWindow
 from dataset2kfold import *
 from pyts.image import GramianAngularField
+from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler
 
 
 def save_kfold_feature(kfold_folder, cwt_feature, feature_folder, kfold=int):
@@ -41,14 +43,14 @@ def save_kfold_feature(kfold_folder, cwt_feature, feature_folder, kfold=int):
             os.makedirs(feature_dir)
 
         # train_feature = Log_GF_GAF(kfold_folder_train)
-        train_feature = Log_GF_CWT(kfold_folder_train, cwt_train_folder)
+        train_feature = Log_GF_CWT_PCA(kfold_folder_train, cwt_train_folder)
         # train_feature = Log_GF_TDF(kfold_folder_train, tdf_train_folder)
 
         train_label, train_location, train_id = get_label(kfold_folder_train)  # 获取各个3s片段label和听诊区位置和个体ID
         train_index = get_index(kfold_folder_train)
 
         # vali_feature = Log_GF_GAF(kfold_folder_vali)
-        vali_feature = Log_GF_CWT(kfold_folder_vali, cwt_vali_folder)
+        vali_feature = Log_GF_CWT_PCA(kfold_folder_vali, cwt_vali_folder)
         # vali_feature = Log_GF_TDF(kfold_folder_vali, tdf_vali_folder)
 
         vali_label, vali_location, vali_id = get_label(kfold_folder_vali)
@@ -142,6 +144,50 @@ def Log_GF_TDF(data_directory, TDF_directory):  # 提取时频域和时域特征
                 print(f"CSV file not found for {f}")
 
             # loggamma.append(fbank_feat)
+
+        else:
+            continue
+    return np.array(loggamma)
+
+
+def Log_GF_CWT_PCA(data_directory, CWT_directory):  # 提取时频域和时域特征
+    loggamma = list()
+    for f in tqdm(sorted(os.listdir(data_directory)), desc=str(data_directory) + ' Log_GF and CWT_PCA feature:'):  # 加tqdm可视化特征提取过程
+        root, extension = os.path.splitext(f)
+        if extension == '.wav':
+            x, fs = librosa.load(os.path.join(data_directory, f), sr=4000)
+            x = x - np.mean(x)
+            x = x / np.max(np.abs(x))
+            # gfreqs为经过gammatone滤波器后得到的傅里叶变换矩阵
+            gSpec, gfreqs = erb_spectrogram(x,
+                                            fs=fs,
+                                            pre_emph=0,
+                                            pre_emph_coeff=0.97,
+                                            window=SlidingWindow(0.025, 0.0125, "hamming"),
+                                            nfilts=64,
+                                            nfft=512,
+                                            low_freq=25,
+                                            high_freq=2000)
+            fbank_feat = gSpec.T
+            fbank_feat = np.log(fbank_feat)
+            fbank_feat = feature_norm(fbank_feat)
+            # 读取对应的.csv文件
+            csv_file = os.path.join(CWT_directory, root + '.csv')
+            if os.path.exists(csv_file):
+                csv_data = np.loadtxt(csv_file, delimiter=',')
+                # 数据标准化
+                scaler = StandardScaler()
+                data_scaled = scaler.fit_transform(csv_data)
+                # 应用 PCA 将特征维度从 12000 降到 239
+                n_components = 64
+                pca = PCA(n_components=n_components)
+                data_pca = np.transpose(pca.fit_transform(data_scaled))
+                # 拼接.wav文件特征和.csv文件数据
+                combined_feat = np.concatenate((fbank_feat, data_pca), axis=1)
+                loggamma.append(combined_feat)
+
+            else:
+                print(f"CSV file not found for {f}")
 
         else:
             continue
@@ -248,7 +294,7 @@ def feature_norm(feat):
 if __name__ == '__main__':
     # 特征提取
     kfold_festure_in = "data_kfold_cut_zero"  # 切割好的数据，对于present个体，只复制murmur存在的.wav文件
-    kfold_feature_folder = "feature_TF_CWT_max_cut_zero"  # 存储每折特征文件夹
+    kfold_feature_folder = "feature_TF_CWT_PCA_cut_zero"  # 存储每折特征文件夹
     tdf_feature_folder = r"E:\sdmurmur\EnvelopeandSE\data_kfold_cut_zero"  # 时域特征存储文件夹
     cwt_feature_folder = r"E:\sdmurmur\wavelets\data_kfold_cut_zero"  # cwt特征存储文件夹
     save_kfold_feature(kfold_festure_in, cwt_feature_folder, kfold_feature_folder, kfold=5)

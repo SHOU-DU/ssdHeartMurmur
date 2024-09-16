@@ -10,6 +10,8 @@ import pywt
 from pyts.image import GramianAngularField, RecurrencePlot
 import librosa
 import torch
+from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler
 
 
 if __name__ == '__main__':
@@ -96,11 +98,51 @@ if __name__ == '__main__':
     # # plt.savefig("./GramianAngularField.pdf", pad_inches=0)
     # plt.show()
 
+    # 小波变换特征
+    # cwt_file = r"E:\sdmurmur\murmurmatlab\E\sdmurmur\wavelets\2530_AV_Absent_0.csv"
+    # # output_file = r"E:\sdmurmur\murmurmatlab\E\sdmurmur\wavelets\2530_AV_Absent_0.png"
+    # csv_data = np.loadtxt(cwt_file, delimiter=',')
+    # print(csv_data.shape)
+    # expdata = np.power(10, csv_data)
+    # # plt.savefig(output_file, dpi=300)  # 设置dpi为300，适合打印输出或高质量显示
+    # plt.imshow(csv_data, aspect='auto')
+    # plt.colorbar()
+    # plt.show()
+
+    # RPF特征
+    wavefile = r"E:\sdmurmur\ssdHeartMurmur\data_kfold_cut_zero\0_fold\train_data\2530_AV_Absent_0.wav"
+    wave_data, fs = librosa.load(wavefile, sr=4000)
+
+    # # 生成一个示例时间序列
+    # time_series = np.sin(np.linspace(0, 20, 50)) + np.random.normal(0, 0.1, 50)
+    #
+    # 计算距离矩阵
+    # dist_matrix = np.abs(wave_data[:, None] - wave_data[None, :])
+    #
+    # 设置阈值
+    # epsilon = 0.1
+    # recurrence_matrix = (dist_matrix <= epsilon).astype(int)
+    # print(recurrence_matrix.shape)
+    # print(type(recurrence_matrix))
+    #
+    # # 绘制Recurrence Plot
+    # plt.imshow(recurrence_matrix, cmap='binary', origin='lower')
+    # plt.colorbar(label='Recurrence')
+    # plt.title('Recurrence Plot')
+    # plt.show()
+
     cwt_file = r"E:\sdmurmur\murmurmatlab\E\sdmurmur\wavelets\2530_AV_Absent_0.csv"
     csv_data = np.loadtxt(cwt_file, delimiter=',')
-    print(csv_data.shape)
+    new_csv_data = np.transpose(csv_data)
+    print(new_csv_data.shape)
+    # 数据标准化
+    scaler = StandardScaler()
+    data_scaled = scaler.fit_transform(csv_data)
 
-    plt.imshow(csv_data, aspect='auto')
-    plt.colorbar()
-    plt.show()
+    # 应用 PCA 将特征维度从 12000 降到 239
+    n_components = 64
+    pca = PCA(n_components=n_components)
+    data_pca = np.transpose(pca.fit_transform(data_scaled))
 
+    # 检查结果
+    print("降维后的数据形状:", data_pca.shape)

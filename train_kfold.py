@@ -40,7 +40,7 @@ if __name__ == "__main__":
         print(f'this is {fold}')
 
         # fold = '4_fold'  # 训练第i折
-        feature_data_path = 'feature_TF_CWT_cut_zero'  # 提取的特征和标签文件夹
+        feature_data_path = 'feature_TF_CWT_PCA_cut_zero'  # 提取的特征和标签文件夹
         # cut_data_kfold = r'data_kfold_out'
         cut_data_kfold = r'data_kfold_cut_zero'
         if not test_flag:
@@ -106,9 +106,9 @@ if __name__ == "__main__":
         # 模型选择
         # model = KAN([64 * 239, 64, 3])  # sd KAN
         # model = AudioClassifierFuse()  # sd Fuse
-        model = AudioClassifierFuseODconv()  # sd Fuse ODconv gamma=2.5
+        model = AudioClassifierConcatFeatureODconv()  # sd Fuse ODconv gamma=2.5
         # model = AudioClassifier()
-        model_result_path = os.path.join('TF_CWT_avg_cut_zero_ODconv_k3_fuse', fold_path)
+        model_result_path = os.path.join('TF_CWT_PCA_ODconv_k3_cat', fold_path)
         # model_result_path = os.path.join('Aweight_TimeFreq_result', fold_path)
         os.environ['CUDA_VISIBLE_DEVICES'] = '0'
         device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
