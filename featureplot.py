@@ -15,6 +15,18 @@ from sklearn.preprocessing import StandardScaler
 
 
 if __name__ == '__main__':
+
+    # CQT特征
+    wavefile = r"E:\sdmurmur\ssdHeartMurmur\data_kfold_cut_zero\0_fold\train_data\9979_AV_Loud_0.wav"
+    wave_data, fs = librosa.load(wavefile, sr=4000)
+    CQT_feature = np.abs(librosa.cqt(wave_data, n_bins=60, fmin=25))
+    fig, ax = plt.subplots()
+    img = librosa.display.specshow(librosa.amplitude_to_db(CQT_feature, ref=np.max),
+                                   sr=fs, x_axis='time', y_axis='cqt_note', ax=ax)
+    ax.set_title('Constant-Q power spectrum')
+    fig.colorbar(img, ax=ax, format="%+2.0f dB")
+    plt.show()
+
     # fig_path = 'feature_fig'
     # if not os.path.exists(fig_path):
     #     os.makedirs(fig_path)
@@ -109,9 +121,9 @@ if __name__ == '__main__':
     # plt.colorbar()
     # plt.show()
 
-    # RPF特征
-    wavefile = r"E:\sdmurmur\ssdHeartMurmur\data_kfold_cut_zero\0_fold\train_data\2530_AV_Absent_0.wav"
-    wave_data, fs = librosa.load(wavefile, sr=4000)
+    # # RPF特征
+    # wavefile = r"E:\sdmurmur\ssdHeartMurmur\data_kfold_cut_zero\0_fold\train_data\2530_AV_Absent_0.wav"
+    # wave_data, fs = librosa.load(wavefile, sr=4000)
 
     # # 生成一个示例时间序列
     # time_series = np.sin(np.linspace(0, 20, 50)) + np.random.normal(0, 0.1, 50)
@@ -131,18 +143,18 @@ if __name__ == '__main__':
     # plt.title('Recurrence Plot')
     # plt.show()
 
-    cwt_file = r"E:\sdmurmur\murmurmatlab\E\sdmurmur\wavelets\2530_AV_Absent_0.csv"
-    csv_data = np.loadtxt(cwt_file, delimiter=',')
-    new_csv_data = np.transpose(csv_data)
-    print(new_csv_data.shape)
-    # 数据标准化
-    scaler = StandardScaler()
-    data_scaled = scaler.fit_transform(csv_data)
-
-    # 应用 PCA 将特征维度从 12000 降到 239
-    n_components = 64
-    pca = PCA(n_components=n_components)
-    data_pca = np.transpose(pca.fit_transform(data_scaled))
-
-    # 检查结果
-    print("降维后的数据形状:", data_pca.shape)
+    # cwt_file = r"E:\sdmurmur\murmurmatlab\E\sdmurmur\wavelets\2530_AV_Absent_0.csv"
+    # csv_data = np.loadtxt(cwt_file, delimiter=',')
+    # new_csv_data = np.transpose(csv_data)
+    # print(new_csv_data.shape)
+    # # 数据标准化
+    # scaler = StandardScaler()
+    # data_scaled = scaler.fit_transform(csv_data)
+    #
+    # # 应用 PCA 将特征维度从 12000 降到 239
+    # n_components = 64
+    # pca = PCA(n_components=n_components)
+    # data_pca = np.transpose(pca.fit_transform(data_scaled))
+    #
+    # # 检查结果
+    # print("降维后的数据形状:", data_pca.shape)

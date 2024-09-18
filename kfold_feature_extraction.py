@@ -30,8 +30,8 @@ def save_kfold_feature(kfold_folder, cwt_feature, feature_folder, kfold=int):
         kfold_feature_out = os.path.join(feature_folder, str(i) + "_fold")  #
         kfold_folder_train = os.path.join(kfold_folder, str(i) + "_fold" + r"\train_data")
         kfold_folder_vali = os.path.join(kfold_folder, str(i) + "_fold" + r"\vali_data")  # 五折交叉验证，最后通过测试集测试
-        cwt_train_folder = os.path.join(cwt_feature, str(i) + "_fold" + r"\train_data")  # cwt特征
-        cwt_vali_folder = os.path.join(cwt_feature, str(i) + "_fold" + r"\vali_data")
+        tdf_train_folder = os.path.join(cwt_feature, str(i) + "_fold" + r"\train_data")  # cwt特征
+        tdf_vali_folder = os.path.join(cwt_feature, str(i) + "_fold" + r"\vali_data")
         label_dir = os.path.join(kfold_feature_out, "label")
         feature_dir = os.path.join(kfold_feature_out, "feature")
         # 制作存储特征和标签的文件夹
@@ -43,15 +43,15 @@ def save_kfold_feature(kfold_folder, cwt_feature, feature_folder, kfold=int):
             os.makedirs(feature_dir)
 
         # train_feature = Log_GF_GAF(kfold_folder_train)
-        train_feature = Log_GF_CWT_PCA(kfold_folder_train, cwt_train_folder)
-        # train_feature = Log_GF_TDF(kfold_folder_train, tdf_train_folder)
+        # train_feature = Log_GF_CWT_PCA(kfold_folder_train, cwt_train_folder)
+        train_feature = Log_GF_TDF(kfold_folder_train, tdf_train_folder)
 
         train_label, train_location, train_id = get_label(kfold_folder_train)  # 获取各个3s片段label和听诊区位置和个体ID
         train_index = get_index(kfold_folder_train)
 
         # vali_feature = Log_GF_GAF(kfold_folder_vali)
-        vali_feature = Log_GF_CWT_PCA(kfold_folder_vali, cwt_vali_folder)
-        # vali_feature = Log_GF_TDF(kfold_folder_vali, tdf_vali_folder)
+        # vali_feature = Log_GF_CWT_PCA(kfold_folder_vali, cwt_vali_folder)
+        vali_feature = Log_GF_TDF(kfold_folder_vali, tdf_vali_folder)
 
         vali_label, vali_location, vali_id = get_label(kfold_folder_vali)
         vali_index = get_index(kfold_folder_vali)
@@ -107,7 +107,7 @@ def Log_GF(data_directory):
 
 def Log_GF_TDF(data_directory, TDF_directory):  # 提取时频域和时域特征
     loggamma = list()
-    for f in tqdm(sorted(os.listdir(data_directory)), desc=str(data_directory) + ' Log_GF and TDF feature:'):  # 加tqdm可视化特征提取过程
+    for f in tqdm(sorted(os.listdir(data_directory)), desc=str(data_directory) + ' Log_GF and TDF feature 60Hz:'):  # 加tqdm可视化特征提取过程
         root, extension = os.path.splitext(f)
         if extension == '.wav':
             x, fs = librosa.load(os.path.join(data_directory, f), sr=4000)
@@ -131,14 +131,12 @@ def Log_GF_TDF(data_directory, TDF_directory):  # 提取时频域和时域特征
             if os.path.exists(csv_file):
                 # csv_data = np.genfromtxt(csv_file, delimiter=',', dtype=None, encoding='utf-8')
                 csv_data = np.loadtxt(csv_file, delimiter=',')
-                num_cols_to_add = fbank_feat.shape[1] - csv_data.shape[1]
-                csv_data_pad = np.pad(csv_data, ((0, 0), (0, num_cols_to_add)), mode='constant', constant_values=0)
+                # num_cols_to_add = fbank_feat.shape[1] - csv_data.shape[1]
+                # csv_data_pad = np.pad(csv_data, ((0, 0), (0, num_cols_to_add)), mode='constant', constant_values=0)
+                csv_data_cut = csv_data[:, :-1]
                 # 拼接.wav文件特征和.csv文件数据
-                combined_feat = np.concatenate((fbank_feat, csv_data_pad), axis=0)
+                combined_feat = np.concatenate((fbank_feat, csv_data_cut), axis=0)
                 loggamma.append(combined_feat)
-                csv_data = None
-                csv_data_pad = None
-                combined_feat = None
 
             else:
                 print(f"CSV file not found for {f}")
@@ -294,10 +292,10 @@ def feature_norm(feat):
 if __name__ == '__main__':
     # 特征提取
     kfold_festure_in = "data_kfold_cut_zero"  # 切割好的数据，对于present个体，只复制murmur存在的.wav文件
-    kfold_feature_folder = "feature_TF_CWT_PCA_cut_zero"  # 存储每折特征文件夹
-    tdf_feature_folder = r"E:\sdmurmur\EnvelopeandSE\data_kfold_cut_zero"  # 时域特征存储文件夹
+    kfold_feature_folder = "feature_TF_TDF_60Hz_cut_zero"  # 存储每折特征文件夹
+    tdf_feature_folder = r"E:\sdmurmur\EnvelopeandSE60Hz\data_kfold_cut_zero"  # 时域特征存储文件夹
     cwt_feature_folder = r"E:\sdmurmur\wavelets\data_kfold_cut_zero"  # cwt特征存储文件夹
-    save_kfold_feature(kfold_festure_in, cwt_feature_folder, kfold_feature_folder, kfold=5)
+    save_kfold_feature(kfold_festure_in, tdf_feature_folder, kfold_feature_folder, kfold=5)
     print('this is feature extraction file')
 
     # 特征图拼接测试, 可尝试分帧时补零，
