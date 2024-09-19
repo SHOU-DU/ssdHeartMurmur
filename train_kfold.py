@@ -29,19 +29,20 @@ torch.backends.cudnn.deterministic = True
 # sd 2024/09/08 add ODConv
 # sd 2024/09/09 add ODConv concat model
 # sd 2024/09/13 add cwt feature
+# sd 2024/09/19 add dfm.py
 if __name__ == "__main__":
-    kfold = 1
+    kfold = 5
     test_flag = False
     # 若使用测试集，则test_flag = True
     if test_flag:
         kfold = 0
     for i in range(kfold):
         fold = str(i) + '_fold'  # 训练第i折
-        fold = '2_fold'
+        # fold = '2_fold'
         print(f'this is {fold}')
 
         # fold = '4_fold'  # 训练第i折
-        feature_data_path = 'feature_TF_CWT_PCA_cut_zero'  # 提取的特征和标签文件夹
+        feature_data_path = 'feature_TF_TDF_60Hz_cut_zero'  # 提取的特征和标签文件夹
         # cut_data_kfold = r'data_kfold_out'
         cut_data_kfold = r'data_kfold_cut_zero'
         if not test_flag:
@@ -107,9 +108,9 @@ if __name__ == "__main__":
         # 模型选择
         # model = KAN([64 * 239, 64, 3])  # sd KAN
         # model = AudioClassifierFuse()  # sd Fuse
-        model = AudioClassifierODconv2()  # sd Fuse ODconv gamma=2.5
+        model = AudioClassifierFuseODconv()  # sd Fuse ODconv gamma=2.5
         # model = AudioClassifier()
-        model_result_path = os.path.join('TF_ODconv2_k3_512', fold_path)
+        model_result_path = os.path.join('TF_TDF_60Hz_dfm', fold_path)
         # model_result_path = os.path.join('Aweight_TimeFreq_result', fold_path)
         os.environ['CUDA_VISIBLE_DEVICES'] = '0'
         device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
