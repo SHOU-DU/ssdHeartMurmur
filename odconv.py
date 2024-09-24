@@ -140,3 +140,11 @@ class ODConv2d(nn.Module):
 
     def forward(self, x):
         return self._forward_impl(x)
+
+
+if __name__ == '__main__':
+    x = torch.randn(1, 1, 64, 64)
+    net = nn.Sequential(ODConv2d(1, 16, 1, kernel_num=1, padding=1), nn.AdaptiveAvgPool2d(output_size=1), nn.Flatten(),
+                        nn.Linear(in_features=64, out_features=3))
+    y = net(x)
+    print(y.shape)

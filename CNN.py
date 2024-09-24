@@ -152,111 +152,15 @@ class AudioClassifier(nn.Module):
         return x_all
 
 
-class AudioClassifierFuseODconv(nn.Module):
-    # ----------------------------
-    # Build the model architecture
-    # ----------------------------
-    def __init__(self):
-        super().__init__()
-        self.pre = self._pre(1, 16)
-        self.pre2 = self._pre(1, 16)
-        self.ODconv1 = ODConv2d(16, 16, 3, padding=1)
-        self.ODconv2 = ODConv2d(16, 16, 3, padding=1)
-        self.dfm = DF_Module(16, 16, reduction=False)
-        self.conv1 = nn.Sequential(
-            depthwise_separable_conv(16, 16),
-            nn.BatchNorm2d(16),
-            nn.ReLU(),
-            nn.MaxPool2d(2)
-        )
-        self.conv2 = nn.Sequential(
-            depthwise_separable_conv(16, 32),
-            nn.BatchNorm2d(32),
-            nn.ReLU(),
-            nn.MaxPool2d(2)
-        )
-        self.conv3 = nn.Sequential(
-            depthwise_separable_conv(32, 64),
-            nn.BatchNorm2d(64),
-            nn.ReLU(),
-            nn.MaxPool2d(2)
-        )
-        self.conv4 = nn.Sequential(
-            depthwise_separable_conv(64, 128),
-            nn.BatchNorm2d(128),
-            nn.ReLU(),
-            nn.MaxPool2d(2)
-        )
-
-        self.ap = nn.AdaptiveAvgPool2d(output_size=1)
-        self.lin = nn.Linear(in_features=128, out_features=3)
-
-
-    def _pre(self, input_channel, outchannel):
-        pre = nn.Sequential(nn.ReLU(),
-            nn.Conv2d(input_channel, outchannel, kernel_size=7, stride=2, padding=3, bias=False),
-            nn.BatchNorm2d(outchannel),
-            nn.ReLU(inplace=True),
-        )
-        return pre
-    # # ----------------------------
-    # Forward pass computations
-    # ----------------------------
-    def forward(self, x):
-        # 记录每层的输出
-        # outputs = {}
-        # Run the convolutional blocks
-        x = x.unsqueeze(1)  # 为输入特征添加通道，变为(batch_size, 1, height, width)
-        # outputs['input'] = x.shape
-        xf1 = x[:, :, :64, :]  # 时频域
-        xf2 = x[:, :, 64:, :]  # 时域
-        xf2 = F.interpolate(xf2, size=(64, 239), mode='bilinear', align_corners=True)
-        # outputs['xf1 shape'] = xf1.shape
-        # outputs['xf2 shape'] = xf2.shape
-        xf1 = self.pre(xf1)
-        xf2 = self.pre2(xf2)
-        # outputs['pre xf1'] = xf1.shape
-        # outputs['pre xf2'] = xf2.shape
-        xf1 = self.ODconv1(xf1)  # (32, 120)
-        # outputs['ODconv1'] = xf1.shape
-        xf2 = self.ODconv2(xf2)
-        # outputs['ODconv2'] = xf2.shape
-        # 先融合再送入DSC
-        x_fuse = self.dfm(xf1, xf2)
-        # outputs['fuse'] = x_fuse.shape
-        x_fuse = self.conv1(x_fuse)
-        # outputs['conv1'] = x_fuse.shape
-        x_fuse = self.conv2(x_fuse)
-        # outputs['conv2'] = x_fuse.shape
-        x_fuse = self.conv3(x_fuse)
-        # outputs['conv3'] = x_fuse.shape
-        x_fuse = self.conv4(x_fuse)
-        # outputs['conv4'] = x_fuse.shape
-        # Adaptive pool and flatten for input to linear layer
-        x_fuse = self.ap(x_fuse)
-        # outputs['ap'] = x_fuse.shape
-        x_all = x_fuse.view(x_fuse.shape[0], -1)
-        # outputs['flatten'] = x_all.shape
-
-        # Linear layer
-        x_all = self.lin(x_all)
-        # outputs['output'] = x_all.shape
-
-        # for layer_name, shape in outputs.items():
-        #     print(f'{layer_name}: {shape}')
-
-        # # Final output
-        return x_all
-
-
 class AudioClassifierODconv(nn.Module):
     # ----------------------------
     # Build the model architecture
     # ----------------------------
+    # 2024/09/24 PM 单特征gamma_tone输入ODConv网络
     def __init__(self):
         super().__init__()
         self.pre = self._pre(1, 16)
-        self.ODconv = ODConv2d(16, 16, 3, padding=1)
+        self.ODconv = ODConv2d(16, 16, 1, padding=1)
         self.conv1 = nn.Sequential(
             depthwise_separable_conv(16, 16),
             nn.BatchNorm2d(16),
@@ -281,18 +185,7 @@ class AudioClassifierODconv(nn.Module):
             nn.ReLU(),
             nn.MaxPool2d(2)
         )
-        self.conv5 = nn.Conv2d(1, 128, kernel_size=1, stride=1, padding=0)
-        # 注意力机制
-        self.channel_att = nn.Sequential(
-            nn.AdaptiveAvgPool2d(1),
-            nn.Conv2d(128, 128, 1, bias=False),
-            nn.BatchNorm2d(128),
-            nn.ReLU(inplace=True),
-            nn.Conv2d(128, 128, 1, bias=False),
-        )
-
         self.ap = nn.AdaptiveAvgPool2d(output_size=1)
-        self.ap2 = nn.AdaptiveAvgPool2d(output_size=(2, 7))
         self.lin = nn.Linear(in_features=128, out_features=3)
 
 
@@ -349,104 +242,25 @@ class AudioClassifierODconv(nn.Module):
         return x_all
 
 
-# 引入两个ODConv模块
-class AudioClassifierODconv2(nn.Module):
+class AudioClassifierFuseODconv(nn.Module):
     # ----------------------------
     # Build the model architecture
     # ----------------------------
+    # 2024/09/24 PM 14:55 将时域特征xf2重复复制为(1,1,64,239)视作另一个模态，与xf1经过相同网络结构后进行通道层面拼接，最后进入全连接层
+    # 通道层面拼接选择128+128;128+64;128+32
     def __init__(self):
         super().__init__()
         self.pre = self._pre(1, 16)
-        self.ODconv = ODConv2d(16, 16, 3, padding=1)
-        self.ODconv2 = ODConv2d(16, 32, 3, padding=1)
-        self.conv1 = nn.Sequential(
-            depthwise_separable_conv(32, 64),
-            nn.BatchNorm2d(64),
-            nn.ReLU(),
-            nn.MaxPool2d(2)
-        )
-        self.conv2 = nn.Sequential(
-            depthwise_separable_conv(64, 128),
-            nn.BatchNorm2d(128),
-            nn.ReLU(),
-            nn.MaxPool2d(2)
-        )
-        self.conv3 = nn.Sequential(
-            depthwise_separable_conv(128, 256),
-            nn.BatchNorm2d(256),
-            nn.ReLU(),
-            nn.MaxPool2d(2)
-        )
-        self.conv4 = nn.Sequential(
-            depthwise_separable_conv(256, 512),
-            nn.BatchNorm2d(512),
-            nn.ReLU(),
-            nn.MaxPool2d(2)
-        )
-
-        self.ap = nn.AdaptiveAvgPool2d(output_size=1)
-        self.lin = nn.Linear(in_features=512, out_features=3)
-
-
-    def _pre(self, input_channel, outchannel):
-        pre = nn.Sequential(nn.ReLU(),
-            nn.Conv2d(input_channel, outchannel, kernel_size=7, stride=2, padding=3, bias=False),
-            nn.BatchNorm2d(outchannel),
-            nn.ReLU(inplace=True),
-        )
-        return pre
-    # # ----------------------------
-    # Forward pass computations
-    # ----------------------------
-    def forward(self, x):
-        # 记录每层的输出
-        # outputs = {}
-        # Run the convolutional blocks
-        x = x.unsqueeze(1)  # 为输入特征添加通道，变为(batch_size, 1, height, width)
-        # outputs['input'] = x.shape
-        xf1 = x[:, :, :, :239]  # 时频域
-        xf2 = x[:, :, :, 239:]  # 时域或GAF或cwt
-        xf1 = self.pre(xf1)
-        # outputs['pre'] = xf1.shape
-        xf1 = self.ODconv(xf1)
-        # outputs['ODconv'] = xf1.shape
-        xf1 = self.ODconv2(xf1)
-        # outputs['ODconv2'] = xf1.shape
-        xf1 = self.conv1(xf1)
-        # outputs['conv1'] = xf1.shape
-        xf1 = self.conv2(xf1)
-        # outputs['conv2'] = xf1.shape
-        xf1 = self.conv3(xf1)
-        # outputs['conv3'] = xf1.shape
-        xf1 = self.conv4(xf1)
-        # outputs['conv4'] = xf1.shape
-
-        # Adaptive pool and flatten for input to linear layer
-        x_fuse = self.ap(xf1)
-        # outputs['ap'] = x_fuse.shape
-        x_all = x_fuse.view(x_fuse.shape[0], -1)
-        # outputs['flatten'] = x_all.shape
-
-        # Linear layer
-        x_all = self.lin(x_all)
-        # outputs['output'] = x_all.shape
-
-        # for layer_name, shape in outputs.items():
-        #     print(f'{layer_name}: {shape}')
-
-        # Final output
-        return x_all
-
-
-
-class AudioClassifierConcatFeatureODconv(nn.Module):
-    # ----------------------------
-    # Build the model architecture
-    # ----------------------------
-    def __init__(self):
-        super().__init__()
-        self.pre = self._pre(1, 16)
-        self.ODconv = ODConv2d(16, 16, 3, padding=1)
+        self.pre2 = self._pre(1, 16)
+        # self.pre2 = nn.Sequential(
+        #     nn.ReLU(),
+        #     nn.Conv2d(1, 5, kernel_size=(1, 3)),
+        #     nn.BatchNorm2d(5),
+        #     nn.ReLU(inplace=True)
+        # )
+        self.ODconv1 = ODConv2d(16, 16, 3, padding=1)
+        self.ODconv2 = ODConv2d(16, 16, 3, padding=1)
+        self.dfm = DF_Module(16, 16, reduction=False)
         self.conv1 = nn.Sequential(
             depthwise_separable_conv(16, 16),
             nn.BatchNorm2d(16),
@@ -471,9 +285,34 @@ class AudioClassifierConcatFeatureODconv(nn.Module):
             nn.ReLU(),
             nn.MaxPool2d(2)
         )
-
+        self.conv21 = nn.Sequential(
+            depthwise_separable_conv(16, 16),
+            nn.BatchNorm2d(16),
+            nn.ReLU(),
+            nn.MaxPool2d(2)
+        )
+        self.conv22 = nn.Sequential(
+            depthwise_separable_conv(16, 32),
+            nn.BatchNorm2d(32),
+            nn.ReLU(),
+            nn.MaxPool2d(2)
+        )
+        self.conv23 = nn.Sequential(
+            depthwise_separable_conv(32, 64),
+            nn.BatchNorm2d(64),
+            nn.ReLU(),
+            nn.MaxPool2d(2)
+        )
+        self.conv24 = nn.Sequential(
+            depthwise_separable_conv(64, 128),
+            nn.BatchNorm2d(128),
+            nn.ReLU(),
+            nn.MaxPool2d(2)
+        )
         self.ap = nn.AdaptiveAvgPool2d(output_size=1)
-        self.lin = nn.Linear(in_features=128, out_features=3)
+        self.ap2 = nn.AdaptiveAvgPool2d(output_size=1)
+        self.lin = nn.Linear(in_features=256, out_features=3)
+
 
     def _pre(self, input_channel, outchannel):
         pre = nn.Sequential(nn.ReLU(),
@@ -482,7 +321,6 @@ class AudioClassifierConcatFeatureODconv(nn.Module):
             nn.ReLU(inplace=True),
         )
         return pre
-
     # # ----------------------------
     # Forward pass computations
     # ----------------------------
@@ -492,40 +330,86 @@ class AudioClassifierConcatFeatureODconv(nn.Module):
         # Run the convolutional blocks
         x = x.unsqueeze(1)  # 为输入特征添加通道，变为(batch_size, 1, height, width)
         # outputs['input'] = x.shape
-        x = self.pre(x)
-        # outputs['pre'] = x.shape
-        x = self.ODconv(x)
-        # outputs['ODconv'] = x.shape
-        x = self.conv1(x)
-        # outputs['conv1'] = x.shape
-        x = self.conv2(x)
-        # outputs['conv2'] = x.shape
-        x = self.conv3(x)
-        # outputs['conv3'] = x.shape
-        x_fuse = self.conv4(x)
-        # outputs['conv4'] = x_fuse.shape
-
-        # Adaptive pool and flatten for input to linear layer
-        x_fuse = self.ap(x_fuse)
-        # outputs['ap'] = x_fuse.shape
-        x_all = x_fuse.view(x_fuse.shape[0], -1)
-        # outputs['flatten'] = x_all.shape
-
-        # Linear layer
-        x_all = self.lin(x_all)
-        # outputs['output'] = x_all.shape
+        xf1 = x[:, :, :64, :]  # 时频域
+        xf2 = x[:, :, 64:, :]  # 时域
+        xf2 = xf2.repeat(1, 1, 13, 1)
+        xf2 = xf2[:, :, :64, :]
+        # outputs['xf1 shape'] = xf1.shape
+        # outputs['xf2 shape'] = xf2.shape
+        xf1 = self.pre(xf1)
+        xf2 = self.pre2(xf2)
+        # outputs['pre xf1'] = xf1.shape
+        # outputs['pre xf2'] = xf2.shape
+        xf1 = self.ODconv1(xf1)  # (32, 120)
+        # outputs['ODconv1'] = xf1.shape
+        xf2 = self.ODconv2(xf2)
+        # outputs['ODconv2'] = xf2.shape
+        xf1 = self.conv1(xf1)
+        xf1 = self.conv2(xf1)
+        xf1 = self.conv3(xf1)
+        xf1 = self.conv4(xf1)
+        xf1 = self.ap(xf1)
+        xf1 = xf1.view(xf1.shape[0], -1)
+        xf2 = self.conv21(xf2)
+        # outputs['conv21'] = xf2.shape
+        xf2 = self.conv22(xf2)
+        # outputs['conv22'] = xf2.shape
+        xf2 = self.conv23(xf2)
+        # outputs['conv23'] = xf2.shape
+        xf2 = self.conv24(xf2)
+        # outputs['conv24'] = xf2.shape
+        xf2 = self.ap2(xf2)
+        # outputs['ap2'] = xf2.shape
+        xf2 = xf2.view(xf2.shape[0], -1)
+        # outputs['flatten x2'] = xf2.shape
+        x_fuse = torch.cat((xf1, xf2), dim=1)
+        # outputs['x_fuse shape'] = x_fuse.shape
+        x_fuse = self.lin(x_fuse)
+        # outputs['output'] = x_fuse.shape
 
         # for layer_name, shape in outputs.items():
         #     print(f'{layer_name}: {shape}')
 
         # Final output
-        return x_all
+        return x_fuse
+
+        # # 先融合再送入DSC
+        # x_fuse = self.dfm(xf1, xf2)
+        # # outputs['fuse'] = x_fuse.shape
+        # x_fuse = self.conv1(x_fuse)
+        # # outputs['conv1'] = x_fuse.shape
+        # x_fuse = self.conv2(x_fuse)
+        # # outputs['conv2'] = x_fuse.shape
+        # x_fuse = self.conv3(x_fuse)
+        # # outputs['conv3'] = x_fuse.shape
+        # x_fuse = self.conv4(x_fuse)
+        # # outputs['conv4'] = x_fuse.shape
+        # # Adaptive pool and flatten for input to linear layer
+        # x_fuse = self.ap(x_fuse)
+        # # outputs['ap'] = x_fuse.shape
+        # x_all = x_fuse.view(x_fuse.shape[0], -1)
+        # # outputs['flatten'] = x_all.shape
+        #
+        # # Linear layer
+        # x_all = self.lin(x_all)
+        # # outputs['output'] = x_all.shape
+        #
+        # for layer_name, shape in outputs.items():
+        #     print(f'{layer_name}: {shape}')
+        #
+        # # # Final output
+        # return x_all
 
 
 if __name__ == "__main__":
-    input1 = torch.rand(10, 12000)
-    input2 = torch.rand(10, 64, 239)
     model = AudioClassifierFuseODconv()
     X = torch.rand(10, 1, 64, 239)
     X2 = torch.rand(10, 69, 239)
     output = model(X2)
+    # X3 = torch.rand(1, 1, 5, 239)
+    # num_copies = 64 // 5 + 1  # 因为原维度大小为 5，需要复制 12 次才能达到 64
+    #
+    # # 复制 dim=2 的维度
+    # X_repeated = X3.repeat(1, 1, num_copies, 1)
+    # X_new = X_repeated[:, :, :64, :]
+    # print(X_new.shape)
