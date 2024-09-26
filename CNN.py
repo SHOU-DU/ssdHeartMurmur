@@ -298,20 +298,21 @@ class AudioClassifierFuseODconv(nn.Module):
             nn.MaxPool2d(2)
         )
         self.conv23 = nn.Sequential(
-            depthwise_separable_conv(32, 64),
-            nn.BatchNorm2d(64),
+            depthwise_separable_conv(32, 32),
+            nn.BatchNorm2d(32),
             nn.ReLU(),
             nn.MaxPool2d(2)
         )
         self.conv24 = nn.Sequential(
-            depthwise_separable_conv(64, 128),
-            nn.BatchNorm2d(128),
+            depthwise_separable_conv(64, 64),
+            nn.BatchNorm2d(64),
             nn.ReLU(),
             nn.MaxPool2d(2)
         )
         self.ap = nn.AdaptiveAvgPool2d(output_size=1)
         self.ap2 = nn.AdaptiveAvgPool2d(output_size=1)
-        self.lin = nn.Linear(in_features=256, out_features=3)
+        self.lin = nn.Linear(in_features=128, out_features=3)
+        self.lin2 = nn.Linear(in_features=5, out_features=3)  # 时域特征判断loud
 
 
     def _pre(self, input_channel, outchannel):
@@ -344,28 +345,16 @@ class AudioClassifierFuseODconv(nn.Module):
         # outputs['ODconv1'] = xf1.shape
         xf2 = self.ODconv2(xf2)
         # outputs['ODconv2'] = xf2.shape
-        xf1 = self.conv1(xf1)
-        xf1 = self.conv2(xf1)
-        xf1 = self.conv3(xf1)
-        xf1 = self.conv4(xf1)
-        xf1 = self.ap(xf1)
-        xf1 = xf1.view(xf1.shape[0], -1)
-        xf2 = self.conv21(xf2)
-        # outputs['conv21'] = xf2.shape
-        xf2 = self.conv22(xf2)
-        # outputs['conv22'] = xf2.shape
-        xf2 = self.conv23(xf2)
-        # outputs['conv23'] = xf2.shape
-        xf2 = self.conv24(xf2)
-        # outputs['conv24'] = xf2.shape
-        xf2 = self.ap2(xf2)
-        # outputs['ap2'] = xf2.shape
-        xf2 = xf2.view(xf2.shape[0], -1)
-        # outputs['flatten x2'] = xf2.shape
-        x_fuse = torch.cat((xf1, xf2), dim=1)
-        # outputs['x_fuse shape'] = x_fuse.shape
+        # 先融合再送入DSC
+        x_fuse = self.dfm(xf1, xf2)
+        x_fuse = self.conv1(x_fuse)
+        x_fuse = self.conv2(x_fuse)
+        x_fuse = self.conv3(x_fuse)
+        x_fuse = self.conv4(x_fuse)
+        x_fuse = self.ap(x_fuse)
+        x_fuse = x_fuse.view(x_fuse.shape[0], -1)
         x_fuse = self.lin(x_fuse)
-        # outputs['output'] = x_fuse.shape
+        # outputs['lin x1'] = x_fuse.shape
 
         # for layer_name, shape in outputs.items():
         #     print(f'{layer_name}: {shape}')
@@ -373,39 +362,33 @@ class AudioClassifierFuseODconv(nn.Module):
         # Final output
         return x_fuse
 
-        # # 先融合再送入DSC
-        # x_fuse = self.dfm(xf1, xf2)
-        # # outputs['fuse'] = x_fuse.shape
-        # x_fuse = self.conv1(x_fuse)
-        # # outputs['conv1'] = x_fuse.shape
-        # x_fuse = self.conv2(x_fuse)
-        # # outputs['conv2'] = x_fuse.shape
-        # x_fuse = self.conv3(x_fuse)
-        # # outputs['conv3'] = x_fuse.shape
-        # x_fuse = self.conv4(x_fuse)
-        # # outputs['conv4'] = x_fuse.shape
-        # # Adaptive pool and flatten for input to linear layer
-        # x_fuse = self.ap(x_fuse)
-        # # outputs['ap'] = x_fuse.shape
-        # x_all = x_fuse.view(x_fuse.shape[0], -1)
-        # # outputs['flatten'] = x_all.shape
-        #
-        # # Linear layer
-        # x_all = self.lin(x_all)
-        # # outputs['output'] = x_all.shape
-        #
-        # for layer_name, shape in outputs.items():
-        #     print(f'{layer_name}: {shape}')
-        #
-        # # # Final output
-        # return x_all
-
 
 if __name__ == "__main__":
     model = AudioClassifierFuseODconv()
     X = torch.rand(10, 1, 64, 239)
-    X2 = torch.rand(10, 69, 239)
+    X2 = torch.rand(128, 69, 239)
     output = model(X2)
+
+    # # 假设 x1 和 x2 的形状都是 [256, 3]
+    # x1 = torch.randn(256, 3)
+    # x2 = torch.randn(256, 3)
+    #
+    # # 获取每行的最大值及其对应的索引
+    # max_values_x1, indices_x1 = torch.max(x1, dim=1)
+    # max_values_x2, indices_x2 = torch.max(x2, dim=1)
+    #
+    # # 找到索引相同的行
+    # matching_indices = torch.eq(indices_x1, indices_x2)
+    #
+    # # 获取索引相同行的序号
+    # matching_rows = torch.where(matching_indices)[0]
+    #
+    # print("每行最大值及其索引：")
+    # print("x1:", max_values_x1, indices_x1)
+    # print("x2:", max_values_x2, indices_x2)
+    #
+    # print("\n索引相同的行序号：", matching_rows)
+
     # X3 = torch.rand(1, 1, 5, 239)
     # num_copies = 64 // 5 + 1  # 因为原维度大小为 5，需要复制 12 次才能达到 64
     #

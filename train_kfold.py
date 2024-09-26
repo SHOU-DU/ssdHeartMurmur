@@ -24,11 +24,12 @@ random.seed(init_seed)
 torch.backends.cudnn.deterministic = True
 
 
-# sd 2024/07/24推送
+# sd 2024/07/24 推送
 # sd 2024/09/08 add ODConv
 # sd 2024/09/09 add ODConv concat model
 # sd 2024/09/13 add cwt feature
 # sd 2024/09/19 add dfm.py
+# sd 2024/09/24 将时域信号重复后送入与时频域信号相同网络后在通道层面拼接
 if __name__ == "__main__":
     kfold = 5
     test_flag = False
@@ -105,11 +106,9 @@ if __name__ == "__main__":
         test_loader = DataLoader(vali_set, batch_size=test_batch_size)
         print("DataLoader is OK")
         # 模型选择
-        # model = KAN([64 * 239, 64, 3])  # sd KAN
-        # model = AudioClassifierFuse()  # sd Fuse
         model = AudioClassifierFuseODconv()  # sd Fuse ODconv gamma=2.5
         # model = AudioClassifier()
-        model_result_path = os.path.join('TF_TDF_60Hz_FCCat5', fold_path)
+        model_result_path = os.path.join('TF_TDF_60Hz_xf1sumxf2_55_45', fold_path)
         # model_result_path = os.path.join('Aweight_TimeFreq_result', fold_path)
         os.environ['CUDA_VISIBLE_DEVICES'] = '0'
         device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -119,12 +118,11 @@ if __name__ == "__main__":
         # optimizer = optim.AdamW(model.parameters(), lr=1e-3, weight_decay=1e-4)  # sd KAN
         # 设置学习率调度器
         scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, [5, 10, 15, 20], gamma=0.1)
-        # scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, [5, 10, 15, 20, 25, 30], gamma=0.2)  # sd Fuse 会过拟合
-        # scheduler = optim.lr_scheduler.ExponentialLR(optimizer, [5, 10, 15, 20, 25], gamma=0.2)  # sd KAN
+        # scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, [5, 10, 15, 20, 25, 30], gamma=0.2)  # sd Fuse会过拟合
 
         # 设置损失函数
         weight = torch.tensor([1, 1, 1]).to(device)
-        # weight = torch.tensor([0.83, 0.25, 0.20]).to(device)  # sd 改变权重值
+        # weight = torch.tensor([0.2, 0.4, 0.40]).to(device)  # sd 改变权重值，增加soft和loud权重
         # criterion = Focal_Loss(gamma=2.5, weight=weight)
         criterion = Focal_Loss(gamma=2.5, weight=weight)  # sd 增大gamma
         # criterion = nn.CrossEntropyLoss()  # sd KAN
@@ -177,7 +175,7 @@ if __name__ == "__main__":
                 optimizer.step()
 
                 train_loss += loss.item()
-                _, y_pred = outputs.max(1)  # 返回概率值和对应索引，y_pred即为取对应概率索引值：absent:0, soft:1, loud:2
+                _, y_pred = outputs.max(1)  # 返回最大概率值和对应索引，y_pred即为取对应概率索引值：absent:0, soft:1, loud:2
                 num_correct = (y_pred == y).sum().item()
                 acc = num_correct / train_batch_size
                 train_acc += acc
