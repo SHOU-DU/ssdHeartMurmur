@@ -15,17 +15,98 @@ from sklearn.preprocessing import StandardScaler
 # from torchvision import transforms
 
 if __name__ == '__main__':
-
-    # CQT特征
+    # tonnetz Feature
     wavefile = r"E:\sdmurmur\ssdHeartMurmur\data_kfold_cut_zero\0_fold\train_data\9979_AV_Loud_0.wav"
     wave_data, fs = librosa.load(wavefile, sr=4000)
-    CQT_feature = np.abs(librosa.cqt(wave_data, n_bins=60, fmin=25))
-    fig, ax = plt.subplots()
-    img = librosa.display.specshow(librosa.amplitude_to_db(CQT_feature, ref=np.max),
-                                   sr=fs, x_axis='time', y_axis='cqt_note', ax=ax)
-    ax.set_title('Constant-Q power spectrum')
-    fig.colorbar(img, ax=ax, format="%+2.0f dB")
+    chromagram = librosa.feature.chroma_stft(y=wave_data, sr=fs, hop_length=50, win_length=100)
+    chromagram = chromagram[:, 0:-2]
+    frame_length = int(0.025*fs)  # 帧长
+    hop_length = int(0.0125 * fs)  # 帧移
+    # 对音频数据进行分帧
+    frames = librosa.util.frame(wave_data, frame_length=frame_length, hop_length=hop_length)
+    # 计算每一帧的均值和方差
+    frame_means = np.mean(frames, axis=0)
+    frame_variances = np.var(frames, axis=0)
+    print(frame_means.shape)
+    print(frame_variances.shape)
+    # 将均值和方差转换成1x帧数的二维数组
+    frame_means_2d = frame_means.reshape(1, -1)
+    frame_variances_2d = frame_variances.reshape(1, -1)
+    print(frame_means_2d.shape)
+    print(frame_variances_2d.shape)
+    combined_feat = np.concatenate((chromagram, frame_means_2d, frame_variances_2d), axis=0)
+    print(combined_feat.shape)
+
+    # 绘制均值和方差的图像
+    plt.figure(figsize=(12, 6))
+
+    # 绘制均值图像
+    plt.subplot(2, 1, 1)
+    plt.plot(frame_means_2d.flatten(), label='Frame Means')
+    plt.title(wavefile[65:]+'Frame Means')
+    plt.xlabel('Frame Index')
+    plt.ylabel('Mean Value')
+    plt.legend()
+
+    # 绘制方差图像
+    plt.subplot(2, 1, 2)
+    plt.plot(frame_variances_2d.flatten(), label='Frame Variances', color='orange')
+    plt.title(wavefile[65:]+'Frame Variances')
+    plt.xlabel('Frame Index')
+    plt.ylabel('Variance Value')
+    plt.legend()
+
+    plt.tight_layout()
     plt.show()
+
+    # y = librosa.effects.harmonic(y=wave_data)
+    # chromagram = librosa.feature.chroma_stft(y=wave_data, sr=fs, hop_length=50, win_length=100)
+    # chromagram = chromagram[:, 0:-2]
+    # tonnetz = librosa.feature.tonnetz(y=y, sr=fs, hop_length=50, chroma=chromagram)
+    # # tonnetz = tonnetz[:, 0:-2]
+    # librosa.display.specshow(tonnetz, x_axis='s', sr=4000, hop_length=50, win_length=100)
+    # print(tonnetz.shape)
+    # plt.colorbar()
+    # plt.xlabel('time')
+    # plt.title(wavefile[27:])
+    # plt.tight_layout()
+    # plt.show()
+
+    # # spectral contrast
+    # wavefile = r"E:\sdmurmur\ssdHeartMurmur\data_kfold_cut_zero\0_fold\train_data\14241_MV_Soft_0.wav"
+    # wave_data, fs = librosa.load(wavefile, sr=4000)
+    # S = np.abs(librosa.stft(wave_data, hop_length=50, win_length=100))
+    # contrast = librosa.feature.spectral_contrast(S=S, sr=fs, hop_length=50, win_length=100, fmin=20)
+    # librosa.display.specshow(contrast, x_axis='s', sr=4000, hop_length=50, win_length=100)
+    # print(contrast.shape)
+    # plt.colorbar()
+    # plt.xlabel('time')
+    # plt.title(wavefile[27:])
+    # plt.tight_layout()
+    # plt.show()
+
+    # # chroma 特征
+    # wavefile = r"E:\sdmurmur\ssdHeartMurmur\data_kfold_cut_zero\0_fold\train_data\14241_MV_Soft_0.wav"
+    # wave_data, fs = librosa.load(wavefile, sr=4000)
+    # chromagram = librosa.feature.chroma_stft(y=wave_data, sr=fs, hop_length=50, win_length=100)
+    # librosa.display.specshow(chromagram, x_axis='s', y_axis='chroma', sr=4000, hop_length=50, win_length=100)
+    # print(chromagram.shape)
+    # plt.colorbar()
+    # plt.xlabel('time')
+    # plt.title('Chroma Features')
+    # plt.tight_layout()
+    # plt.show()
+
+    # # CQT特征
+    # wavefile = r"E:\sdmurmur\ssdHeartMurmur\data_kfold_cut_zero\0_fold\train_data\9979_AV_Loud_0.wav"
+    # wave_data, fs = librosa.load(wavefile, sr=4000)
+    # CQT_feature = np.abs(librosa.cqt(wave_data, n_bins=60, fmin=25))
+    # fig, ax = plt.subplots()
+    # img = librosa.display.specshow(librosa.amplitude_to_db(CQT_feature, ref=np.max),
+    #                                sr=fs, x_axis='time', y_axis='cqt_note', ax=ax)
+    # ax.set_title('Constant-Q power spectrum')
+    # fig.colorbar(img, ax=ax, format="%+2.0f dB")
+    # plt.show()
 
     # fig_path = 'feature_fig'
     # if not os.path.exists(fig_path):
