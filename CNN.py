@@ -251,13 +251,13 @@ class AudioClassifierFuseODconv(nn.Module):
     def __init__(self):
         super().__init__()
         self.pre = self._pre(1, 16)
-        self.pre2 = self._pre(1, 16)
-        # self.pre2 = nn.Sequential(
-        #     nn.ReLU(),
-        #     nn.Conv2d(1, 5, kernel_size=(1, 3), stride=(1, 3)),
-        #     nn.BatchNorm2d(5),
-        #     nn.ReLU(inplace=True)
-        # )
+        # self.pre2 = self._pre(1, 16)
+        self.pre2 = nn.Sequential(
+            nn.ReLU(),
+            nn.Conv2d(1, 7, kernel_size=(1, 3), stride=(1, 3)),
+            nn.BatchNorm2d(7),
+            nn.ReLU(inplace=True)
+        )
         self.ODconv1 = ODConv2d(16, 16, 3, padding=1)
         self.ODconv2 = ODConv2d(16, 16, 3, padding=1)
         self.dfm = DF_Module(16, 16, reduction=False)
@@ -304,14 +304,14 @@ class AudioClassifierFuseODconv(nn.Module):
             nn.MaxPool2d(2)
         )
         self.conv24 = nn.Sequential(
-            depthwise_separable_conv(64, 128),
-            nn.BatchNorm2d(128),
+            depthwise_separable_conv(64, 64),
+            nn.BatchNorm2d(64),
             nn.ReLU(),
             nn.MaxPool2d(2)
         )
         self.ap = nn.AdaptiveAvgPool2d(output_size=1)
         self.ap2 = nn.AdaptiveAvgPool2d(output_size=1)
-        self.lin = nn.Linear(in_features=256, out_features=3)
+        self.lin = nn.Linear(in_features=135, out_features=3)
         self.lin2 = nn.Linear(in_features=8, out_features=3)  # 时域特征判断loud
 
 
@@ -333,12 +333,14 @@ class AudioClassifierFuseODconv(nn.Module):
         # outputs['input'] = x.shape
         xf1 = x[:, :, :64, :]  # 时频域
         xf2 = x[:, :, 64:, :]  # 时域+CST
+        xf3 = torch.cat((x[:, :, 64:68, :], x[:, :, 94:, :]), dim=2)
+        # outputs['xf3 shape'] = xf3.shape
         # xf2 = xf2.repeat(1, 1, 2, 1)
         # xf2 = xf2[:, :, :64, :]
         # outputs['xf1 shape'] = xf1.shape
         # outputs['xf2 shape'] = xf2.shape
         xf1 = self.pre(xf1)
-        xf2 = self.pre2(xf2)
+        xf3 = self.pre2(xf3)
         # xf2 = self.ap2(xf2)
         # xf2 = xf2.view(xf2.shape[0], -1)
         # outputs['pre xf1'] = xf1.shape
@@ -353,24 +355,24 @@ class AudioClassifierFuseODconv(nn.Module):
         xf1 = xf1.view(xf1.shape[0], -1)
         # outputs['flatten xf1'] = xf1.shape
 
-        xf2 = self.ODconv2(xf2)
+        # xf2 = self.ODconv2(xf2)
         # outputs['ODconv2'] = xf2.shape
-        xf2 = self.conv21(xf2)
+        # xf2 = self.conv21(xf2)
         # outputs['conv21'] = xf2.shape
-        xf2 = self.conv22(xf2)
+        # xf2 = self.conv22(xf2)
         # outputs['conv22'] = xf2.shape
-        xf2 = self.conv23(xf2)
+        # xf2 = self.conv23(xf2)
         # outputs['conv23'] = xf2.shape
-        xf2 = self.conv24(xf2)
+        # xf2 = self.conv24(xf2)
         # outputs['conv24'] = xf2.shape
-        xf2 = self.ap2(xf2)
+        xf3 = self.ap2(xf3)
         # outputs['ap2'] = xf2.shape
-        xf2 = xf2.view(xf2.shape[0], -1)
+        xf3 = xf3.view(xf2.shape[0], -1)
         # outputs['flatten xf2'] = xf2.shape
         # 先融合再送入DSC
         # x_fuse = self.dfm(xf1, xf2)
 
-        x_fuse = torch.cat((xf1, xf2), dim=1)
+        x_fuse = torch.cat((xf1, xf3), dim=1)
         # outputs['x_fuse'] = x_fuse.shape
         x_fuse = self.lin(x_fuse)
         # outputs['lin x_fuse'] = x_fuse.shape
