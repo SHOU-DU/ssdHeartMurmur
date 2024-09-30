@@ -422,7 +422,7 @@ class AudioClassifierFuseODconv(nn.Module):
         #     print(f'{layer_name}: {shape}')
 
         # Final output
-        # return x_fuse
+        return x_fuse
 
 
 if __name__ == "__main__":

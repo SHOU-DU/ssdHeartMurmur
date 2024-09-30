@@ -44,7 +44,7 @@ if __name__ == "__main__":
         print(f'this is {fold}')
 
         # fold = '4_fold'  # 训练第i折
-        feature_data_path = 'feature_TF_TDF_CST_MV_60Hz_cut_zero'  # 提取的特征和标签文件夹
+        feature_data_path = 'feature_TF_TDF_CST_MV_MFCC_60Hz_cut_zero'  # 提取的特征和标签文件夹
         # cut_data_kfold = r'data_kfold_out'
         cut_data_kfold = r'data_kfold_cut_zero'
         if not test_flag:
