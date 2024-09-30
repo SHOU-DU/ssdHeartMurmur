@@ -109,7 +109,7 @@ if __name__ == "__main__":
         # 模型选择
         model = AudioClassifierFuseODconv()  # sd Fuse ODconv gamma=2.5
         # model = AudioClassifier()
-        model_result_path = os.path.join('TF_TDF_CST_MV_60Hz_ODconv_k3_MM_FCCat160_c2', fold_path)
+        model_result_path = os.path.join('TF_TDFMVCST_MFCC_ODC_k3_MM_FCCat384', fold_path)
         # model_result_path = os.path.join('Aweight_TimeFreq_result', fold_path)
         os.environ['CUDA_VISIBLE_DEVICES'] = '0'
         device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -329,17 +329,6 @@ if __name__ == "__main__":
             if epoch >= 15:
                 # if acc_metric > best_acc_metric:
                 if Patient_f1 > best_val_F1:
-                    # (AV_ture_label, AV_pre_label,
-                    #  MV_ture_label, MV_pre_label,
-                    #  TV_ture_label, TV_pre_label,
-                    #  PV_ture_label, PV_pre_label) = location_result(all_id,all_y_pred,all_location,all_label)
-                    # print_cm(AV_ture_label, AV_pre_label,"AV")
-                    # print_cm(MV_ture_label, MV_pre_label,"MV")
-                    # print_cm(TV_ture_label, TV_pre_label,"TV")
-                    # print_cm(PV_ture_label, PV_pre_label,"PV")
-
-                    # if PCG_acc_soft_aver > best_val_acc_soft :
-                    # if Soft_recall  > best_val_soft:
                     torch.save(
                         model,
                         os.path.join(model_path, 'best_model'),
@@ -371,6 +360,7 @@ if __name__ == "__main__":
                     best_Absent_f1 = Absent_f1
                     best_Soft_f1 = Soft_f1
                     best_Loud_f1 = Loud_f1
+                    best_UAF = (best_Absent_f1 + best_Soft_f1 + best_Loud_f1) / 3
                     best_PCG_UAR = (Absent_recall + Soft_recall + Loud_recall) / 3
                     best_PCG_f1 = PCG_f1
                     best_Patient_f1 = Patient_f1
@@ -540,6 +530,7 @@ if __name__ == "__main__":
             file.write("Absent: " + str('{:.4f}'.format(best_Absent_f1))
                        + "  Soft: " + str('{:.4f}'.format(best_Soft_f1))
                        + "  Loud: " + str('{:.4f}'.format(best_Loud_f1))
+                       + "  UAF: " + str('{:.4f}'.format(best_UAF))
                        + "\n")
             file.write("-----------------patient_vali_recall----------------- " + "\n")
             file.write("Absent: " + str('{:.4f}'.format(best_Absent_recall_patient))

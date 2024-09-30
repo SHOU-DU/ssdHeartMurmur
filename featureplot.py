@@ -15,49 +15,58 @@ from sklearn.preprocessing import StandardScaler
 # from torchvision import transforms
 
 if __name__ == '__main__':
-    # tonnetz Feature
+    # MFCC Feature
     wavefile = r"E:\sdmurmur\ssdHeartMurmur\data_kfold_cut_zero\0_fold\train_data\9979_AV_Loud_0.wav"
     wave_data, fs = librosa.load(wavefile, sr=4000)
-    chromagram = librosa.feature.chroma_stft(y=wave_data, sr=fs, hop_length=50, win_length=100)
-    chromagram = chromagram[:, 0:-2]
-    frame_length = int(0.025*fs)  # 帧长
-    hop_length = int(0.0125 * fs)  # 帧移
-    # 对音频数据进行分帧
-    frames = librosa.util.frame(wave_data, frame_length=frame_length, hop_length=hop_length)
-    # 计算每一帧的均值和方差
-    frame_means = np.mean(frames, axis=0)
-    frame_variances = np.var(frames, axis=0)
-    print(frame_means.shape)
-    print(frame_variances.shape)
-    # 将均值和方差转换成1x帧数的二维数组
-    frame_means_2d = frame_means.reshape(1, -1)
-    frame_variances_2d = frame_variances.reshape(1, -1)
-    print(frame_means_2d.shape)
-    print(frame_variances_2d.shape)
-    combined_feat = np.concatenate((chromagram, frame_means_2d, frame_variances_2d), axis=0)
-    print(combined_feat.shape)
-
-    # 绘制均值和方差的图像
-    plt.figure(figsize=(12, 6))
-
-    # 绘制均值图像
-    plt.subplot(2, 1, 1)
-    plt.plot(frame_means_2d.flatten(), label='Frame Means')
-    plt.title(wavefile[65:]+'Frame Means')
-    plt.xlabel('Frame Index')
-    plt.ylabel('Mean Value')
-    plt.legend()
-
-    # 绘制方差图像
-    plt.subplot(2, 1, 2)
-    plt.plot(frame_variances_2d.flatten(), label='Frame Variances', color='orange')
-    plt.title(wavefile[65:]+'Frame Variances')
-    plt.xlabel('Frame Index')
-    plt.ylabel('Variance Value')
-    plt.legend()
-
+    MFCC = librosa.feature.mfcc(y=wave_data, sr=fs, n_mfcc=64, n_fft=512, hop_length=50, win_length=100)
+    print(MFCC.shape)
+    librosa.display.specshow(MFCC, x_axis='s', sr=4000)
+    plt.colorbar()
     plt.tight_layout()
     plt.show()
+    # tonnetz Feature
+    # wavefile = r"E:\sdmurmur\ssdHeartMurmur\data_kfold_cut_zero\0_fold\train_data\9979_AV_Loud_0.wav"
+    # wave_data, fs = librosa.load(wavefile, sr=4000)
+    # chromagram = librosa.feature.chroma_stft(y=wave_data, sr=fs, hop_length=50, win_length=100)
+    # chromagram = chromagram[:, 0:-2]
+    # frame_length = int(0.025*fs)  # 帧长
+    # hop_length = int(0.0125 * fs)  # 帧移
+    # # 对音频数据进行分帧
+    # frames = librosa.util.frame(wave_data, frame_length=frame_length, hop_length=hop_length)
+    # # 计算每一帧的均值和方差
+    # frame_means = np.mean(frames, axis=0)
+    # frame_variances = np.var(frames, axis=0)
+    # print(frame_means.shape)
+    # print(frame_variances.shape)
+    # # 将均值和方差转换成1x帧数的二维数组
+    # frame_means_2d = frame_means.reshape(1, -1)
+    # frame_variances_2d = frame_variances.reshape(1, -1)
+    # print(frame_means_2d.shape)
+    # print(frame_variances_2d.shape)
+    # combined_feat = np.concatenate((chromagram, frame_means_2d, frame_variances_2d), axis=0)
+    # print(combined_feat.shape)
+    #
+    # # 绘制均值和方差的图像
+    # plt.figure(figsize=(12, 6))
+    #
+    # # 绘制均值图像
+    # plt.subplot(2, 1, 1)
+    # plt.plot(frame_means_2d.flatten(), label='Frame Means')
+    # plt.title(wavefile[65:]+'Frame Means')
+    # plt.xlabel('Frame Index')
+    # plt.ylabel('Mean Value')
+    # plt.legend()
+    #
+    # # 绘制方差图像
+    # plt.subplot(2, 1, 2)
+    # plt.plot(frame_variances_2d.flatten(), label='Frame Variances', color='orange')
+    # plt.title(wavefile[65:]+'Frame Variances')
+    # plt.xlabel('Frame Index')
+    # plt.ylabel('Variance Value')
+    # plt.legend()
+    #
+    # plt.tight_layout()
+    # plt.show()
 
     # y = librosa.effects.harmonic(y=wave_data)
     # chromagram = librosa.feature.chroma_stft(y=wave_data, sr=fs, hop_length=50, win_length=100)
