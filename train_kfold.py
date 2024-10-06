@@ -123,8 +123,8 @@ if __name__ == "__main__":
         # scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, [5, 10, 15, 20, 25, 30], gamma=0.2)  # sd Fuse会过拟合
 
         # 设置损失函数
-        # weight = torch.tensor([1, 1, 1]).to(device)
-        weight = torch.tensor([0.2, 0.2, 0.60]).to(device)  # sd 改变权重值，增加loud权重
+        weight = torch.tensor([1, 1, 1]).to(device)
+        # weight = torch.tensor([0.2, 0.2, 0.60]).to(device)  # sd 改变权重值，增加loud权重
         # criterion = Focal_Loss(gamma=2.5, weight=weight)
         criterion = Focal_Loss(gamma=2.5, weight=weight)  # sd 增大gamma
         # criterion = nn.CrossEntropyLoss()  # sd KAN
