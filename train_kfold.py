@@ -32,7 +32,7 @@ torch.backends.cudnn.deterministic = True
 # sd 2024/09/24 将时域信号重复后送入与时频域信号相同网络后在通道层面拼接
 # sd 2024/09/28 添加数据分帧后的均值和方差作为特征
 # sd 2024/09/30 添加MFCC特征，进行多模态（3）特征融合
-# sd 2024/10/06 改变FocalLoss参数调整单时频域特征的结果，重跑特征拼接模型Fcat5
+# sd 2024/10/06 改变FocalLoss参数调整单时频域特征的结果，重跑特征拼接模型Fcat5  tdf_cat_sum
 if __name__ == "__main__":
     kfold = 5
     test_flag = False
