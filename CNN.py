@@ -340,7 +340,7 @@ class AudioClassifierFuseODconv(nn.Module):
         self.ap3 = nn.AdaptiveAvgPool2d(output_size=1)
         self.lin = nn.Linear(in_features=128, out_features=3)
         self.lin2 = nn.Linear(in_features=5, out_features=3)  # 时域特征判断loud
-        self.lin_fuse = nn.Linear(in_features=320, out_features=3)
+        self.lin_fuse = nn.Linear(in_features=288, out_features=3)
 
 
     def _pre(self, input_channel, outchannel):
@@ -392,7 +392,7 @@ class AudioClassifierFuseODconv(nn.Module):
         xf3 = self.ODconv3(xf3)
         xf3 = self.conv31(xf3)
         xf3 = self.conv32(xf3)
-        xf3 = self.conv33(xf3)
+        # xf3 = self.conv33(xf3)
         # xf3 = self.conv34(xf3)
         xf3 = self.ap3(xf3)
         xf3 = xf3.view(xf3.shape[0], -1)
