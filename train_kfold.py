@@ -111,7 +111,7 @@ if __name__ == "__main__":
         # 模型选择
         model = AudioClassifierFuseODconv()  # sd Fuse ODconv gamma=2.5
         # model = AudioClassifier()
-        model_result_path = os.path.join('TF_TDF_60Hz_FCCat5_repeat', fold_path)
+        model_result_path = os.path.join('TF_TDF_60Hz_FCCat5_repeat2', fold_path)
         # model_result_path = os.path.join('Aweight_TimeFreq_result', fold_path)
         os.environ['CUDA_VISIBLE_DEVICES'] = '0'
         device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
