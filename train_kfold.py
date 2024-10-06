@@ -32,6 +32,7 @@ torch.backends.cudnn.deterministic = True
 # sd 2024/09/24 将时域信号重复后送入与时频域信号相同网络后在通道层面拼接
 # sd 2024/09/28 添加数据分帧后的均值和方差作为特征
 # sd 2024/09/30 添加MFCC特征，进行多模态（3）特征融合
+# sd 2024/10/06 改变FocalLoss参数调整单时频域特征的结果，重跑特征拼接模型Fcat5
 if __name__ == "__main__":
     kfold = 5
     test_flag = False
@@ -44,7 +45,7 @@ if __name__ == "__main__":
         print(f'this is {fold}')
 
         # fold = '4_fold'  # 训练第i折
-        feature_data_path = 'feature_TF_TDF_cut_zero'  # 提取的特征和标签文件夹
+        feature_data_path = 'feature_TF_TDF_60Hz_cut_zero'  # 提取的特征和标签文件夹
         # cut_data_kfold = r'data_kfold_out'
         cut_data_kfold = r'data_kfold_cut_zero'
         if not test_flag:
@@ -110,7 +111,7 @@ if __name__ == "__main__":
         # 模型选择
         model = AudioClassifierODconv()  # sd Fuse ODconv gamma=2.5
         # model = AudioClassifier()
-        model_result_path = os.path.join('TF_ODConv_k3_weight_2_2_6', fold_path)
+        model_result_path = os.path.join('TF_TDF_60Hz_FCCat5_repeat', fold_path)
         # model_result_path = os.path.join('Aweight_TimeFreq_result', fold_path)
         os.environ['CUDA_VISIBLE_DEVICES'] = '0'
         device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")

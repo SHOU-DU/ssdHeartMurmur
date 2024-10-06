@@ -374,29 +374,29 @@ class AudioClassifierFuseODconv(nn.Module):
         xf1 = self.conv4(xf1)
         xf1 = self.ap(xf1)
         xf1 = xf1.view(xf1.shape[0], -1)
-        xf1_r = self.lin(xf1)
+        # xf1_r = self.lin(xf1)
         # outputs['flatten xf1'] = xf1.shape
         xf2 = self.pre2(xf2)
         xf2 = self.ap2(xf2)
         xf2 = xf2.view(xf2.shape[0], -1)
-        xf2_r = self.lin2(xf2)
-        x_sum = 0.7*xf1_r + 0.3*xf2_r
+        # xf2_r = self.lin2(xf2)
+        # x_sum = 0.7*xf1_r + 0.3*xf2_r
         # 融合
         x_cat = torch.cat((xf1, xf2), dim=1)
         # outputs['x_fuse'] = x_fuse.shape
         x_cat = self.lin_fuse(x_cat)
-        x_fuse = 0.0*x_sum + 1.0*x_cat
+        # x_fuse = 0.0*x_sum + 1.0*x_cat
         # outputs['x_fuse shape'] = x_fuse.shape
 
         # for layer_name, shape in outputs.items():
         #     print(f'{layer_name}: {shape}')
 
         # Final output
-        return x_fuse
+        return x_cat
 
 
 if __name__ == "__main__":
-    model = AudioClassifierODconv()
+    model = AudioClassifierFuseODconv()
     X = torch.rand(10, 1, 64, 239)
     X2 = torch.rand(128, 69, 239)
     output = model(X2)
