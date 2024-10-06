@@ -367,7 +367,7 @@ class AudioClassifierFuseODconv(nn.Module):
         # outputs['xf2 shape'] = xf2.shape
         xf1 = self.pre(xf1)
         # outputs['pre xf1'] = xf1.shape
-        # MM1
+        # MM1时频域
         xf1 = self.ODconv1(xf1)  # (32, 120)
         # outputs['ODconv1'] = xf1.shape
         xf1 = self.conv1(xf1)
@@ -378,7 +378,7 @@ class AudioClassifierFuseODconv(nn.Module):
         xf1 = xf1.view(xf1.shape[0], -1)
         # xf1_r = self.lin(xf1)
         # outputs['flatten xf1'] = xf1.shape
-        # MM2
+        # MM2MFCC
         xf2 = self.pre2(xf2)
         xf2 = self.ODconv2(xf2)
         xf2 = self.conv21(xf2)
@@ -387,13 +387,13 @@ class AudioClassifierFuseODconv(nn.Module):
         xf2 = self.conv24(xf2)
         xf2 = self.ap2(xf2)
         xf2 = xf2.view(xf2.shape[0], -1)
-        # MM3
+        # MM3时域包络+均值方差
         xf3 = self.pre3(xf3)
         xf3 = self.ODconv3(xf3)
         xf3 = self.conv31(xf3)
         xf3 = self.conv32(xf3)
         xf3 = self.conv33(xf3)
-        xf3 = self.conv34(xf3)
+        # xf3 = self.conv34(xf3)
         xf3 = self.ap3(xf3)
         xf3 = xf3.view(xf3.shape[0], -1)
         # xf2_r = self.lin2(xf2)
