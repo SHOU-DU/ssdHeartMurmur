@@ -44,7 +44,7 @@ if __name__ == "__main__":
         print(f'this is {fold}')
 
         # fold = '4_fold'  # 训练第i折
-        feature_data_path = 'feature_TF_TDF_CST_MV_MFCC_60Hz_cut_zero'  # 提取的特征和标签文件夹
+        feature_data_path = 'feature_TF_TDF_cut_zero'  # 提取的特征和标签文件夹
         # cut_data_kfold = r'data_kfold_out'
         cut_data_kfold = r'data_kfold_cut_zero'
         if not test_flag:
@@ -108,23 +108,22 @@ if __name__ == "__main__":
         test_loader = DataLoader(vali_set, batch_size=test_batch_size)
         print("DataLoader is OK")
         # 模型选择
-        model = AudioClassifierFuseODconv()  # sd Fuse ODconv gamma=2.5
+        model = AudioClassifierODconv()  # sd Fuse ODconv gamma=2.5
         # model = AudioClassifier()
-        model_result_path = os.path.join('TF_TDFMVCST_MFCC_ODC_k3_MM_FCCat384', fold_path)
+        model_result_path = os.path.join('TF_ODConv_k3_weight_3_3_4', fold_path)
         # model_result_path = os.path.join('Aweight_TimeFreq_result', fold_path)
         os.environ['CUDA_VISIBLE_DEVICES'] = '0'
         device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         model = model.to(device)  # 放到设备中
         # 设置优化器
         optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, betas=(0.9, 0.999), eps=1e-7)
-        # optimizer = optim.AdamW(model.parameters(), lr=1e-3, weight_decay=1e-4)  # sd KAN
         # 设置学习率调度器
         scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, [5, 10, 15, 20], gamma=0.1)
         # scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, [5, 10, 15, 20, 25, 30], gamma=0.2)  # sd Fuse会过拟合
 
         # 设置损失函数
-        weight = torch.tensor([1, 1, 1]).to(device)
-        # weight = torch.tensor([0.2, 0.4, 0.40]).to(device)  # sd 改变权重值，增加soft和loud权重
+        # weight = torch.tensor([1, 1, 1]).to(device)
+        weight = torch.tensor([0.3, 0.3, 0.40]).to(device)  # sd 改变权重值，增加loud权重
         # criterion = Focal_Loss(gamma=2.5, weight=weight)
         criterion = Focal_Loss(gamma=2.5, weight=weight)  # sd 增大gamma
         # criterion = nn.CrossEntropyLoss()  # sd KAN
