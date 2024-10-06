@@ -109,7 +109,7 @@ if __name__ == "__main__":
         test_loader = DataLoader(vali_set, batch_size=test_batch_size)
         print("DataLoader is OK")
         # 模型选择
-        model = AudioClassifierODconv()  # sd Fuse ODconv gamma=2.5
+        model = AudioClassifierFuseODconv()  # sd Fuse ODconv gamma=2.5
         # model = AudioClassifier()
         model_result_path = os.path.join('TF_TDF_60Hz_FCCat5_repeat', fold_path)
         # model_result_path = os.path.join('Aweight_TimeFreq_result', fold_path)
