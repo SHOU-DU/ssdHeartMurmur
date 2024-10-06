@@ -255,7 +255,7 @@ class AudioClassifierFuseODconv(nn.Module):
         self.pre3 = self._pre(1, 16)
         self.pre2 = nn.Sequential(
             nn.ReLU(),
-            nn.Conv2d(1, 5, kernel_size=(1, 3), stride=(1, 3)),
+            nn.Conv2d(1, 5, kernel_size=(1, 3)),
             nn.BatchNorm2d(5),
             nn.ReLU(inplace=True)
         )
