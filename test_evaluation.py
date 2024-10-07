@@ -114,7 +114,7 @@ if __name__ == "__main__":
         recall_per_class = recall_score(labels, predictions, average=None)
         f1_per_class = f1_score(labels, predictions, average=None)
         # 打印每一类的召回率和 F1 分数
-        class_names = ['Class 0', 'Class 1', 'Class 2']  # 假设有三类
+        class_names = ['Absent 0', 'Soft 1', 'Loud 2']  # 假设有三类
         for i, class_name in enumerate(class_names):
             print(f'{class_name} - Recall: {recall_per_class[i]:.4f}, F1 Score: {f1_per_class[i]:.4f}')
 
