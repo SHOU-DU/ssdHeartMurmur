@@ -109,10 +109,10 @@ if __name__ == "__main__":
         test_loader = DataLoader(vali_set, batch_size=test_batch_size)
         print("DataLoader is OK")
         # 模型选择
-        model = AudioClassifierODconv()  # sd Fuse ODconv gamma=2.5
+        model = AudioClassifierFuseODconv()  # sd Fuse ODconv gamma=2.5
         # model = AudioClassifier()
-        # model_result_path = os.path.join('all_data_TF_MFCC_TDFMVCST_ODC_k3_FCCat133_withoutMFCC', fold_path)
-        model_result_path = os.path.join('all_data_TF_ODConv_k3_weight_1_1_1', fold_path)
+        model_result_path = os.path.join('all_data_TF_MFCC_TDFMVCST_ODC_k3_FCCat133_1_1_1', fold_path)
+        # model_result_path = os.path.join('all_data_TF_ODConv_k3_weight_1_1_1', fold_path)
         os.environ['CUDA_VISIBLE_DEVICES'] = '0'
         device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         model = model.to(device)  # 放到设备中
