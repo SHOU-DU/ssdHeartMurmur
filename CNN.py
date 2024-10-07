@@ -340,7 +340,7 @@ class AudioClassifierFuseODconv(nn.Module):
         self.ap3 = nn.AdaptiveAvgPool2d(output_size=1)
         self.lin = nn.Linear(in_features=128, out_features=3)
         self.lin2 = nn.Linear(in_features=5, out_features=3)  # 时域特征判断loud
-        self.lin_fuse = nn.Linear(in_features=384, out_features=3)
+        self.lin_fuse = nn.Linear(in_features=256, out_features=3)
 
 
     def _pre(self, input_channel, outchannel):
@@ -378,15 +378,15 @@ class AudioClassifierFuseODconv(nn.Module):
         xf1 = xf1.view(xf1.shape[0], -1)
         # xf1_r = self.lin(xf1)
         # outputs['flatten xf1'] = xf1.shape
-        # MM2MFCC
-        xf2 = self.pre2(xf2)
-        xf2 = self.ODconv2(xf2)
-        xf2 = self.conv21(xf2)
-        xf2 = self.conv22(xf2)
-        xf2 = self.conv23(xf2)
-        xf2 = self.conv24(xf2)
-        xf2 = self.ap2(xf2)
-        xf2 = xf2.view(xf2.shape[0], -1)
+        # # MM2MFCC
+        # xf2 = self.pre2(xf2)
+        # xf2 = self.ODconv2(xf2)
+        # xf2 = self.conv21(xf2)
+        # xf2 = self.conv22(xf2)
+        # xf2 = self.conv23(xf2)
+        # xf2 = self.conv24(xf2)
+        # xf2 = self.ap2(xf2)
+        # xf2 = xf2.view(xf2.shape[0], -1)
         # MM3时域包络+均值方差
         xf3 = self.pre3(xf3)
         xf3 = self.ODconv3(xf3)
@@ -399,8 +399,8 @@ class AudioClassifierFuseODconv(nn.Module):
         # xf2_r = self.lin2(xf2)
         # x_sum = 0.7*xf1_r + 0.3*xf2_r
         # 融合
-        x_cat = torch.cat((xf1, xf2, xf3), dim=1)
-        # x_cat = torch.cat((xf1, xf3), dim=1)
+        # x_cat = torch.cat((xf1, xf2, xf3), dim=1)
+        x_cat = torch.cat((xf1, xf3), dim=1)
         # outputs['x_fuse'] = x_fuse.shape
         x_cat = self.lin_fuse(x_cat)
         # x_fuse = 0.0*x_sum + 1.0*x_cat
