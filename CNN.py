@@ -390,7 +390,7 @@ class AudioClassifierFuseODconv(nn.Module):
         # MM3时域包络+均值方差
         xf3 = self.pre3(xf3)
         xf3 = self.ODconv3(xf3)
-        # xf3 = self.conv31(xf3)
+        xf3 = self.conv31(xf3)
         # xf3 = self.conv32(xf3)
         # xf3 = self.conv33(xf3)
         # xf3 = self.conv34(xf3)
