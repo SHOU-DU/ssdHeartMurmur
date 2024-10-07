@@ -251,14 +251,14 @@ class AudioClassifierFuseODconv(nn.Module):
     def __init__(self):
         super().__init__()
         self.pre = self._pre(1, 16)
-        self.pre2 = self._pre(1, 16)
+        # self.pre2 = self._pre(1, 16)
         self.pre3 = self._pre(1, 7)
-        # self.pre2 = nn.Sequential(
-        #     nn.ReLU(),
-        #     nn.Conv2d(1, 5, kernel_size=(1, 3)),
-        #     nn.BatchNorm2d(5),
-        #     nn.ReLU(inplace=True)
-        # )
+        self.pre2 = nn.Sequential(
+            nn.ReLU(),
+            nn.Conv2d(1, 7, kernel_size=(1, 3)),
+            nn.BatchNorm2d(7),
+            nn.ReLU(inplace=True)
+        )
         self.ODconv1 = ODConv2d(16, 16, 3, padding=1)
         self.ODconv2 = ODConv2d(16, 16, 3, padding=1)
         self.ODconv3 = ODConv2d(7, 7, 3, padding=1)
@@ -388,8 +388,8 @@ class AudioClassifierFuseODconv(nn.Module):
         # xf2 = self.ap2(xf2)
         # xf2 = xf2.view(xf2.shape[0], -1)
         # MM3时域包络+均值方差
-        xf3 = self.pre3(xf3)
-        xf3 = self.ODconv3(xf3)
+        xf3 = self.pre2(xf3)
+        # xf3 = self.ODconv3(xf3)
         # xf3 = self.conv31(xf3)
         # xf3 = self.conv32(xf3)
         # xf3 = self.conv33(xf3)
