@@ -22,7 +22,7 @@ np.random.seed(init_seed)  # 用于numpy的随机数
 random.seed(init_seed)
 
 if __name__ == "__main__":
-    feature_data_path = r'E:\sdmurmur\ssdHeartMurmur\test_feature_TF_TDF_CST_MV_MFCC_60Hz_cut_zero'  # 提取的特征和标签文件夹
+    feature_data_path = 'test_feature_TF_TDF_CST_MV_MFCC_60Hz_cut_zero'  # 提取的特征和标签文件夹
     fold_path = feature_data_path
     feature_path = os.path.join(fold_path, 'feature')
     model_folder = r'E:\sdmurmur\ssdHeartMurmur\TF_ODConv_k3_weight_2_2_6\feature_TF_TDF_cut_zero'  # 存储模型的文件夹
@@ -46,7 +46,7 @@ if __name__ == "__main__":
         model_path = os.path.join(model_folder, fold)
         # 加载模型
         model = torch.load(os.path.join(model_path, 'best_model'))
-        model_result_path = os.path.join('test_result_cut_zero_odconv_k3_repeat_weight_2_2_6', fold_path)
+        model_result_path = os.path.join('test_result_odconv_k3_repeat_weight_2_2_6', fold_path, str(j)+'_fold')
         # 设置环境变量，指定可见的 GPU 设备
         os.environ['CUDA_VISIBLE_DEVICES'] = '0'
         # 检查是否有可用的 GPU，并选择合适的计算设备

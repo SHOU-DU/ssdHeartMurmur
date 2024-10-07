@@ -39,7 +39,7 @@ def save_test_feature(test_folder, test_tdf_folder, test_feature_folder):
 
     # train_feature = Log_GF_GAF(kfold_folder_train)
     # train_feature = Log_GF_CWT_PCA(kfold_folder_train, test_tdf_folder)
-    train_feature = Log_GF_TDF_CST_MV_MFCC(test_folder, test_tdf_folder)
+    train_feature = Log_GF_TDF(test_folder, test_tdf_folder)
 
     train_label, train_location, train_id = get_label(test_folder)  # 获取各个3s片段label和听诊区位置和个体ID
     train_index = get_index(test_folder)
