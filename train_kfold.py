@@ -45,9 +45,9 @@ if __name__ == "__main__":
         print(f'this is {fold}')
 
         # fold = '4_fold'  # 训练第i折
-        feature_data_path = 'feature_TF_TDF_CST_MV_MFCC_60Hz_cut_zero'  # 提取的特征和标签文件夹
+        feature_data_path = 'all_data_feature_TF_TDF_CST_MV_MFCC_60Hz_cut_zero'  # 提取的特征和标签文件夹
         # cut_data_kfold = r'data_kfold_out'
-        cut_data_kfold = r'data_kfold_cut_zero'
+        cut_data_kfold = r'E:\sdmurmur\all_data_kfold\non_scaled_all_data'  # 切分好的3s段数据
         if not test_flag:
             fold_path = os.path.join(feature_data_path, fold)
             cut_data = os.path.join(cut_data_kfold, fold, 'vali_data')
@@ -109,10 +109,10 @@ if __name__ == "__main__":
         test_loader = DataLoader(vali_set, batch_size=test_batch_size)
         print("DataLoader is OK")
         # 模型选择
-        model = AudioClassifierFuseODconv()  # sd Fuse ODconv gamma=2.5
+        model = AudioClassifierODconv()  # sd Fuse ODconv gamma=2.5
         # model = AudioClassifier()
-        model_result_path = os.path.join('TF_MFCC_TDFMVCST_ODC_k3_MM_FCCat133_withoutMFCC', fold_path)
-        # model_result_path = os.path.join('Aweight_TimeFreq_result', fold_path)
+        # model_result_path = os.path.join('all_data_TF_MFCC_TDFMVCST_ODC_k3_MM_FCCat133_withoutMFCC', fold_path)
+        model_result_path = os.path.join('all_data_TF_ODConv_k3_weight_2_2_6', fold_path)
         os.environ['CUDA_VISIBLE_DEVICES'] = '0'
         device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         model = model.to(device)  # 放到设备中
@@ -124,7 +124,7 @@ if __name__ == "__main__":
 
         # 设置损失函数
         # weight = torch.tensor([1, 1, 1]).to(device)
-        weight = torch.tensor([0.25, 0.25, 0.50]).to(device)  # sd 改变权重值，增加loud权重
+        weight = torch.tensor([0.2, 0.2, 0.60]).to(device)  # sd 改变权重值，增加loud权重
         # criterion = Focal_Loss(gamma=2.5, weight=weight)
         criterion = Focal_Loss(gamma=2.5, weight=weight)  # sd 增大gamma
         # criterion = nn.CrossEntropyLoss()  # sd KAN
