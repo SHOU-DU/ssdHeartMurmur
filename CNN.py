@@ -362,7 +362,7 @@ class AudioClassifierFuseODconv(nn.Module):
         xf1 = x[:, :, :64, :]  # 时频域
         # xf2 = x[:, :, 64:, :]  # 时域包络
         xf2 = x[:, :, 64:128, :]  # MFCC
-        xf3 = x[:, :, 128:133, :]  # 时域包络+均值方差
+        xf3 = x[:, :, 128:135, :]  # 时域包络+均值方差
         # outputs['xf1 shape'] = xf1.shape
         # outputs['xf2 shape'] = xf2.shape
         xf1 = self.pre(xf1)
