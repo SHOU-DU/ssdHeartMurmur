@@ -30,28 +30,33 @@ if __name__ == "__main__":
     # 时频域特征+时域特征模型
     model_folder = r'E:\sdmurmur\ssdHeartMurmur\TF_MFCC_TDFMVCST_ODC_k3_MM_FCCat133_withoutMFCC\feature_TF_TDF_CST_MV_MFCC_60Hz_cut_zero'  # 存储模型的文件夹
     # model = AudioClassifierODconv()
-    kfold = 5
+    label_path = os.path.join(fold_path, 'label')
+
+    test_data = np.load(feature_path + r'\test_loggamma.npy', allow_pickle=True)
+    test_label = np.load(label_path + r'\test_label.npy', allow_pickle=True)
+    test_location = np.load(label_path + r'\test_location.npy', allow_pickle=True)
+    test_id = np.load(label_path + r'\test_id.npy', allow_pickle=True)
+    test_index = np.load(label_path + r'\test_index.npy', allow_pickle=True)
+
     test_batch_size = 128
+    test_set = NewDataset(wav_label=test_label, wav_data=test_data, wav_index=test_index)
+    test_loader = DataLoader(test_set, batch_size=test_batch_size)
+    print("DataLoader is OK")
+    num_classes = 3
+    test_class_count = np.zeros(num_classes, dtype=int)
+    for data, label, index in test_set:
+        test_class_count[label] += 1
+    print("test_set:", 'absent:', test_class_count[0], 'soft:', test_class_count[1], 'loud:', test_class_count[2])
+    kfold = 5
     for j in range(kfold):
 
-        label_path = os.path.join(fold_path, 'label')
-
-        test_data = np.load(feature_path + r'\test_loggamma.npy', allow_pickle=True)
-        test_label = np.load(label_path + r'\test_label.npy', allow_pickle=True)
-        test_location = np.load(label_path + r'\test_location.npy', allow_pickle=True)
-        test_id = np.load(label_path + r'\test_id.npy', allow_pickle=True)
-        test_index = np.load(label_path + r'\test_index.npy', allow_pickle=True)
-
-        test_set = NewDataset(wav_label=test_label, wav_data=test_data, wav_index=test_index)
-        test_loader = DataLoader(test_set, batch_size=test_batch_size)
-        print("DataLoader is OK")
         fold = str(j) + r'_fold\model'  # 测试第i折模型
         model_path = os.path.join(model_folder, fold)
         # 加载模型
         model = torch.load(os.path.join(model_path, 'last_model'))
         # 采用最后一轮的模型进行评估
         # model_result_path = os.path.join('test_result_odconv_k3_repeat_weight_2_2_6_last_model_batchsize128', fold_path, str(j) + '_fold')
-        model_result_path = os.path.join('test_result_odconv_k3_tf_tdf_MM_Fcat133_last_model', fold_path, str(j)+'_fold')
+        model_result_path = os.path.join('test_result_odconv_k3_tf_tdf_MM_Fcat133_last_model_2', fold_path, str(j)+'_fold')
         # 设置环境变量，指定可见的 GPU 设备
         os.environ['CUDA_VISIBLE_DEVICES'] = '0'
         # 检查是否有可用的 GPU，并选择合适的计算设备
@@ -65,7 +70,7 @@ if __name__ == "__main__":
 
         print(model_path)
         # evaluate model,将模型设置为评估模式
-        model.eval()
+        # model.eval()
         val_loss = 0.0
         val_acc = 0.0
         all_test_loss = []
@@ -77,7 +82,7 @@ if __name__ == "__main__":
         all_location = []
 
         with torch.no_grad():
-            # model.eval()
+            model.eval()
             for i, data in enumerate(test_loader):
                 x, y, z = data
                 x = x.to(device)
