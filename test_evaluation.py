@@ -14,7 +14,7 @@ from My_Dataloader import NewDataset, TrainDataset, Dataset2, MyDataset
 from torch.utils.data import DataLoader, WeightedRandomSampler
 from patient_information import get_locations, cal_patient_acc, single_result, location_result
 import random
-
+from sklearn.metrics import recall_score, f1_score
 
 init_seed = 10
 torch.manual_seed(init_seed)
@@ -56,7 +56,7 @@ if __name__ == "__main__":
         model = torch.load(os.path.join(model_path, 'last_model'))
         # 采用最后一轮的模型进行评估
         # model_result_path = os.path.join('test_result_odconv_k3_repeat_weight_2_2_6_last_model_batchsize128', fold_path, str(j) + '_fold')
-        model_result_path = os.path.join('test_result_odconv_k3_tf_tdf_MM_Fcat133_last_model_2', fold_path, str(j)+'_fold')
+        model_result_path = os.path.join('test_result_odconv_k3_tf_tdf_MM_Fcat133_last_model_4', fold_path, str(j)+'_fold')
         # 设置环境变量，指定可见的 GPU 设备
         os.environ['CUDA_VISIBLE_DEVICES'] = '0'
         # 检查是否有可用的 GPU，并选择合适的计算设备
@@ -80,6 +80,9 @@ if __name__ == "__main__":
         all_label = []  # 存放3s样本的预测标签
         all_id = []
         all_location = []
+        # 初始化评估指标
+        predictions = []
+        labels = []
 
         with torch.no_grad():
             model.eval()
@@ -101,9 +104,20 @@ if __name__ == "__main__":
                 all_y_pred.append(softmax(outputs).cpu().detach())
                 all_label.append(y.cpu().detach())
                 all_y_pred_label.append(y_pred.cpu().detach())
+
+                predictions.extend(y_pred.cpu().numpy())
+                labels.extend(y.cpu().numpy())
                 # for ii in range(test_batch_size):
                 #     all_id.append(test_id[z[ii].cpu().detach()])
                 #     all_location.append(test_location[z[ii].cpu().detach()])  # 对应ID的所有片段听诊区位置
+        # 计算每一类的召回率和 F1 分数
+        recall_per_class = recall_score(labels, predictions, average=None)
+        f1_per_class = f1_score(labels, predictions, average=None)
+        # 打印每一类的召回率和 F1 分数
+        class_names = ['Class 0', 'Class 1', 'Class 2']  # 假设有三类
+        for i, class_name in enumerate(class_names):
+            print(f'{class_name} - Recall: {recall_per_class[i]:.4f}, F1 Score: {f1_per_class[i]:.4f}')
+
         all_y_pred = np.vstack(all_y_pred)  # 三种输出结果
         all_label = np.hstack(all_label)
         all_y_pred_label = np.hstack(all_y_pred_label)
