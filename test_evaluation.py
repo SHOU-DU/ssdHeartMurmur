@@ -91,9 +91,9 @@ if __name__ == "__main__":
                 all_y_pred.append(softmax(outputs).cpu().detach())
                 all_label.append(y.cpu().detach())
                 all_y_pred_label.append(y_pred.cpu().detach())
-                for ii in range(test_batch_size):
-                    all_id.append(test_id[z[ii].cpu().detach()])
-                    all_location.append(test_location[z[ii].cpu().detach()])  # 对应ID的所有片段听诊区位置
+                # for ii in range(test_batch_size):
+                #     all_id.append(test_id[z[ii].cpu().detach()])
+                #     all_location.append(test_location[z[ii].cpu().detach()])  # 对应ID的所有片段听诊区位置
         all_y_pred = np.vstack(all_y_pred)  # 三种输出结果
         all_label = np.hstack(all_label)
         all_y_pred_label = np.hstack(all_y_pred_label)
