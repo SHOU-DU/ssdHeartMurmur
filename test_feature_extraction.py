@@ -180,7 +180,7 @@ def feature_norm(feat):
 if __name__ == '__main__':
     # 特征提取
     kfold_festure_in = "test_data_cut_zero"  # test set切割好的数据，对于present个体，只复制murmur存在的.wav文件
-    kfold_feature_folder = "test_feature_TF_TDF_CST_MV_MFCC_60Hz_cut_zero"  # 存储每折特征文件夹
+    kfold_feature_folder = "test_feature_TF_TDF_60Hz_cut_zero"  # 存储每折特征文件夹
     tdf_feature_folder = r"E:\sdmurmur\testEnvelopeandSE60Hz"  # 时域特征存储文件夹
     cwt_feature_folder = r"E:\sdmurmur\wavelets\data_kfold_cut_zero"  # cwt特征存储文件夹
     save_test_feature(kfold_festure_in, tdf_feature_folder, kfold_feature_folder)
