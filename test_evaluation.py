@@ -26,9 +26,9 @@ if __name__ == "__main__":
     fold_path = feature_data_path
     feature_path = os.path.join(fold_path, 'feature')
     # 单时频特征模型
-    model_folder = r'E:\sdmurmur\ssdHeartMurmur\TF_ODConv_k3_weight_2_2_6\feature_TF_TDF_cut_zero'  # 存储模型的文件夹
+    # model_folder = r'E:\sdmurmur\ssdHeartMurmur\TF_ODConv_k3_weight_2_2_6\feature_TF_TDF_cut_zero'  # 存储模型的文件夹
     # 时频域特征+时域特征模型
-    # model_folder = r'E:\sdmurmur\ssdHeartMurmur\TF_MFCC_TDFMVCST_ODC_k3_MM_FCCat133_withoutMFCC\feature_TF_TDF_CST_MV_MFCC_60Hz_cut_zero'  # 存储模型的文件夹
+    model_folder = r'E:\sdmurmur\ssdHeartMurmur\TF_MFCC_TDFMVCST_ODC_k3_MM_FCCat133_withoutMFCC\feature_TF_TDF_CST_MV_MFCC_60Hz_cut_zero'  # 存储模型的文件夹
     # model = AudioClassifierODconv()
     kfold = 5
     test_batch_size = 128
@@ -50,8 +50,8 @@ if __name__ == "__main__":
         # 加载模型
         model = torch.load(os.path.join(model_path, 'last_model'))
         # 采用最后一轮的模型进行评估
-        model_result_path = os.path.join('test_result_odconv_k3_repeat_weight_2_2_6_last_model_batchsize128', fold_path, str(j) + '_fold')
-        # model_result_path = os.path.join('test_result_odconv_k3_tf_tdf_MM_Fcat133', fold_path, str(j)+'_fold')
+        # model_result_path = os.path.join('test_result_odconv_k3_repeat_weight_2_2_6_last_model_batchsize128', fold_path, str(j) + '_fold')
+        model_result_path = os.path.join('test_result_odconv_k3_tf_tdf_MM_Fcat133_last_model', fold_path, str(j)+'_fold')
         # 设置环境变量，指定可见的 GPU 设备
         os.environ['CUDA_VISIBLE_DEVICES'] = '0'
         # 检查是否有可用的 GPU，并选择合适的计算设备
