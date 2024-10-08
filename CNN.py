@@ -135,16 +135,17 @@ class AudioClassifier(nn.Module):
     def forward(self, x):
         # Run the convolutional blocks
         x = x.unsqueeze(1)
-        x = self.pre(x)
-        x = self.SK(x)
-        x = self.conv1(x)
-        x = self.conv2(x)
-        x = self.conv3(x)
-        x = self.conv4(x)
+        x2 = x[:, :, : 64, :]  # 时频域
+        x2 = self.pre(x2)
+        x2 = self.SK(x2)
+        x2 = self.conv1(x2)
+        x2 = self.conv2(x2)
+        x2 = self.conv3(x2)
+        x2 = self.conv4(x2)
 
         # Adaptive pool and flatten for input to linear layer
-        x = self.ap(x)
-        x_all = x.view(x.shape[0], -1)
+        x2 = self.ap(x2)
+        x_all = x2.view(x2.shape[0], -1)
 
         x_all = self.lin(x_all)
 
@@ -414,7 +415,8 @@ class AudioClassifierFuseODconv(nn.Module):
 
 
 if __name__ == "__main__":
-    model = AudioClassifierFuseODconv()
+    # model = AudioClassifierFuseODconv()
+    model = AudioClassifier()
     X = torch.rand(10, 1, 64, 239)
     X2 = torch.rand(128, 160, 239)
     output = model(X2)
