@@ -45,9 +45,10 @@ if __name__ == "__main__":
         print(f'this is {fold}')
 
         # fold = '4_fold'  # 训练第i折
-        feature_data_path = 'all_data_feature_TF_TDF_CST_MV_MFCC_60Hz_cut_zero'  # 提取的特征和标签文件夹
-        # cut_data_kfold = r'data_kfold_out'
-        cut_data_kfold = r'E:\sdmurmur\all_data_kfold\non_scaled_all_data'  # 切分好的3s段数据
+        # feature_data_path = 'all_data_feature_TF_TDF_CST_MV_MFCC_60Hz_cut_zero'  # 提取的特征和标签文件夹
+        feature_data_path = 'feature_TF_TDF_CST_MV_MFCC_60Hz_cut_zero'
+        cut_data_kfold = r'data_kfold_cut_zero'
+        # cut_data_kfold = r'E:\sdmurmur\all_data_kfold\non_scaled_all_data'  # 切分好的3s段数据
         if not test_flag:
             fold_path = os.path.join(feature_data_path, fold)
             cut_data = os.path.join(cut_data_kfold, fold, 'vali_data')
@@ -110,10 +111,10 @@ if __name__ == "__main__":
         print("DataLoader is OK")
         # 模型选择
         # model = AudioClassifierFuseODconv()  # sd Fuse ODconv gamma=2.5
-        model = AudioClassifier()  # 黄师兄模型
+        model = AudioClassifierODconv()
         # model_result_path = os.path.join('all_data_TF_MFCC_TDFMVCST_ODC_k3__FCCat384_25_25_5', fold_path)
         # model_result_path = os.path.join('all_data_TF_ODConv_k3_weight_25_25_5', fold_path)
-        model_result_path = os.path.join('SK_TF_Result', fold_path)
+        model_result_path = os.path.join('ODC_TF_Result', fold_path)
         os.environ['CUDA_VISIBLE_DEVICES'] = '0'
         device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         model = model.to(device)  # 放到设备中

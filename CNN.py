@@ -207,7 +207,7 @@ class AudioClassifierODconv(nn.Module):
         x = x.unsqueeze(1)  # 为输入特征添加通道，变为(batch_size, 1, height, width)
         # outputs['input'] = x.shape
         xf1 = x[:, :, : 64, :]  # 时频域
-        xf2 = x[:, :, 64:, :]  # 时域或GAF或cwt
+        # xf2 = x[:, :, 64:, :]  # 时域或GAF或cwt
         xf1 = self.pre(xf1)
         # outputs['pre'] = xf1.shape
         xf1 = self.ODconv(xf1)
@@ -416,7 +416,7 @@ class AudioClassifierFuseODconv(nn.Module):
 
 if __name__ == "__main__":
     # model = AudioClassifierFuseODconv()
-    model = AudioClassifier()
+    model = AudioClassifierODconv()
     X = torch.rand(10, 1, 64, 239)
     X2 = torch.rand(128, 160, 239)
     output = model(X2)
