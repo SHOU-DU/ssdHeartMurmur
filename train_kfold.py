@@ -15,7 +15,7 @@ from My_Dataloader import NewDataset, TrainDataset, Dataset2, MyDataset
 from torch.utils.data import DataLoader, WeightedRandomSampler
 from patient_information import get_locations, cal_patient_acc, single_result, location_result
 import random
-
+from sklearn.metrics import recall_score, f1_score
 init_seed = 10
 torch.manual_seed(init_seed)
 torch.cuda.manual_seed(init_seed)
@@ -240,6 +240,9 @@ if __name__ == "__main__":
                     for ii in range(test_batch_size):
                         all_id.append(vali_id[z[ii].cpu().detach()])
                         all_location.append(vali_location[z[ii].cpu().detach()])  # 对应ID的所有片段听诊区位置
+
+                        # predictions.extend(y_pred.cpu().numpy())
+                        # labels.extend(y.cpu().numpy())
 
             all_y_pred = np.vstack(all_y_pred)  # 三种输出结果
             all_label = np.hstack(all_label)
@@ -574,15 +577,15 @@ if __name__ == "__main__":
             #     file.write(str(np_out[i]) + '\n')
         print("save result successful!!!")
         # 计算五折召回率均值
-        avg_absent_recall.append(best_Absent_recall)
-        avg_soft_recall.append(best_Soft_recall)
-        avg_loud_recall.append(best_Loud_recall)
-        avg_uar.append(best_PCG_UAR)
+        avg_absent_recall.append(Absent_recall)
+        avg_soft_recall.append(Soft_recall)
+        avg_loud_recall.append(Loud_recall)
+        avg_uar.append(PCG_UAR)
         # 计算五折F1均值
-        avg_absent_f1.append(best_Absent_f1)
-        avg_soft_f1.append(best_Soft_f1)
-        avg_loud_f1.append(best_Loud_f1)
-        avg_uaf.append(best_UAF)
+        avg_absent_f1.append(Absent_f1)
+        avg_soft_f1.append(Soft_f1)
+        avg_loud_f1.append(Loud_f1)
+        avg_uaf.append(PCG_f1)
     # 计算并存储五折平均召回率和F1分数
     mean_absent_recall = np.mean(avg_absent_recall)
     mean_soft_recall = np.mean(avg_soft_recall)
