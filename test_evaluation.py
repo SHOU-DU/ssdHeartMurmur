@@ -29,7 +29,7 @@ if __name__ == "__main__":
     # model_folder = r'E:\sdmurmur\ssdHeartMurmur\TF_ODConv_k3_weight_2_2_6\feature_TF_TDF_cut_zero'  # 存储模型的文件夹
     # 时频域特征+时域特征模型
     # model_folder = r'E:\sdmurmur\ssdHeartMurmur\SK_TF_Result\feature_TF_TDF_CST_MV_MFCC_60Hz_cut_zero'
-    model_folder = r'E:\sdmurmur\ssdHeartMurmur\CBloss\TF_ODC_k3_b_9'  # 存储模型的文件夹
+    model_folder = r'E:\sdmurmur\ssdHeartMurmur\CBloss\TF_ODC_k3_b_9_sigmoid'  # 存储模型的文件夹
     # model = AudioClassifierODconv()
     label_path = os.path.join(fold_path, 'label')
 
@@ -48,6 +48,15 @@ if __name__ == "__main__":
     for data, label, index in test_set:
         test_class_count[label] += 1
     print("test_set:", 'absent:', test_class_count[0], 'soft:', test_class_count[1], 'loud:', test_class_count[2])
+    # 计算测试集在5个模型上的平均指标
+    avg_absent_recall = []
+    avg_soft_recall = []
+    avg_loud_recall = []
+    avg_uar = []
+    avg_absent_f1 = []
+    avg_soft_f1 = []
+    avg_loud_f1 = []
+    avg_uaf = []
     kfold = 5
     for j in range(kfold):
 
@@ -57,7 +66,7 @@ if __name__ == "__main__":
         model = torch.load(os.path.join(model_path, 'last_model'))
         # 采用最后一轮的模型进行评估
         # model_result_path = os.path.join('test_result_odconv_k3_repeat_weight_2_2_6_last_model_batchsize128', fold_path, str(j) + '_fold')
-        CB_Loss_test_model_path = r'E:\sdmurmur\ssdHeartMurmur\CBloss\test_TF_ODC_k3_b_9'
+        CB_Loss_test_model_path = r'E:\sdmurmur\ssdHeartMurmur\CBloss\test_TF_ODC_k3_b_9_sigmoid'  # 保存测试结果的路径
         model_result_path = os.path.join(CB_Loss_test_model_path, str(j)+'_fold')
         # 设置环境变量，指定可见的 GPU 设备
         os.environ['CUDA_VISIBLE_DEVICES'] = '0'
@@ -145,6 +154,12 @@ if __name__ == "__main__":
         Loud_recall = cm[2][2] / Loud_num
 
         PCG_UAR = (Absent_recall + Soft_recall + Loud_recall) / 3
+        # 计算五折召回率均值
+        avg_absent_recall.append(Absent_recall)
+        avg_soft_recall.append(Soft_recall)
+        avg_loud_recall.append(Loud_recall)
+        avg_uar.append(PCG_UAR)
+
         PCG_acc_soft_aver = (acc_metric + Soft_recall) / 2  # 准确率和soft找回率均值
         print("------------------------------PCG result------------------------------")
         print("Absent_recall: %.4f, Soft_recall: %.4f, Loud_recall: %.4f,PCG_UAR: %.4f"
@@ -158,6 +173,12 @@ if __name__ == "__main__":
         Soft_f1 = (2 * Soft_recall * Soft_Precision) / (Soft_recall + Soft_Precision)
         Loud_f1 = (2 * Loud_recall * Loud_Precision) / (Loud_recall + Loud_Precision)
         PCG_f1 = (Absent_f1 + Soft_f1 + Loud_f1) / 3
+        # 计算五折f1分数均值
+        avg_absent_f1.append(Absent_f1)
+        avg_soft_f1.append(Soft_f1)
+        avg_loud_f1.append(Loud_f1)
+        avg_uaf.append(Loud_f1)
+
         print("Absent_F1: %.4f, Soft_F1: %.4f, Loud_F1: %.4f, PCG_F1: %.4f"
               % (Absent_f1, Soft_f1, Loud_f1, PCG_f1))
         result_path = os.path.join(model_result_path, "ResultFile")
@@ -208,18 +229,29 @@ if __name__ == "__main__":
             # for i in range(len(np_out)):
             #     file.write(str(np_out[i]) + '\n')
         print("save result successful!!!")
+        # 计算并存储五折平均召回率和F1分数
+    mean_absent_recall = sum(avg_absent_recall) / len(avg_absent_recall)
+    mean_soft_recall = sum(avg_soft_recall) / len(avg_soft_recall)
+    mean_loud_recall = sum(avg_loud_recall) / len(avg_loud_recall)
+    mean_uar = sum(avg_uar) / len(avg_uar)
 
-    # checkpoint = torch.load(os.path.join(model_path, 'sd_last_model.pth'))
-    # learning_rate = 0.005
-    #
-    # optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, betas=(0.9, 0.999), eps=1e-7)
-    # # 加载模型状态字典
-    # model.load_state_dict(checkpoint['model_state_dict'])
-    # # 加载优化器状态字典
-    # optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
-    # # 打印模型的参数
-    # print("Model's parameters:")
-    # for name, param in model.named_parameters():
-    #     print(f"Layer: {name}")
-    #     print(f"Parameter shape: {param.shape}")
-    #     print(f"Parameter values:\n{param}")
+    mean_absent_f1 = sum(avg_absent_f1) / len(avg_absent_f1)
+    mean_soft_f1 = sum(avg_soft_f1) / len(avg_soft_f1)
+    mean_loud_f1 = sum(avg_loud_f1) / len(avg_loud_f1)
+    mean_uaf = sum(avg_uaf) / len(avg_uaf)
+    f = CB_Loss_test_model_path + "/save_result.txt"
+    mytime = datetime.now()
+    with open(f, "a") as file:
+        file.write("-----------------PCG_vali_recall----------------- " + "\n")
+        file.write("Absent: " + str('{:.4f}'.format(mean_absent_recall))
+                   + "  Soft: " + str('{:.4f}'.format(mean_soft_recall))
+                   + "  Loud: " + str('{:.4f}'.format(mean_loud_recall))
+                   + "  PCG_UAR: " + str('{:.4f}'.format(mean_uar))
+                   + "\n")
+        file.write("-------------------PCG_vali_F1------------------- " + "\n")
+        file.write("Absent: " + str('{:.4f}'.format(mean_absent_f1))
+                   + "  Soft: " + str('{:.4f}'.format(mean_soft_f1))
+                   + "  Loud: " + str('{:.4f}'.format(mean_loud_f1))
+                   + "  UAF: " + str('{:.4f}'.format(mean_uaf))
+                   + "\n")
+

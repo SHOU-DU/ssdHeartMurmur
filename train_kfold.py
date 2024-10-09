@@ -41,6 +41,14 @@ if __name__ == "__main__":
     # 若使用测试集，则test_flag = True
     if test_flag:
         kfold = 0
+    avg_absent_recall = []
+    avg_soft_recall = []
+    avg_loud_recall = []
+    avg_uar = []
+    avg_absent_f1 = []
+    avg_soft_f1 = []
+    avg_loud_f1 = []
+    avg_uaf = []
     for i in range(kfold):
         fold = str(i) + '_fold'  # 训练第i折
         # fold = '2_fold'
@@ -114,7 +122,7 @@ if __name__ == "__main__":
         # 模型选择
         # model = AudioClassifierFuseODconv()  # sd Fuse ODconv gamma=2.5
         model = AudioClassifierODconv()
-        CBloss_model_path = r'E:\sdmurmur\ssdHeartMurmur\CBloss\TF_ODC_k3_b_9'
+        CBloss_model_path = r'E:\sdmurmur\ssdHeartMurmur\CBloss\TF_ODC_k3_b_9_sigmoid'
         # model_result_path = os.path.join('all_data_TF_MFCC_TDFMVCST_ODC_k3__FCCat384_25_25_5', fold_path)
         # model_result_path = os.path.join('all_data_TF_ODConv_k3_weight_25_25_5', fold_path)
         model_result_path = os.path.join(CBloss_model_path, fold)
@@ -134,7 +142,8 @@ if __name__ == "__main__":
         # CB_Loss损失函数参数设置
         samples_per_cls = [class_count[0], class_count[1], class_count[2]]
         beta = 0.9
-        loss_type = "softmax"
+        # loss_type = "softmax"
+        loss_type = "sigmoid"
         no_of_classes = 3
         gamma = 2.5
         criterion = Focal_Loss(gamma=2.5, weight=weight)  # sd 增大gamma
@@ -284,6 +293,11 @@ if __name__ == "__main__":
             Loud_recall = cm[2][2] / Loud_num
 
             PCG_UAR = (Absent_recall + Soft_recall + Loud_recall) / 3
+            # 计算五折召回率均值
+            avg_absent_recall.append(Absent_recall)
+            avg_soft_recall.append(Soft_recall)
+            avg_loud_recall.append(Loud_recall)
+            avg_uar.append(PCG_UAR)
             PCG_acc_soft_aver = (acc_metric + Soft_recall) / 2  # 准确率和soft找回率均值
             print("------------------------------PCG result------------------------------")
             print("Absent_recall: %.4f, Soft_recall: %.4f, Loud_recall: %.4f,PCG_UAR: %.4f"
@@ -297,6 +311,11 @@ if __name__ == "__main__":
             Soft_f1 = (2 * Soft_recall * Soft_Precision) / (Soft_recall + Soft_Precision)
             Loud_f1 = (2 * Loud_recall * Loud_Precision) / (Loud_recall + Loud_Precision)
             PCG_f1 = (Absent_f1 + Soft_f1 + Loud_f1) / 3
+            # 计算五折f1分数均值
+            avg_absent_f1.append(Absent_f1)
+            avg_soft_f1.append(Soft_f1)
+            avg_loud_f1.append(Loud_f1)
+            avg_uaf.append(Loud_f1)
             print("Absent_F1: %.4f, Soft_F1: %.4f, Loud_F1: %.4f, PCG_F1: %.4f"
                   % (Absent_f1, Soft_f1, Loud_f1, PCG_f1))
 
@@ -562,3 +581,29 @@ if __name__ == "__main__":
             # for i in range(len(np_out)):
             #     file.write(str(np_out[i]) + '\n')
         print("save result successful!!!")
+
+    # 计算并存储五折平均召回率和F1分数
+    mean_absent_recall = sum(avg_absent_recall) / len(avg_absent_recall)
+    mean_soft_recall = sum(avg_soft_recall) / len(avg_soft_recall)
+    mean_loud_recall = sum(avg_loud_recall) / len(avg_loud_recall)
+    mean_uar = sum(avg_uar) / len(avg_uar)
+
+    mean_absent_f1 = sum(avg_absent_f1) / len(avg_absent_f1)
+    mean_soft_f1 = sum(avg_soft_f1) / len(avg_soft_f1)
+    mean_loud_f1 = sum(avg_loud_f1) / len(avg_loud_f1)
+    mean_uaf = sum(avg_uaf) / len(avg_uaf)
+    f = CBloss_model_path + "/save_result.txt"
+    mytime = datetime.now()
+    with open(f, "a") as file:
+        file.write("-----------------PCG_vali_recall----------------- " + "\n")
+        file.write("Absent: " + str('{:.4f}'.format(mean_absent_recall))
+                   + "  Soft: " + str('{:.4f}'.format(mean_soft_recall))
+                   + "  Loud: " + str('{:.4f}'.format(mean_loud_recall))
+                   + "  PCG_UAR: " + str('{:.4f}'.format(mean_uar))
+                   + "\n")
+        file.write("-------------------PCG_vali_F1------------------- " + "\n")
+        file.write("Absent: " + str('{:.4f}'.format(mean_absent_f1))
+                   + "  Soft: " + str('{:.4f}'.format(mean_soft_f1))
+                   + "  Loud: " + str('{:.4f}'.format(mean_loud_f1))
+                   + "  UAF: " + str('{:.4f}'.format(mean_uaf))
+                   + "\n")
