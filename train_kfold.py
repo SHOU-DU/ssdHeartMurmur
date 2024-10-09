@@ -6,6 +6,7 @@ import torch.nn as nn
 import numpy as np
 from datetime import datetime
 from Imbanlance_Loss import Focal_Loss, DiceLoss, PolyLoss
+from class_balanced_loss import CB_loss
 import math
 import torch.optim as optim
 from CNN import (AudioClassifier, AudioClassifierFuseODconv, AudioClassifierODconv)
@@ -33,6 +34,7 @@ torch.backends.cudnn.deterministic = True
 # sd 2024/09/28 添加数据分帧后的均值和方差作为特征
 # sd 2024/09/30 添加MFCC特征，进行多模态（3）特征融合
 # sd 2024/10/06 改变FocalLoss参数调整单时频域特征的结果，重跑特征拼接模型Fcat5  tdf_cat_sum
+# sd 2024/10/09 添加CBloss损失函数
 if __name__ == "__main__":
     kfold = 5
     test_flag = False
@@ -112,9 +114,10 @@ if __name__ == "__main__":
         # 模型选择
         # model = AudioClassifierFuseODconv()  # sd Fuse ODconv gamma=2.5
         model = AudioClassifierODconv()
+        CBloss_model_path = r'E:\sdmurmur\ssdHeartMurmur\CBloss\TF_ODC_k3_b_9999'
         # model_result_path = os.path.join('all_data_TF_MFCC_TDFMVCST_ODC_k3__FCCat384_25_25_5', fold_path)
         # model_result_path = os.path.join('all_data_TF_ODConv_k3_weight_25_25_5', fold_path)
-        model_result_path = os.path.join('ODC_TF_Result', fold_path)
+        model_result_path = os.path.join(CBloss_model_path, fold)
         os.environ['CUDA_VISIBLE_DEVICES'] = '0'
         device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         model = model.to(device)  # 放到设备中
@@ -128,8 +131,13 @@ if __name__ == "__main__":
         weight = torch.tensor([1, 1, 1]).to(device)
         # weight = torch.tensor([0.25, 0.25, 0.50]).to(device)  # sd 改变权重值，增加loud权重
         # criterion = Focal_Loss(gamma=2.5, weight=weight)
+        # CB_Loss损失函数参数设置
+        samples_per_cls = [class_count[0], class_count[1], class_count[2]]
+        beta = 0.9999
+        loss_type = "softmax"
+        no_of_classes = 3
+        gamma = 2.5
         criterion = Focal_Loss(gamma=2.5, weight=weight)  # sd 增大gamma
-        # criterion = nn.CrossEntropyLoss()  # sd KAN
         # 保存验证集准确率最大时的模型
         model_path = os.path.join(model_result_path, "model")
         if not os.path.exists(model_path):
@@ -171,10 +179,11 @@ if __name__ == "__main__":
                 x = x.to(device)
                 # x = x.view(-1, 64*239).to(device)  # sd KAN
                 y = y.to(device)
-
+                # 设置损失函数
                 outputs = model(x)
                 optimizer.zero_grad()
-                loss = criterion(outputs, y.long())
+                loss = CB_loss(y.long(), outputs, samples_per_cls, no_of_classes, loss_type, beta, gamma)
+                # loss = criterion(outputs, y.long())
                 loss.backward()
                 optimizer.step()
 
@@ -208,7 +217,8 @@ if __name__ == "__main__":
                     z = z.to(device)
 
                     outputs = model(x)
-                    loss = criterion(outputs, y.long())
+                    loss = CB_loss(y.long(), outputs, samples_per_cls, no_of_classes, loss_type, beta, gamma)
+                    # loss = criterion(outputs, y.long())
                     val_loss += loss.item()
                     _, y_pred = outputs.max(1)
                     num_correct = (y_pred == y).sum().item()

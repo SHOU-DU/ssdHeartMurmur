@@ -72,30 +72,36 @@ def CB_loss(labels, logits, samples_per_cls, no_of_classes, loss_type, beta, gam
 
     labels_one_hot = F.one_hot(labels, no_of_classes).float()
 
-    weights = torch.tensor(weights).float()
+    weights = torch.tensor(weights).float().to(labels_one_hot.device)  # 将 weights 移动到与 labels_one_hot 相同的设备上
     weights = weights.unsqueeze(0)
-    weights = weights.repeat(labels_one_hot.shape[0],1) * labels_one_hot
+    weights = weights.repeat(labels_one_hot.shape[0], 1) * labels_one_hot
     weights = weights.sum(1)
     weights = weights.unsqueeze(1)
-    weights = weights.repeat(1,no_of_classes)
+    weights = weights.repeat(1, no_of_classes)
 
     if loss_type == "focal":
         cb_loss = focal_loss(labels_one_hot, logits, weights, gamma)
     elif loss_type == "sigmoid":
-        cb_loss = F.binary_cross_entropy_with_logits(input = logits,target = labels_one_hot, weights = weights)
+        cb_loss = F.binary_cross_entropy_with_logits(input=logits, target=labels_one_hot, weight=weights)
     elif loss_type == "softmax":
-        pred = logits.softmax(dim = 1)
-        cb_loss = F.binary_cross_entropy(input = pred, target = labels_one_hot, weight = weights)
+        pred = logits.softmax(dim=1)
+        cb_loss = F.binary_cross_entropy(input=pred, target=labels_one_hot, weight=weights)
     return cb_loss
 
 
 if __name__ == '__main__':
     no_of_classes = 5
-    logits = torch.rand(10,no_of_classes).float()
-    labels = torch.randint(0,no_of_classes, size = (10,))
+    logits = torch.rand(10, no_of_classes).float()
+    labels = torch.randint(0, no_of_classes, size=(10,))
     beta = 0.9999
     gamma = 2.0
-    samples_per_cls = [2,3,1,2,2]
+    samples_per_cls = [2, 3, 1, 2, 2]
     loss_type = "focal"
-    cb_loss = CB_loss(labels, logits, samples_per_cls, no_of_classes,loss_type, beta, gamma)
+    cb_loss = CB_loss(labels, logits, samples_per_cls, no_of_classes, loss_type, beta, gamma)
+    print(cb_loss)
+    loss_type = "sigmoid"
+    cb_loss = CB_loss(labels, logits, samples_per_cls, no_of_classes, loss_type, beta, gamma)
+    print(cb_loss)
+    loss_type = "softmax"
+    cb_loss = CB_loss(labels, logits, samples_per_cls, no_of_classes, loss_type, beta, gamma)
     print(cb_loss)
