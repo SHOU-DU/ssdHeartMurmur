@@ -122,7 +122,7 @@ if __name__ == "__main__":
         # 模型选择
         # model = AudioClassifierFuseODconv()  # sd Fuse ODconv gamma=2.5
         model = AudioClassifierODconv()
-        CBloss_model_path = r'E:\sdmurmur\ssdHeartMurmur\CBloss\TF_ODC_k3_b_99_sigmoid'
+        CBloss_model_path = r'E:\sdmurmur\ssdHeartMurmur\CBloss\TF_ODC_k3_b_999_sigmoid'
         # model_result_path = os.path.join('all_data_TF_MFCC_TDFMVCST_ODC_k3__FCCat384_25_25_5', fold_path)
         # model_result_path = os.path.join('all_data_TF_ODConv_k3_weight_25_25_5', fold_path)
         model_result_path = os.path.join(CBloss_model_path, fold)
@@ -141,7 +141,7 @@ if __name__ == "__main__":
         # criterion = Focal_Loss(gamma=2.5, weight=weight)
         # CB_Loss损失函数参数设置
         samples_per_cls = [class_count[0], class_count[1], class_count[2]]
-        beta = 0.99
+        beta = 0.999
         # loss_type = "softmax"
         loss_type = "sigmoid"
         no_of_classes = 3
@@ -583,15 +583,15 @@ if __name__ == "__main__":
         print("save result successful!!!")
 
     # 计算并存储五折平均召回率和F1分数
-    mean_absent_recall = sum(avg_absent_recall) / len(avg_absent_recall)
-    mean_soft_recall = sum(avg_soft_recall) / len(avg_soft_recall)
-    mean_loud_recall = sum(avg_loud_recall) / len(avg_loud_recall)
-    mean_uar = sum(avg_uar) / len(avg_uar)
+    mean_absent_recall = np.mean(avg_absent_recall)
+    mean_soft_recall = np.mean(avg_soft_recall)
+    mean_loud_recall = np.mean(avg_loud_recall)
+    mean_uar = np.mean(avg_uar)
 
-    mean_absent_f1 = sum(avg_absent_f1) / len(avg_absent_f1)
-    mean_soft_f1 = sum(avg_soft_f1) / len(avg_soft_f1)
-    mean_loud_f1 = sum(avg_loud_f1) / len(avg_loud_f1)
-    mean_uaf = sum(avg_uaf) / len(avg_uaf)
+    mean_absent_f1 = np.mean(avg_absent_f1)
+    mean_soft_f1 = np.mean(avg_soft_f1)
+    mean_loud_f1 = np.mean(avg_loud_f1)
+    mean_uaf = np.mean(avg_uaf)
     f = CBloss_model_path + "/save_result.txt"
     mytime = datetime.now()
     with open(f, "a") as file:
