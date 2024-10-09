@@ -293,11 +293,7 @@ if __name__ == "__main__":
             Loud_recall = cm[2][2] / Loud_num
 
             PCG_UAR = (Absent_recall + Soft_recall + Loud_recall) / 3
-            # 计算五折召回率均值
-            avg_absent_recall.append(Absent_recall)
-            avg_soft_recall.append(Soft_recall)
-            avg_loud_recall.append(Loud_recall)
-            avg_uar.append(PCG_UAR)
+
             PCG_acc_soft_aver = (acc_metric + Soft_recall) / 2  # 准确率和soft找回率均值
             print("------------------------------PCG result------------------------------")
             print("Absent_recall: %.4f, Soft_recall: %.4f, Loud_recall: %.4f,PCG_UAR: %.4f"
@@ -311,11 +307,7 @@ if __name__ == "__main__":
             Soft_f1 = (2 * Soft_recall * Soft_Precision) / (Soft_recall + Soft_Precision)
             Loud_f1 = (2 * Loud_recall * Loud_Precision) / (Loud_recall + Loud_Precision)
             PCG_f1 = (Absent_f1 + Soft_f1 + Loud_f1) / 3
-            # 计算五折f1分数均值
-            avg_absent_f1.append(Absent_f1)
-            avg_soft_f1.append(Soft_f1)
-            avg_loud_f1.append(Loud_f1)
-            avg_uaf.append(PCG_f1)
+
             print("Absent_F1: %.4f, Soft_F1: %.4f, Loud_F1: %.4f, PCG_F1: %.4f"
                   % (Absent_f1, Soft_f1, Loud_f1, PCG_f1))
 
@@ -581,7 +573,16 @@ if __name__ == "__main__":
             # for i in range(len(np_out)):
             #     file.write(str(np_out[i]) + '\n')
         print("save result successful!!!")
-
+        # 计算五折召回率均值
+        avg_absent_recall.append(best_Absent_recall)
+        avg_soft_recall.append(best_Soft_recall)
+        avg_loud_recall.append(best_Loud_recall)
+        avg_uar.append(best_PCG_UAR)
+        # 计算五折F1均值
+        avg_absent_f1.append(best_Absent_f1)
+        avg_soft_f1.append(best_Soft_f1)
+        avg_loud_f1.append(best_Loud_f1)
+        avg_uaf.append(best_UAF)
     # 计算并存储五折平均召回率和F1分数
     mean_absent_recall = np.mean(avg_absent_recall)
     mean_soft_recall = np.mean(avg_soft_recall)
