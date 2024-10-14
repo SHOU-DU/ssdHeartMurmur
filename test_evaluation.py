@@ -67,7 +67,7 @@ if __name__ == "__main__":
         # 采用最后一轮的模型进行评估
         # model_result_path = os.path.join('test_result_odconv_k3_repeat_weight_2_2_6_last_model_batchsize128', fold_path, str(j) + '_fold')
         # CB_Loss_test_model_path = r'E:\sdmurmur\ssdHeartMurmur\mask\test_TF_ODC_k3_2_3_4_5'  # 保存测试结果的路径
-        mask_test_model_path = r'E:\sdmurmur\ssdHeartMurmur\mask\test_TF_ODC_k3_2_3_4_5'  # 保存测试结果的路径
+        mask_test_model_path = r'E:\sdmurmur\ssdHeartMurmur\mask\test_TF_ODC_k3_15_15'  # 保存测试结果的路径
         model_result_path = os.path.join(mask_test_model_path, str(j)+'_fold')
         # 设置环境变量，指定可见的 GPU 设备
         os.environ['CUDA_VISIBLE_DEVICES'] = '0'
@@ -240,7 +240,7 @@ if __name__ == "__main__":
     mean_soft_f1 = sum(avg_soft_f1) / len(avg_soft_f1)
     mean_loud_f1 = sum(avg_loud_f1) / len(avg_loud_f1)
     mean_uaf = sum(avg_uaf) / len(avg_uaf)
-    f = CB_Loss_test_model_path + "/save_result.txt"
+    f = mask_test_model_path + "/save_result.txt"
     mytime = datetime.now()
     with open(f, "a") as file:
         file.write("-----------------PCG_vali_recall----------------- " + "\n")
