@@ -56,7 +56,7 @@ if __name__ == "__main__":
 
         # fold = '4_fold'  # 训练第i折
         # feature_data_path = 'all_data_feature_TF_TDF_CST_MV_MFCC_60Hz_cut_zero'  # 提取的特征和标签文件夹
-        feature_data_path = 'feature_TF_TDF_CST_MV_MFCC_60Hz_cut_zero'
+        feature_data_path = 'feature_TF_TDF_60Hz_cut_zero'
         cut_data_kfold = r'data_kfold_cut_zero'
         # cut_data_kfold = r'E:\sdmurmur\all_data_kfold\non_scaled_all_data'  # 切分好的3s段数据
         if not test_flag:
@@ -68,11 +68,11 @@ if __name__ == "__main__":
         feature_path = os.path.join(fold_path, 'feature')
         label_path = os.path.join(fold_path, 'label')
 
-        train_data = np.load(feature_path + r'\train_loggamma.npy',
+        train_data = np.load(feature_path + r'\mask_train_loggamma.npy',
                              allow_pickle=True)  # 加载训练集和验证集数据，验证集和测试集搞反了，test_loggamma.npy应该存为vali_loggamma.npy
         vali_data = np.load(feature_path + r'\vali_loggamma.npy', allow_pickle=True)
 
-        train_label = np.load(label_path + r'\train_label.npy', allow_pickle=True)  # 加载训练集和测试集标签
+        train_label = np.load(label_path + r'\mask_train_label.npy', allow_pickle=True)  # 加载训练集和测试集标签
         vali_label = np.load(label_path + r'\vali_label.npy', allow_pickle=True)
 
         vali_location = np.load(label_path + r'\vali_location.npy', allow_pickle=True)
@@ -123,7 +123,7 @@ if __name__ == "__main__":
         # 模型选择
         # model = AudioClassifierFuseODconv()  # sd Fuse ODconv gamma=2.5
         model = AudioClassifierODconv()
-        CBloss_model_path = r'E:\sdmurmur\ssdHeartMurmur\dropout\TF_ODC_k3_2_3_4_5'
+        CBloss_model_path = r'E:\sdmurmur\ssdHeartMurmur\mask\TF_ODC_k3_15_15'
         # model_result_path = os.path.join('all_data_TF_MFCC_TDFMVCST_ODC_k3__FCCat384_25_25_5', fold_path)
         # model_result_path = os.path.join('all_data_TF_ODConv_k3_weight_25_25_5', fold_path)
         model_result_path = os.path.join(CBloss_model_path, fold)
