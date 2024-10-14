@@ -1,7 +1,7 @@
 import torch
 import torch.nn.functional as F
 import numpy as np
-
+import os
 
 def spec_augment(spec, num_mask=2, freq_masking_max_percentage=0.15, time_masking_max_percentage=0.15):
     """
@@ -34,31 +34,55 @@ def spec_augment(spec, num_mask=2, freq_masking_max_percentage=0.15, time_maskin
 
 
 if __name__ == "__main__":
-    # 示例频谱图
-    batch_size = 2
-    num_channels = 1
-    num_freq = 128
-    num_time = 100
-    spec = torch.randn(batch_size, num_freq, num_time)
+    kfold = 5
+    for i in range(kfold):
+        fold = str(i) + '_fold'
+        train_feature_folder = os.path.join(r'E:\sdmurmur\ssdHeartMurmur\feature_TF_TDF_60Hz_cut_zero',
+                                            fold, r'feature\train_loggamma.npy')
+        train_label_folder = os.path.join(r'E:\sdmurmur\ssdHeartMurmur\feature_TF_TDF_60Hz_cut_zero',
+                                          fold, r'label\train_label.npy')
+        # print(train_feature_folder)
+        # print(train_label_folder)
+        train_feature = np.load(train_feature_folder)
+        torch_train_feature = torch.from_numpy(train_feature)  # 将numpy.ndarray转换成torch张量
+        train_label = np.load(train_label_folder)
+        torch_train_label = torch.from_numpy(train_label)  # 将numpy.ndarray转换成torch张量
+        # 找到标签为2的索引
+        indices = (torch_train_label == 2).nonzero(as_tuple=True)[0]
+        # 对标签为2的特征进行频谱掩码
+        masked_spec = spec_augment(torch_train_feature[indices], num_mask=2, freq_masking_max_percentage=0.15,
+                                   time_masking_max_percentage=0.15)
+        # 转回numpy数组
+        masked_spec = masked_spec.numpy()
+        # 拼接掩码后数据与原数据
+        mask_train_feature = np.concatenate((train_feature, masked_spec), axis=0)
+        # 拼接掩码后标签与原标签
+        mask_train_label = np.concatenate((train_label, train_label[indices]), axis=0)
+        # print(train_feature_folder[:-19])
+        np.save(train_feature_folder[:-19] + r'\mask_train_loggamma.npy', mask_train_feature)
+        # print(train_label_folder[:-16])
+        np.save(train_label_folder[:-15] + r'\mask_train_label.npy', mask_train_label)
+        # print(train_feature_folder)
 
-    # 应用频谱掩码
-    # masked_spec = spec_augment(spec, num_mask=2, freq_masking_max_percentage=0.15, time_masking_max_percentage=0.15)
+    # train_feature_folder = r'E:\sdmurmur\ssdHeartMurmur\feature_TF_TDF_60Hz_cut_zero\0_fold\feature\train_loggamma.npy'
+    # train_label_folder = r'E:\sdmurmur\ssdHeartMurmur\feature_TF_TDF_60Hz_cut_zero\0_fold\label\train_label.npy'
+    # train_feature = np.load(train_feature_folder)
+    # torch_train_feature = torch.from_numpy(train_feature)  # 将numpy.ndarray转换成torch张量
+    # train_label = np.load(train_label_folder)
+    # torch_train_label = torch.from_numpy(train_label)  # 将numpy.ndarray转换成torch张量
     #
-    # print(masked_spec.shape)  # 输出: torch.Size([2, 1, 128, 100])
+    # # 找到标签为2的索引
+    # indices = (torch_train_label == 2).nonzero(as_tuple=True)[0]
+    # # 对标签为2的特征进行频谱掩码
+    # masked_spec = spec_augment(torch_train_feature[indices], num_mask=2, freq_masking_max_percentage=0.15, time_masking_max_percentage=0.15)
+    # # 转回numpy数组
+    # masked_spec = masked_spec.numpy()
+    # # 拼接掩码后数据与原数据
+    # mask_train_feature = np.concatenate((train_feature, masked_spec), axis=0)
+    # # 拼接掩码后标签与原标签
+    # mask_train_label = np.concatenate((train_label, train_label[indices]), axis=0)
+    # print(f'origin train feature:{train_feature.shape}')
+    # print(f'masked train feature:{masked_spec.shape}')
+    # print(f'concatenate train feature:{mask_train_feature.shape}')
+    # print(f'masked train label:{mask_train_label.shape}')
 
-    train_feature_folder = r'E:\sdmurmur\ssdHeartMurmur\feature_TF_TDF_60Hz_cut_zero\0_fold\feature\train_loggamma.npy'
-    train_label_folder = r'E:\sdmurmur\ssdHeartMurmur\feature_TF_TDF_60Hz_cut_zero\0_fold\label\train_label.npy'
-    train_feature = np.load(train_feature_folder)
-    torch_train_feature = torch.from_numpy(train_feature)  # 将numpy.ndarray转换成torch张量
-    train_label = np.load(train_label_folder)
-    torch_train_label = torch.from_numpy(train_label)  # 将numpy.ndarray转换成torch张量
-
-    # 找到标签为2的索引
-    indices = (torch_train_label == 2).nonzero(as_tuple=True)[0]
-    # 对标签为2的特征进行频谱掩码
-    masked_spec = spec_augment(torch_train_feature[indices], num_mask=2, freq_masking_max_percentage=0.15, time_masking_max_percentage=0.15)
-    print(train_feature.shape)
-    # 转回numpy数组
-    masked_spec = masked_spec.numpy()
-    print(masked_spec.shape)
-    # print(train_label)
