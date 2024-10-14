@@ -216,6 +216,10 @@ if __name__ == "__main__":
             all_label = []  # 存放3s样本的预测标签
             all_id = []
             all_location = []
+            # 初始化评估指标
+            predictions = []
+            labels = []
+
             with torch.no_grad():
                 model.eval()
                 for i, data in enumerate(test_loader):
@@ -237,12 +241,16 @@ if __name__ == "__main__":
                     all_y_pred.append(softmax(outputs).cpu().detach())
                     all_label.append(y.cpu().detach())
                     all_y_pred_label.append(y_pred.cpu().detach())
+                    # 库函数计算召回率
+                    predictions.extend(y_pred.cpu().numpy())
+                    labels.extend(y.cpu().numpy())
                     for ii in range(test_batch_size):
                         all_id.append(vali_id[z[ii].cpu().detach()])
                         all_location.append(vali_location[z[ii].cpu().detach()])  # 对应ID的所有片段听诊区位置
 
-                        # predictions.extend(y_pred.cpu().numpy())
-                        # labels.extend(y.cpu().numpy())
+            # 计算每一类的召回率和 F1 分数
+            recall_per_class = recall_score(labels, predictions, average=None)
+            f1_per_class = f1_score(labels, predictions, average=None)
 
             all_y_pred = np.vstack(all_y_pred)  # 三种输出结果
             all_label = np.hstack(all_label)
@@ -577,15 +585,17 @@ if __name__ == "__main__":
             #     file.write(str(np_out[i]) + '\n')
         print("save result successful!!!")
         # 计算五折召回率均值
-        avg_absent_recall.append(Absent_recall)
-        avg_soft_recall.append(Soft_recall)
-        avg_loud_recall.append(Loud_recall)
-        avg_uar.append(PCG_UAR)
+        avg_absent_recall.append(recall_per_class[0])
+        avg_soft_recall.append(recall_per_class[1])
+        avg_loud_recall.append(recall_per_class[2])
+        # avg_uar.append(PCG_UAR)
+        avg_uar.append((avg_absent_recall+avg_soft_recall+avg_loud_recall)/3)
         # 计算五折F1均值
-        avg_absent_f1.append(Absent_f1)
-        avg_soft_f1.append(Soft_f1)
-        avg_loud_f1.append(Loud_f1)
-        avg_uaf.append(PCG_f1)
+        avg_absent_f1.append(f1_per_class[0])
+        avg_soft_f1.append(f1_per_class[1])
+        avg_loud_f1.append(f1_per_class[2])
+        # avg_uaf.append(PCG_f1)
+        avg_uaf.append((avg_absent_f1+avg_soft_f1+avg_loud_f1))
     # 计算并存储五折平均召回率和F1分数
     mean_absent_recall = np.mean(avg_absent_recall)
     mean_soft_recall = np.mean(avg_soft_recall)
