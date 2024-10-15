@@ -104,9 +104,9 @@ if __name__ == "__main__":
         train_batch_size = 128
         # test_batch_size = 1
         test_batch_size = 1
-        learning_rate = 0.005
-        # learning_rate = 0.002
-        num_epochs = 40
+        # learning_rate = 0.005
+        learning_rate = 0.002  # mask
+        num_epochs = 60
         # num_epochs = 30  # sd Fuse
         # num_epochs = 60  # sd KAN 会过拟合
         img_size = (32, 240)
@@ -123,7 +123,7 @@ if __name__ == "__main__":
         # 模型选择
         # model = AudioClassifierFuseODconv()  # sd Fuse ODconv gamma=2.5
         model = AudioClassifierODconv()
-        CBloss_model_path = r'E:\sdmurmur\ssdHeartMurmur\mask\TF_ODC_k3_15_15'
+        CBloss_model_path = r'E:\sdmurmur\ssdHeartMurmur\mask\TF_ODC_k3_15_15_es_3'
         # model_result_path = os.path.join('all_data_TF_MFCC_TDFMVCST_ODC_k3__FCCat384_25_25_5', fold_path)
         # model_result_path = os.path.join('all_data_TF_ODConv_k3_weight_25_25_5', fold_path)
         model_result_path = os.path.join(CBloss_model_path, fold)
@@ -133,7 +133,7 @@ if __name__ == "__main__":
         # 设置优化器
         optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, betas=(0.9, 0.999), eps=1e-7)
         # 设置学习率调度器
-        # 对于加入掩码的数据，不使用学习率调度器而是增加学习轮数，加入早停
+        # 对于加入掩码的数据，不使用学习率调度器而是增加学习轮数，加入早停,还注释了scheduler.step()
         # scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, [5, 10, 15, 20], gamma=0.1)
         # scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, [5, 10, 15, 20, 25, 30], gamma=0.2)  # sd Fuse会过拟合
 
@@ -177,6 +177,11 @@ if __name__ == "__main__":
         best_val_loss = 1
         best_train_acc = -np.inf
 
+        # 早停参数
+        patience = 3
+        es_best_val_loss = float('inf')
+        counter = 0
+
         # train model
         no_better_epoch = 0
         torch.manual_seed(10)
@@ -204,7 +209,7 @@ if __name__ == "__main__":
                 acc = num_correct / train_batch_size
                 train_acc += acc
                 all_y_pred.append(y_pred.cpu().detach())
-            scheduler.step()
+            # scheduler.step()
             print("第%d个epoch的学习率：%f" % (epoch, optimizer.param_groups[0]['lr']))
             all_train_acc.append(train_acc / len(train_loader))
             all_train_loss.append(train_loss / len(train_loader))
@@ -478,6 +483,15 @@ if __name__ == "__main__":
 
             # if no_better_epoch == 15 :
             #     break
+            # 早停逻辑
+            if loss_metric < es_best_val_loss:
+                es_best_val_loss = loss_metric
+                counter = 0
+            else:
+                counter += 1
+                if counter >= patience:
+                    print(f'Early stopping at epoch {epoch}')
+                    break
 
         torch.save(
             model,
