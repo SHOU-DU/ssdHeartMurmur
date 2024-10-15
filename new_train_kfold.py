@@ -105,8 +105,8 @@ if __name__ == "__main__":
         # test_batch_size = 1
         test_batch_size = 1
         # learning_rate = 0.005
-        learning_rate = 0.002  # mask
-        num_epochs = 60
+        learning_rate = 0.0005  # mask
+        num_epochs = 100
         # num_epochs = 30  # sd Fuse
         # num_epochs = 60  # sd KAN 会过拟合
         img_size = (32, 240)
@@ -123,7 +123,7 @@ if __name__ == "__main__":
         # 模型选择
         # model = AudioClassifierFuseODconv()  # sd Fuse ODconv gamma=2.5
         model = AudioClassifierODconv()
-        CBloss_model_path = r'E:\sdmurmur\ssdHeartMurmur\mask\TF_ODC_k3_15_15_es_3'
+        CBloss_model_path = r'E:\sdmurmur\ssdHeartMurmur\mask\TF_ODC_k3_15_15_es_5_005'
         # model_result_path = os.path.join('all_data_TF_MFCC_TDFMVCST_ODC_k3__FCCat384_25_25_5', fold_path)
         # model_result_path = os.path.join('all_data_TF_ODConv_k3_weight_25_25_5', fold_path)
         model_result_path = os.path.join(CBloss_model_path, fold)
@@ -178,7 +178,7 @@ if __name__ == "__main__":
         best_train_acc = -np.inf
 
         # 早停参数
-        patience = 3
+        patience = 5
         es_best_val_loss = float('inf')
         counter = 0
 
@@ -221,8 +221,6 @@ if __name__ == "__main__":
             all_y_pred = []  # 存放3s样本的预测概率
             all_y_pred_label = []  # 存放3s样本的真实标签
             all_label = []  # 存放3s样本的预测标签
-            all_id = []
-            all_location = []
             # 初始化评估指标
             predictions = []
             labels = []
@@ -251,9 +249,6 @@ if __name__ == "__main__":
                     # 库函数计算召回率
                     predictions.extend(y_pred.cpu().numpy())
                     labels.extend(y.cpu().numpy())
-                    for ii in range(test_batch_size):
-                        all_id.append(vali_id[z[ii].cpu().detach()])
-                        all_location.append(vali_location[z[ii].cpu().detach()])  # 对应ID的所有片段听诊区位置
 
             # 计算每一类的召回率和 F1 分数
             recall_per_class = recall_score(labels, predictions, average=None)
@@ -269,29 +264,18 @@ if __name__ == "__main__":
             acc_metric = val_acc / len(test_loader)
             loss_metric = val_loss / len(test_loader)
 
-            # 计算人头的准确率
-            vali_data_directory = os.path.join(cut_data)
-            # vali_data_directory：切割好的验证集，all_id：对应验证集ID, all_y_pred：三种输出结果，all_location：顺序存储的所有听诊区片段
-            patient_pre, patient_ture_label, patient_acc = cal_patient_acc(vali_data_directory, all_id, all_y_pred,
-                                                                           all_location)
-
-            # if not os.path.exists(r'E:\sdmurmur\segmentation\TimeFreq_result\data_kfold_feature\\all_id'):
-            #     os.makedirs('all_id')
-            # np.save('all_id' + r'\all_id.txt', all_id)
-
             # ------结果统计------
             print(
                 "======================================================================================================================")
             print(
                 "Epoch: %d, Train Loss: %.4f, Train Acc: %.4f, Val Loss: %.4f, "
-                "Val Acc: %.4f,patient Acc: %.4f "
+                "Val Acc: %.4f"
                 % (
                     epoch,
                     train_loss / len(train_loader),
                     train_acc / len(train_loader),
                     val_loss / len(test_loader),
                     val_acc / len(test_loader),
-                    patient_acc
 
                 )
             )
@@ -329,69 +313,29 @@ if __name__ == "__main__":
             print("Absent_F1: %.4f, Soft_F1: %.4f, Loud_F1: %.4f, PCG_F1: %.4f"
                   % (Absent_f1, Soft_f1, Loud_f1, PCG_f1))
 
-            # 患者分类性能
-            # 将预测标签和真实标签转换为numpy数组
-            y_pred = np.array(patient_pre)
-            y_true = np.array(patient_ture_label)
-            # 计算混淆矩阵
-            cm1 = confusion_matrix(y_true, y_pred)
-            # 计算召回率 F1
-            Absent_num = np.sum(cm1[0])
-            Soft_num = np.sum(cm1[1])
-            Loud_num = np.sum(cm1[2])
-            All_num = Absent_num + Soft_num + Loud_num
-            Absent_recall_patient = cm1[0][0] / Absent_num
-            Soft_recall_patient = cm1[1][1] / Soft_num
-            Loud_recall_patient = cm1[2][2] / Loud_num
-            Patient_UAR = (Absent_recall_patient + Soft_recall_patient + Loud_recall_patient) / 3
-            Patient_WAR = (
-                                  Absent_recall_patient * Absent_num + Soft_recall_patient * Soft_num + Loud_recall_patient * Loud_num) / All_num
-            # Patient_WAcc = (Absent_num*cm1[0][0]+Soft_num*cm1[1][1]+Loud_num*cm1[2][2])/All_num
-            print("------------------------------Patient result------------------------------")
-            print("Absent_recall: %.4f, Soft_recall: %.4f, Loud_recall: %.4f, Patient_UAR: %.4f, Patient_WAR: %.4f"
-                  % (Absent_recall_patient, Soft_recall_patient, Loud_recall_patient, Patient_UAR, Patient_WAR))
-            a = np.sum(cm1, 0)
-            Absent_Precision_patient = cm1[0][0] / a[0]
-            Soft_Precision_patient = cm1[1][1] / a[1]
-            Loud_Precision_patient = cm1[2][2] / a[2]
-
-            Absent_f1_patient = (2 * Absent_recall_patient * Absent_Precision_patient) / (
-                    Absent_recall_patient + Absent_Precision_patient)
-            Soft_f1_patient = (2 * Soft_recall_patient * Soft_Precision_patient) / (
-                    Soft_recall_patient + Soft_Precision_patient)
-            Loud_f1_patient = (2 * Loud_recall_patient * Loud_Precision_patient) / (
-                    Loud_recall_patient + Loud_Precision_patient)
-            Patient_f1 = (Absent_f1_patient + Soft_f1_patient + Loud_f1_patient) / 3
-            print("Absent_F1: %.4f, Soft_F1: %.4f, Loud_F1: %.4f,Patient_F1: %.4f"
-                  % (Absent_f1_patient, Soft_f1_patient, Loud_f1_patient, Patient_f1))
-
-            best_acc_metric = best_val_acc
             best_uar = best_val_UAR
 
-            if epoch >= 15:
-                # if acc_metric > best_acc_metric:
-                if Patient_f1 > best_val_F1:
-                    torch.save(
-                        model,
-                        os.path.join(model_path, 'best_model'),
-                    )
-
-                    # sd：保存模型和参数
-                    torch.save({
-                        'epoch': epoch,
-                        'model_state_dict': model.state_dict(),
-                        'optimizer_state_dict': optimizer.state_dict(),
-                    }, os.path.join(model_path, 'sd_best_model.pth'))
-
-                    print(
-                        "Saving best_model model to:",
-                        os.path.join(model_path, 'best_model'),
-                    )
+            # 早停逻辑
+            if loss_metric < es_best_val_loss:
+                es_best_val_loss = loss_metric
+                # 保存验证集loss最小时的模型
+                torch.save(model, os.path.join(model_path, "loss_model"))
+                # sd：保存模型和参数
+                torch.save({
+                    'epoch': epoch,
+                    'model_state_dict': model.state_dict(),
+                    'optimizer_state_dict': optimizer.state_dict(),
+                }, os.path.join(model_path, 'sd_loss_model.pth'))
+                print(
+                    "Saving loss_model model to:",
+                    os.path.join(model_path, "loss_model"),
+                )
+                counter = 0
+            else:
+                counter += 1
+                if counter >= patience:
                     best_train_acc = train_acc / len(train_loader)
                     best_val_acc = acc_metric
-                    best_val_patient_acc = patient_acc
-                    best_val_UAR = Patient_UAR
-                    best_val_F1 = Patient_f1
                     best_val_acc_soft = PCG_acc_soft_aver
                     best_val_soft = Soft_recall
                     best_epoch = epoch
@@ -405,16 +349,7 @@ if __name__ == "__main__":
                     best_UAF = (best_Absent_f1 + best_Soft_f1 + best_Loud_f1) / 3
                     best_PCG_UAR = (Absent_recall + Soft_recall + Loud_recall) / 3
                     best_PCG_f1 = PCG_f1
-                    best_Patient_f1 = Patient_f1
 
-                    best_Absent_recall_patient = Absent_recall_patient
-                    best_Soft_recall_patient = Soft_recall_patient
-                    best_Loud_recall_patient = Loud_recall_patient
-                    best_Absent_f1_patient = Absent_f1_patient
-                    best_Soft_f1_patient = Soft_f1_patient
-                    best_Loud_f1_patient = Loud_f1_patient
-                    best_Patient_UAR = (Absent_recall_patient + Soft_recall_patient + Loud_recall_patient) / 3
-                    best_Patient_WAR = Patient_WAR
                     result_path = os.path.join(model_result_path, "ResultFile")
                     if not os.path.exists(result_path):
                         os.makedirs(result_path)
@@ -436,63 +371,73 @@ if __name__ == "__main__":
                     plt.savefig(result_path + '/PCG Confusion matrix.png', dpi=600)
                     plt.close()
 
-                    # 患者混淆矩阵
+                    aver_PCG_acc.append(acc_metric)
+                    aver_PCG_UAR.append(PCG_UAR)
+                    aver_PCG_absent.append(Absent_recall)
+                    aver_PCG_soft.append(Soft_recall)
+                    aver_PCG_loud.append(Loud_recall)
 
-                    plt.figure()
-                    plt.imshow(cm1, cmap=plt.cm.Blues)
-                    plt.colorbar()
-                    # 显示矩阵元素的数值
-                    for i in range(cm1.shape[0]):
-                        for j in range(cm1.shape[1]):
-                            if i == 0 and j == 0:
-                                plt.text(j, i, cm1[i, j], color='white', ha='center', va='center')
-                            else:
-                                plt.text(j, i, cm1[i, j], ha='center', va='center')
-                    plt.xlabel('Predicted labels')
-                    plt.ylabel('True labels')
-                    plt.xticks([0, 1, 2], ['absent', 'soft', 'loud'])
-                    plt.yticks([0, 1, 2], ['absent', 'soft', 'loud'])
-                    plt.title('Confusion matrix')
-                    plt.savefig(result_path + '/patient Confusion matrix.png', dpi=600)
-                    plt.close()
-                else:
-                    no_better_epoch = no_better_epoch + 1
-
-                # 保存验证集loss最小时的模型
-                if loss_metric < best_val_loss:
-                    torch.save(model, os.path.join(model_path, "loss_model"))
+                    # 保存早停模型
+                    torch.save(
+                        model,
+                        os.path.join(model_path, 'es_model'),
+                    )
                     # sd：保存模型和参数
                     torch.save({
                         'epoch': epoch,
                         'model_state_dict': model.state_dict(),
                         'optimizer_state_dict': optimizer.state_dict(),
-                    }, os.path.join(model_path, 'sd_loss_model.pth'))
+                    }, os.path.join(model_path, 'sd_es_model.pth'))
                     print(
-                        "Saving loss_model model to:",
-                        os.path.join(model_path, "loss_model"),
+                        "Saving early_stop_model model to:",
+                        os.path.join(model_path, 'es_model'),
                     )
-
-                    min_loss_epoch = epoch
-                    best_val_loss = loss_metric
-
-                aver_PCG_acc.append(acc_metric)
-                aver_PCG_UAR.append(PCG_UAR)
-                aver_PCG_absent.append(Absent_recall)
-                aver_PCG_soft.append(Soft_recall)
-                aver_PCG_loud.append(Loud_recall)
-
-            # if no_better_epoch == 15 :
-            #     break
-            # 早停逻辑
-            if loss_metric < es_best_val_loss:
-                es_best_val_loss = loss_metric
-                counter = 0
-            else:
-                counter += 1
-                if counter >= patience:
                     print(f'Early stopping at epoch {epoch}')
                     break
 
+        # best_train_acc = train_acc / len(train_loader)
+        # best_val_acc = acc_metric
+        # best_val_acc_soft = PCG_acc_soft_aver
+        # best_val_soft = Soft_recall
+        # best_epoch = epoch
+        #
+        # best_Absent_recall = Absent_recall
+        # best_Soft_recall = Soft_recall
+        # best_Loud_recall = Loud_recall
+        # best_Absent_f1 = Absent_f1
+        # best_Soft_f1 = Soft_f1
+        # best_Loud_f1 = Loud_f1
+        # best_UAF = (best_Absent_f1 + best_Soft_f1 + best_Loud_f1) / 3
+        # best_PCG_UAR = (Absent_recall + Soft_recall + Loud_recall) / 3
+        # best_PCG_f1 = PCG_f1
+
+        result_path = os.path.join(model_result_path, "ResultFile")
+        if not os.path.exists(result_path):
+            os.makedirs(result_path)
+
+        # PCG混淆矩阵
+        # 将预测标签和真实标签转换为numpy数组
+        plt.figure()
+        plt.imshow(cm, cmap=plt.cm.Blues)
+        plt.colorbar()
+        # 显示矩阵元素的数值
+        for i in range(cm.shape[0]):
+            for j in range(cm.shape[1]):
+                plt.text(j, i, cm[i, j], ha='center', va='center')
+        plt.xlabel('Predicted labels')
+        plt.ylabel('True labels')
+        plt.xticks([0, 1, 2], ['absent', 'soft', 'loud'])
+        plt.yticks([0, 1, 2], ['absent', 'soft', 'loud'])
+        plt.title('Confusion matrix')
+        plt.savefig(result_path + '/PCG Confusion matrix.png', dpi=600)
+        plt.close()
+
+        aver_PCG_acc.append(acc_metric)
+        aver_PCG_UAR.append(PCG_UAR)
+        aver_PCG_absent.append(Absent_recall)
+        aver_PCG_soft.append(Soft_recall)
+        aver_PCG_loud.append(Loud_recall)
+        # 保存最后的模型
         torch.save(
             model,
             os.path.join(model_path, 'last_model'),
@@ -504,7 +449,7 @@ if __name__ == "__main__":
             'optimizer_state_dict': optimizer.state_dict(),
         }, os.path.join(model_path, 'sd_last_model.pth'))
         print(
-            "Saving last_model model to:",
+            "Saving early_stop_model model to:",
             os.path.join(model_path, 'last_model'),
         )
 
@@ -544,22 +489,13 @@ if __name__ == "__main__":
         np_out = np.concatenate([np_train_acc, np_val_acc, np_train_loss, np_val_loss], axis=1)
 
         f = result_path + "/save_result.txt"
-        # if not os.path.isdir(f):
-        #     os.makedirs(f)
         mytime = datetime.now()
         with open(f, "a") as file:
             file.write("===============================================================================" + "\n")
             file.write(str(mytime) + "\n")
-            # file.write("# encoder layers = " + str(encoders) + "\n")
-            # file.write("# img_size = " + str(img_size) + "\n")
-            # file.write("# patch size = " + str(patch_size) + "\n")
-            # file.write("# num_heads = " + str(num_heads) + "\n")
             file.write("# num_epochs = " + str(num_epochs) + "\n")
-            # file.write("# train_batch_size = " + str(train_batch_size) + "\n")
-            # file.write("# test_batch_size = " + str(test_batch_size) + "\n")
             file.write("# learning_rate = " + str(learning_rate) + "\n")
-            file.write("# best_epoch = " + str(best_epoch) + "\n")
-            file.write("# min_loss_epoch = " + str(min_loss_epoch) + "\n")
+            # file.write("# best_epoch = " + str(best_epoch) + "\n")
             file.write("# train_acc = " + str('{:.4f}'.format(best_train_acc)) + "\n")
             file.write("# val_acc = " + str('{:.4f}'.format(best_val_acc)) + "\n")
             file.write("# val_patient_acc = " + str('{:.4f}'.format(best_val_patient_acc)) + "\n")
@@ -582,22 +518,6 @@ if __name__ == "__main__":
                        + "  Loud: " + str('{:.4f}'.format(best_Loud_f1))
                        + "  UAF: " + str('{:.4f}'.format(best_UAF))
                        + "\n")
-            file.write("-----------------patient_vali_recall----------------- " + "\n")
-            file.write("Absent: " + str('{:.4f}'.format(best_Absent_recall_patient))
-                       + "  Soft: " + str('{:.4f}'.format(best_Soft_recall_patient))
-                       + "  Loud: " + str('{:.4f}'.format(best_Loud_recall_patient))
-                       + "  Patient_UAR: " + str('{:.4f}'.format(best_Patient_UAR))
-                       + "  Patient_WAR: " + str('{:.4f}'.format(best_Patient_WAR))
-                       + "\n")
-            file.write("-------------------patient_vali_F1------------------- " + "\n")
-            file.write("Absent: " + str('{:.4f}'.format(best_Absent_f1_patient))
-                       + "  Soft: " + str('{:.4f}'.format(best_Soft_f1_patient))
-                       + "  Loud: " + str('{:.4f}'.format(best_Loud_f1_patient))
-                       + "  Average: " + str('{:.4f}'.format(best_Patient_f1))
-                       + "\n")
-            # file.write('train_acc    val_acc   train_loss    val_loss' + "\n")
-            # for i in range(len(np_out)):
-            #     file.write(str(np_out[i]) + '\n')
         print("save result successful!!!")
         # 计算五折召回率均值
         avg_absent_recall.append(recall_per_class[0])
