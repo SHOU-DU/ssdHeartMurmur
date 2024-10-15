@@ -106,7 +106,7 @@ if __name__ == "__main__":
         test_batch_size = 1
         learning_rate = 0.005
         # learning_rate = 0.002
-        num_epochs = 20
+        num_epochs = 40
         # num_epochs = 30  # sd Fuse
         # num_epochs = 60  # sd KAN 会过拟合
         img_size = (32, 240)
@@ -133,7 +133,8 @@ if __name__ == "__main__":
         # 设置优化器
         optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, betas=(0.9, 0.999), eps=1e-7)
         # 设置学习率调度器
-        scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, [5, 10, 15, 20], gamma=0.1)
+        # 对于加入掩码的数据，不使用学习率调度器而是增加学习轮数，加入早停
+        # scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, [5, 10, 15, 20], gamma=0.1)
         # scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, [5, 10, 15, 20, 25, 30], gamma=0.2)  # sd Fuse会过拟合
 
         # 设置损失函数
