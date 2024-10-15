@@ -105,7 +105,7 @@ if __name__ == "__main__":
         # test_batch_size = 1
         test_batch_size = 1
         # learning_rate = 0.005
-        learning_rate = 0.0005  # mask
+        learning_rate = 0.0001  # mask
         num_epochs = 100
         # num_epochs = 30  # sd Fuse
         # num_epochs = 60  # sd KAN 会过拟合
@@ -123,7 +123,7 @@ if __name__ == "__main__":
         # 模型选择
         model = AudioClassifierFuseODconv()  # sd Fuse ODconv gamma=2.5
         # model = AudioClassifierODconv()
-        CBloss_model_path = r'E:\sdmurmur\ssdHeartMurmur\mask\TF_TDF_ODC_k3_cat133_15_15_es_5_005'
+        CBloss_model_path = r'E:\sdmurmur\ssdHeartMurmur\mask\TF_TDF_ODC_k3_cat133_15_15_es_5_0001'
         # model_result_path = os.path.join('all_data_TF_MFCC_TDFMVCST_ODC_k3__FCCat384_25_25_5', fold_path)
         # model_result_path = os.path.join('all_data_TF_ODConv_k3_weight_25_25_5', fold_path)
         model_result_path = os.path.join(CBloss_model_path, fold)
