@@ -104,9 +104,9 @@ if __name__ == "__main__":
         train_batch_size = 128
         # test_batch_size = 1
         test_batch_size = 1
-        # learning_rate = 0.005
-        learning_rate = 0.0001  # mask
-        num_epochs = 300
+        learning_rate = 0.001
+        # learning_rate = 0.0001  # mask
+        num_epochs = 150
         # num_epochs = 30  # sd Fuse
         # num_epochs = 60  # sd KAN 会过拟合
         img_size = (32, 240)
@@ -123,7 +123,7 @@ if __name__ == "__main__":
         # 模型选择
         # model = AudioClassifierFuseODconv()  # sd Fuse ODconv gamma=2.5
         model = AudioClassifierODconv()
-        CBloss_model_path = r'E:\sdmurmur\ssdHeartMurmur\early_stop\TF_ODC_k3_0001_64'
+        CBloss_model_path = r'E:\sdmurmur\ssdHeartMurmur\early_stop\TF_ODC_k3_001_64_150'
         # model_result_path = os.path.join('all_data_TF_MFCC_TDFMVCST_ODC_k3__FCCat384_25_25_5', fold_path)
         # model_result_path = os.path.join('all_data_TF_ODConv_k3_weight_25_25_5', fold_path)
         model_result_path = os.path.join(CBloss_model_path, fold)
@@ -135,7 +135,7 @@ if __name__ == "__main__":
         # optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=1e-5, betas=(0.9, 0.999), eps=1e-7)  # 添加L2正则化
         # 设置学习率调度器
         # 对于加入掩码的数据，不使用学习率调度器而是增加学习轮数，加入早停,还注释了scheduler.step()
-        # scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, [10, 20, 30], gamma=0.5)
+        scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, [30, 60, 90, 120], gamma=0.5)
         # scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, [5, 10, 15, 20, 25, 30], gamma=0.2)  # sd Fuse会过拟合
 
         # 设置损失函数
