@@ -131,8 +131,8 @@ if __name__ == "__main__":
         device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         model = model.to(device)  # 放到设备中
         # 设置优化器
-        # optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, betas=(0.9, 0.999), eps=1e-7)
-        optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=1e-5, betas=(0.9, 0.999), eps=1e-7)  # 添加L2正则化
+        optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, betas=(0.9, 0.999), eps=1e-7)
+        # optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=1e-5, betas=(0.9, 0.999), eps=1e-7)  # 添加L2正则化
         # 设置学习率调度器
         # 对于加入掩码的数据，不使用学习率调度器而是增加学习轮数，加入早停,还注释了scheduler.step()
         # scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, [10, 20, 30], gamma=0.5)
@@ -315,115 +315,115 @@ if __name__ == "__main__":
 
             best_uar = best_val_UAR
 
-            # 早停逻辑
-            if loss_metric < es_best_val_loss:
-                es_best_val_loss = loss_metric
-                # 保存验证集loss最小时的模型
-                torch.save(model, os.path.join(model_path, "loss_model"))
-                # sd：保存模型和参数
-                torch.save({
-                    'epoch': epoch,
-                    'model_state_dict': model.state_dict(),
-                    'optimizer_state_dict': optimizer.state_dict(),
-                }, os.path.join(model_path, 'sd_loss_model.pth'))
+            # # 早停逻辑
+            # if loss_metric < es_best_val_loss:
+            #     es_best_val_loss = loss_metric
+            #     # 保存验证集loss最小时的模型
+            #     torch.save(model, os.path.join(model_path, "loss_model"))
+            #     # sd：保存模型和参数
+            #     torch.save({
+            #         'epoch': epoch,
+            #         'model_state_dict': model.state_dict(),
+            #         'optimizer_state_dict': optimizer.state_dict(),
+            #     }, os.path.join(model_path, 'sd_loss_model.pth'))
+            #
+            #     # 计算五折召回率均值
+            #     avg_absent_recall.append(recall_per_class[0])
+            #     avg_soft_recall.append(recall_per_class[1])
+            #     avg_loud_recall.append(recall_per_class[2])
+            #     # avg_uar.append(PCG_UAR)
+            #     avg_uar.append((recall_per_class[0] + recall_per_class[1] + recall_per_class[2]) / 3)
+            #     # 计算五折F1均值
+            #     avg_absent_f1.append(f1_per_class[0])
+            #     avg_soft_f1.append(f1_per_class[1])
+            #     avg_loud_f1.append(f1_per_class[2])
+            #     # avg_uaf.append(PCG_f1)
+            #     avg_uaf.append((f1_per_class[0] + f1_per_class[1] + f1_per_class[2]) / 3)
+            #
+            #     print(
+            #         "Saving loss_model model to:",
+            #         os.path.join(model_path, "loss_model"),
+            #     )
+            #     counter = 0
+            # else:
+            #     counter += 1
+            #     if counter >= patience:
+            #         best_train_acc = train_acc / len(train_loader)
+            #         best_val_acc = acc_metric
+            #         best_val_acc_soft = PCG_acc_soft_aver
+            #         best_val_soft = Soft_recall
+            #         best_epoch = epoch
+            #
+            #         best_Absent_recall = Absent_recall
+            #         best_Soft_recall = Soft_recall
+            #         best_Loud_recall = Loud_recall
+            #         best_Absent_f1 = Absent_f1
+            #         best_Soft_f1 = Soft_f1
+            #         best_Loud_f1 = Loud_f1
+            #         best_UAF = (best_Absent_f1 + best_Soft_f1 + best_Loud_f1) / 3
+            #         best_PCG_UAR = (Absent_recall + Soft_recall + Loud_recall) / 3
+            #         best_PCG_f1 = PCG_f1
+            #
+            #         result_path = os.path.join(model_result_path, "ResultFile")
+            #         if not os.path.exists(result_path):
+            #             os.makedirs(result_path)
+            #
+            #         # PCG混淆矩阵
+            #         # 将预测标签和真实标签转换为numpy数组
+            #         plt.figure()
+            #         plt.imshow(cm, cmap=plt.cm.Blues)
+            #         plt.colorbar()
+            #         # 显示矩阵元素的数值
+            #         for i in range(cm.shape[0]):
+            #             for j in range(cm.shape[1]):
+            #                 plt.text(j, i, cm[i, j], ha='center', va='center')
+            #         plt.xlabel('Predicted labels')
+            #         plt.ylabel('True labels')
+            #         plt.xticks([0, 1, 2], ['absent', 'soft', 'loud'])
+            #         plt.yticks([0, 1, 2], ['absent', 'soft', 'loud'])
+            #         plt.title('Confusion matrix')
+            #         plt.savefig(result_path + '/PCG Confusion matrix.png', dpi=600)
+            #         plt.close()
+            #
+            #         aver_PCG_acc.append(acc_metric)
+            #         aver_PCG_UAR.append(PCG_UAR)
+            #         aver_PCG_absent.append(Absent_recall)
+            #         aver_PCG_soft.append(Soft_recall)
+            #         aver_PCG_loud.append(Loud_recall)
+            #
+            #         # 保存早停模型
+            #         torch.save(
+            #             model,
+            #             os.path.join(model_path, 'es_model'),
+            #         )
+            #         # sd：保存模型和参数
+            #         torch.save({
+            #             'epoch': epoch,
+            #             'model_state_dict': model.state_dict(),
+            #             'optimizer_state_dict': optimizer.state_dict(),
+            #         }, os.path.join(model_path, 'sd_es_model.pth'))
+            #         print(
+            #             "Saving early_stop_model model to:",
+            #             os.path.join(model_path, 'es_model'),
+            #         )
+            #         print(f'Early stopping at epoch {epoch}')
+            #         break
 
-                # 计算五折召回率均值
-                avg_absent_recall.append(recall_per_class[0])
-                avg_soft_recall.append(recall_per_class[1])
-                avg_loud_recall.append(recall_per_class[2])
-                # avg_uar.append(PCG_UAR)
-                avg_uar.append((recall_per_class[0] + recall_per_class[1] + recall_per_class[2]) / 3)
-                # 计算五折F1均值
-                avg_absent_f1.append(f1_per_class[0])
-                avg_soft_f1.append(f1_per_class[1])
-                avg_loud_f1.append(f1_per_class[2])
-                # avg_uaf.append(PCG_f1)
-                avg_uaf.append((f1_per_class[0] + f1_per_class[1] + f1_per_class[2]) / 3)
+        best_train_acc = train_acc / len(train_loader)
+        best_val_acc = acc_metric
+        best_val_acc_soft = PCG_acc_soft_aver
+        best_val_soft = Soft_recall
+        best_epoch = epoch
 
-                print(
-                    "Saving loss_model model to:",
-                    os.path.join(model_path, "loss_model"),
-                )
-                counter = 0
-            else:
-                counter += 1
-                if counter >= patience:
-                    best_train_acc = train_acc / len(train_loader)
-                    best_val_acc = acc_metric
-                    best_val_acc_soft = PCG_acc_soft_aver
-                    best_val_soft = Soft_recall
-                    best_epoch = epoch
-
-                    best_Absent_recall = Absent_recall
-                    best_Soft_recall = Soft_recall
-                    best_Loud_recall = Loud_recall
-                    best_Absent_f1 = Absent_f1
-                    best_Soft_f1 = Soft_f1
-                    best_Loud_f1 = Loud_f1
-                    best_UAF = (best_Absent_f1 + best_Soft_f1 + best_Loud_f1) / 3
-                    best_PCG_UAR = (Absent_recall + Soft_recall + Loud_recall) / 3
-                    best_PCG_f1 = PCG_f1
-
-                    result_path = os.path.join(model_result_path, "ResultFile")
-                    if not os.path.exists(result_path):
-                        os.makedirs(result_path)
-
-                    # PCG混淆矩阵
-                    # 将预测标签和真实标签转换为numpy数组
-                    plt.figure()
-                    plt.imshow(cm, cmap=plt.cm.Blues)
-                    plt.colorbar()
-                    # 显示矩阵元素的数值
-                    for i in range(cm.shape[0]):
-                        for j in range(cm.shape[1]):
-                            plt.text(j, i, cm[i, j], ha='center', va='center')
-                    plt.xlabel('Predicted labels')
-                    plt.ylabel('True labels')
-                    plt.xticks([0, 1, 2], ['absent', 'soft', 'loud'])
-                    plt.yticks([0, 1, 2], ['absent', 'soft', 'loud'])
-                    plt.title('Confusion matrix')
-                    plt.savefig(result_path + '/PCG Confusion matrix.png', dpi=600)
-                    plt.close()
-
-                    aver_PCG_acc.append(acc_metric)
-                    aver_PCG_UAR.append(PCG_UAR)
-                    aver_PCG_absent.append(Absent_recall)
-                    aver_PCG_soft.append(Soft_recall)
-                    aver_PCG_loud.append(Loud_recall)
-
-                    # 保存早停模型
-                    torch.save(
-                        model,
-                        os.path.join(model_path, 'es_model'),
-                    )
-                    # sd：保存模型和参数
-                    torch.save({
-                        'epoch': epoch,
-                        'model_state_dict': model.state_dict(),
-                        'optimizer_state_dict': optimizer.state_dict(),
-                    }, os.path.join(model_path, 'sd_es_model.pth'))
-                    print(
-                        "Saving early_stop_model model to:",
-                        os.path.join(model_path, 'es_model'),
-                    )
-                    print(f'Early stopping at epoch {epoch}')
-                    break
-
-        # best_train_acc = train_acc / len(train_loader)
-        # best_val_acc = acc_metric
-        # best_val_acc_soft = PCG_acc_soft_aver
-        # best_val_soft = Soft_recall
-        # best_epoch = epoch
-        #
-        # best_Absent_recall = Absent_recall
-        # best_Soft_recall = Soft_recall
-        # best_Loud_recall = Loud_recall
-        # best_Absent_f1 = Absent_f1
-        # best_Soft_f1 = Soft_f1
-        # best_Loud_f1 = Loud_f1
-        # best_UAF = (best_Absent_f1 + best_Soft_f1 + best_Loud_f1) / 3
-        # best_PCG_UAR = (Absent_recall + Soft_recall + Loud_recall) / 3
-        # best_PCG_f1 = PCG_f1
+        best_Absent_recall = Absent_recall
+        best_Soft_recall = Soft_recall
+        best_Loud_recall = Loud_recall
+        best_Absent_f1 = Absent_f1
+        best_Soft_f1 = Soft_f1
+        best_Loud_f1 = Loud_f1
+        best_UAF = (best_Absent_f1 + best_Soft_f1 + best_Loud_f1) / 3
+        best_PCG_UAR = (Absent_recall + Soft_recall + Loud_recall) / 3
+        best_PCG_f1 = PCG_f1
 
         result_path = os.path.join(model_result_path, "ResultFile")
         if not os.path.exists(result_path):
