@@ -105,7 +105,7 @@ if __name__ == "__main__":
         # test_batch_size = 1
         test_batch_size = 1
         # learning_rate = 0.005
-        learning_rate = 0.0005  # mask
+        learning_rate = 0.00005  # mask
         num_epochs = 100
         # num_epochs = 30  # sd Fuse
         # num_epochs = 60  # sd KAN 会过拟合
@@ -131,10 +131,11 @@ if __name__ == "__main__":
         device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         model = model.to(device)  # 放到设备中
         # 设置优化器
-        optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, betas=(0.9, 0.999), eps=1e-7)
+        # optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, betas=(0.9, 0.999), eps=1e-7)
+        optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=1e-5, betas=(0.9, 0.999), eps=1e-7)  # 添加L2正则化
         # 设置学习率调度器
         # 对于加入掩码的数据，不使用学习率调度器而是增加学习轮数，加入早停,还注释了scheduler.step()
-        scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, [10, 20, 30], gamma=0.5)
+        # scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, [10, 20, 30], gamma=0.5)
         # scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, [5, 10, 15, 20, 25, 30], gamma=0.2)  # sd Fuse会过拟合
 
         # 设置损失函数
@@ -209,7 +210,7 @@ if __name__ == "__main__":
                 acc = num_correct / train_batch_size
                 train_acc += acc
                 all_y_pred.append(y_pred.cpu().detach())
-            scheduler.step()
+            # scheduler.step()
             print("第%d个epoch的学习率：%f" % (epoch, optimizer.param_groups[0]['lr']))
             all_train_acc.append(train_acc / len(train_loader))
             all_train_loss.append(train_loss / len(train_loader))

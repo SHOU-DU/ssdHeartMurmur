@@ -512,9 +512,15 @@ class AudioClassifierFuseODconv(nn.Module):
         return x_cat
 
 
+# 计算参数量
+def count_parameters(model):
+    return sum(p.numel() for p in model.parameters() if p.requires_grad)
+
+
 if __name__ == "__main__":
     # model = AudioClassifierFuseODconv()
     model = AudioClassifierODconv()
+    print(f"The model has {count_parameters(model):,} trainable parameters")
     X = torch.rand(10, 1, 64, 239)
     X2 = torch.rand(128, 69, 239)
     output = model(X2)
