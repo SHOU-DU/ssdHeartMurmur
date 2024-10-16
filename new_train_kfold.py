@@ -105,7 +105,7 @@ if __name__ == "__main__":
         # test_batch_size = 1
         test_batch_size = 1
         # learning_rate = 0.005
-        learning_rate = 0.00005  # mask
+        learning_rate = 0.0001  # mask
         num_epochs = 100
         # num_epochs = 30  # sd Fuse
         # num_epochs = 60  # sd KAN 会过拟合
