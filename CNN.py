@@ -164,28 +164,28 @@ class AudioClassifierODconv(nn.Module):
         self.ODconv = ODConv2d(8, 8, 3, padding=1)
         self.conv1 = nn.Sequential(
             depthwise_separable_conv(8, 8),
-            nn.BatchNorm2d(16),
+            nn.BatchNorm2d(8),
             nn.ReLU(),
             # nn.Dropout(0.2),  # 靠近输入的地方设置较小的dropout值
             nn.MaxPool2d(2)
         )
         self.conv2 = nn.Sequential(
             depthwise_separable_conv(8, 16),
-            nn.BatchNorm2d(32),
+            nn.BatchNorm2d(16),
             nn.ReLU(),
             # nn.Dropout(0.3),  # 靠近输入的地方设置较小的dropout值
             nn.MaxPool2d(2)
         )
         self.conv3 = nn.Sequential(
             depthwise_separable_conv(16, 32),
-            nn.BatchNorm2d(64),
+            nn.BatchNorm2d(32),
             nn.ReLU(),
             # nn.Dropout(0.4),  # 靠近输入的地方设置较小的dropout值
             nn.MaxPool2d(2)
         )
         self.conv4 = nn.Sequential(
             depthwise_separable_conv(32, 64),
-            nn.BatchNorm2d(128),
+            nn.BatchNorm2d(64),
             nn.ReLU(),
             # nn.Dropout(0.5),  # 靠近输入的地方设置较小的dropout值
             nn.MaxPool2d(2)
