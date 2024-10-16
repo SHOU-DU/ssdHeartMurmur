@@ -67,7 +67,7 @@ if __name__ == "__main__":
         # 采用最后一轮的模型进行评估
         # model_result_path = os.path.join('test_result_odconv_k3_repeat_weight_2_2_6_last_model_batchsize128', fold_path, str(j) + '_fold')
         # CB_Loss_test_model_path = r'E:\sdmurmur\ssdHeartMurmur\mask\test_TF_ODC_k3_2_3_4_5'  # 保存测试结果的路径
-        mask_test_model_path = r'E:\sdmurmur\ssdHeartMurmur\early_stop\test_TF_ODC_k3_0001_64'  # 保存测试结果的路径
+        mask_test_model_path = r'E:\sdmurmur\ssdHeartMurmur\early_stop\test_TF_ODC_k3_0001_64_300'  # 保存测试结果的路径
         model_result_path = os.path.join(mask_test_model_path, str(j)+'_fold')
         # 设置环境变量，指定可见的 GPU 设备
         os.environ['CUDA_VISIBLE_DEVICES'] = '0'
