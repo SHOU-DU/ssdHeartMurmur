@@ -68,11 +68,11 @@ if __name__ == "__main__":
         feature_path = os.path.join(fold_path, 'feature')
         label_path = os.path.join(fold_path, 'label')
 
-        train_data = np.load(feature_path + r'\mask_train_loggamma.npy',
+        train_data = np.load(feature_path + r'\train_loggamma.npy',
                              allow_pickle=True)  # 加载训练集和验证集数据，验证集和测试集搞反了，test_loggamma.npy应该存为vali_loggamma.npy
         vali_data = np.load(feature_path + r'\vali_loggamma.npy', allow_pickle=True)
 
-        train_label = np.load(label_path + r'\mask_train_label.npy', allow_pickle=True)  # 加载训练集和测试集标签
+        train_label = np.load(label_path + r'\train_label.npy', allow_pickle=True)  # 加载训练集和测试集标签
         vali_label = np.load(label_path + r'\vali_label.npy', allow_pickle=True)
 
         vali_location = np.load(label_path + r'\vali_location.npy', allow_pickle=True)
@@ -123,7 +123,7 @@ if __name__ == "__main__":
         # 模型选择
         model = AudioClassifierFuseODconv()  # sd Fuse ODconv gamma=2.5
         # model = AudioClassifierODconv()
-        CBloss_model_path = r'E:\sdmurmur\ssdHeartMurmur\mask\TF_TDF_ODC_k3_cat133_15_15_es_5_0001'
+        CBloss_model_path = r'E:\sdmurmur\ssdHeartMurmur\early_stop\TF_TDF_ODC_k3_cat133_15_15_es_5_0001'
         # model_result_path = os.path.join('all_data_TF_MFCC_TDFMVCST_ODC_k3__FCCat384_25_25_5', fold_path)
         # model_result_path = os.path.join('all_data_TF_ODConv_k3_weight_25_25_5', fold_path)
         model_result_path = os.path.join(CBloss_model_path, fold)
@@ -295,7 +295,6 @@ if __name__ == "__main__":
             Loud_recall = cm[2][2] / Loud_num
 
             PCG_UAR = (Absent_recall + Soft_recall + Loud_recall) / 3
-
             PCG_acc_soft_aver = (acc_metric + Soft_recall) / 2  # 准确率和soft找回率均值
             print("------------------------------PCG result------------------------------")
             print("Absent_recall: %.4f, Soft_recall: %.4f, Loud_recall: %.4f,PCG_UAR: %.4f"
