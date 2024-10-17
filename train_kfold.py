@@ -121,7 +121,7 @@ if __name__ == "__main__":
         print("DataLoader is OK")
         # 模型选择
         # model = AudioClassifierFuseODconv()  # sd Fuse ODconv gamma=2.5
-        model = AudioClassifierODconv()
+        model = AudioClassifier()
         CBloss_model_path = r'E:\sdmurmur\ssdHeartMurmur\all_data_results\TF_SK_FocalLoss_1_1_1_old'
         # model_result_path = os.path.join('all_data_TF_MFCC_TDFMVCST_ODC_k3__FCCat384_25_25_5', fold_path)
         # model_result_path = os.path.join('all_data_TF_ODConv_k3_weight_25_25_5', fold_path)
