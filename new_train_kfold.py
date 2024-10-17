@@ -123,7 +123,7 @@ if __name__ == "__main__":
         # 模型选择
         # model = AudioClassifierFuseODconv()  # sd Fuse ODconv gamma=2.5
         model = AudioClassifierODconv()
-        CBloss_model_path = r'E:\sdmurmur\ssdHeartMurmur\early_stop\TF_ODC_k3_001_64_150'
+        CBloss_model_path = r'E:\sdmurmur\ssdHeartMurmur\early_stop\TF_ODC_k3_001_64_150_lr_step'
         # model_result_path = os.path.join('all_data_TF_MFCC_TDFMVCST_ODC_k3__FCCat384_25_25_5', fold_path)
         # model_result_path = os.path.join('all_data_TF_ODConv_k3_weight_25_25_5', fold_path)
         model_result_path = os.path.join(CBloss_model_path, fold)
@@ -210,7 +210,7 @@ if __name__ == "__main__":
                 acc = num_correct / train_batch_size
                 train_acc += acc
                 all_y_pred.append(y_pred.cpu().detach())
-            # scheduler.step()
+            scheduler.step()
             print("第%d个epoch的学习率：%f" % (epoch, optimizer.param_groups[0]['lr']))
             all_train_acc.append(train_acc / len(train_loader))
             all_train_loss.append(train_loss / len(train_loader))
