@@ -595,7 +595,7 @@ if __name__ == "__main__":
         avg_soft_f1.append(f1_per_class[1])
         avg_loud_f1.append(f1_per_class[2])
         # avg_uaf.append(PCG_f1)
-        avg_uaf.append((f1_per_class[0]+f1_per_class[1]+f1_per_class[2]))
+        avg_uaf.append((f1_per_class[0]+f1_per_class[1]+f1_per_class[2])/3)
     # 计算并存储五折平均召回率和F1分数
     mean_absent_recall = np.mean(avg_absent_recall)
     mean_soft_recall = np.mean(avg_soft_recall)
