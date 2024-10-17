@@ -16,6 +16,7 @@ from torch.utils.data import DataLoader, WeightedRandomSampler
 from patient_information import get_locations, cal_patient_acc, single_result, location_result
 import random
 from sklearn.metrics import recall_score, f1_score
+# init_seed = 10
 init_seed = 20
 torch.manual_seed(init_seed)
 torch.cuda.manual_seed(init_seed)
