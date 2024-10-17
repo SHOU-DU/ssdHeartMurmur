@@ -121,8 +121,8 @@ if __name__ == "__main__":
         print("DataLoader is OK")
         # 模型选择
         # model = AudioClassifierFuseODconv()  # sd Fuse ODconv gamma=2.5
-        model = AudioClassifierODconv()
-        CBloss_model_path = r'E:\sdmurmur\ssdHeartMurmur\all_data_results\TF_ODC_FocalLoss_25_25_5_old_128'
+        model = AudioClassifier()
+        CBloss_model_path = r'E:\sdmurmur\ssdHeartMurmur\all_data_results\TF_SK_FocalLoss_4_3_3_old_128'
         # model_result_path = os.path.join('all_data_TF_MFCC_TDFMVCST_ODC_k3__FCCat384_25_25_5', fold_path)
         # model_result_path = os.path.join('all_data_TF_ODConv_k3_weight_25_25_5', fold_path)
         model_result_path = os.path.join(CBloss_model_path, fold)
@@ -137,7 +137,7 @@ if __name__ == "__main__":
 
         # 设置损失函数
         # weight = torch.tensor([1, 1, 1]).to(device)
-        weight = torch.tensor([0.25, 0.25, 0.50]).to(device)  # sd 改变权重值，增加loud权重
+        weight = torch.tensor([0.4, 0.3, 0.3]).to(device)  # sd 改变权重值，增加loud权重
         # criterion = Focal_Loss(gamma=2.5, weight=weight)
         # CB_Loss损失函数参数设置
         samples_per_cls = [class_count[0], class_count[1], class_count[2]]
