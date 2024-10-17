@@ -519,10 +519,10 @@ def count_parameters(model):
 
 if __name__ == "__main__":
     # model = AudioClassifierFuseODconv()
-    model = AudioClassifierODconv()
+    model = AudioClassifier()
     print(f"The model has {count_parameters(model):,} trainable parameters")
     X = torch.rand(10, 1, 64, 239)
-    X2 = torch.rand(128, 69, 239)
+    X2 = torch.rand(128, 160, 239)
     output = model(X2)
 
     # # 假设 x1 和 x2 的形状都是 [256, 3]
