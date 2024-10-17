@@ -160,38 +160,38 @@ class AudioClassifierODconv(nn.Module):
     # 2024/09/24 PM 单特征gamma_tone输入ODConv网络
     def __init__(self):
         super().__init__()
-        self.pre = self._pre(1, 8)
-        self.ODconv = ODConv2d(8, 8, 3, padding=1)
+        self.pre = self._pre(1, 16)
+        self.ODconv = ODConv2d(16, 16, 3, padding=1)
         self.conv1 = nn.Sequential(
-            depthwise_separable_conv(8, 8),
-            nn.BatchNorm2d(8),
+            depthwise_separable_conv(16, 16),
+            nn.BatchNorm2d(16),
             nn.ReLU(),
             # nn.Dropout(0.2),  # 靠近输入的地方设置较小的dropout值
             nn.MaxPool2d(2)
         )
         self.conv2 = nn.Sequential(
-            depthwise_separable_conv(8, 16),
-            nn.BatchNorm2d(16),
+            depthwise_separable_conv(16, 32),
+            nn.BatchNorm2d(32),
             nn.ReLU(),
             # nn.Dropout(0.3),  # 靠近输入的地方设置较小的dropout值
             nn.MaxPool2d(2)
         )
         self.conv3 = nn.Sequential(
-            depthwise_separable_conv(16, 32),
-            nn.BatchNorm2d(32),
+            depthwise_separable_conv(32, 64),
+            nn.BatchNorm2d(64),
             nn.ReLU(),
             # nn.Dropout(0.4),  # 靠近输入的地方设置较小的dropout值
             nn.MaxPool2d(2)
         )
         self.conv4 = nn.Sequential(
-            depthwise_separable_conv(32, 64),
-            nn.BatchNorm2d(64),
+            depthwise_separable_conv(64, 128),
+            nn.BatchNorm2d(128),
             nn.ReLU(),
             # nn.Dropout(0.5),  # 靠近输入的地方设置较小的dropout值
             nn.MaxPool2d(2)
         )
         self.ap = nn.AdaptiveAvgPool2d(output_size=1)
-        self.lin = nn.Linear(in_features=64, out_features=3)
+        self.lin = nn.Linear(in_features=128, out_features=3)
 
 
     def _pre(self, input_channel, outchannel):
@@ -518,8 +518,8 @@ def count_parameters(model):
 
 
 if __name__ == "__main__":
-    # model = AudioClassifierFuseODconv()
-    model = AudioClassifier()
+    model = AudioClassifierODconv()
+    # model = AudioClassifier()
     print(f"The model has {count_parameters(model):,} trainable parameters")
     X = torch.rand(10, 1, 64, 239)
     X2 = torch.rand(128, 160, 239)
