@@ -122,7 +122,7 @@ if __name__ == "__main__":
         # 模型选择
         # model = AudioClassifierFuseODconv()  # sd Fuse ODconv gamma=2.5
         model = AudioClassifierODconv()
-        CBloss_model_path = r'E:\sdmurmur\ssdHeartMurmur\all_data_results\TF_ODC_CBLoss_09_sigmoid_old_128'
+        CBloss_model_path = r'E:\sdmurmur\ssdHeartMurmur\all_data_results\TF_ODC_CBLoss_09_softmax_old_128'
         # model_result_path = os.path.join('all_data_TF_MFCC_TDFMVCST_ODC_k3__FCCat384_25_25_5', fold_path)
         # model_result_path = os.path.join('all_data_TF_ODConv_k3_weight_25_25_5', fold_path)
         model_result_path = os.path.join(CBloss_model_path, fold)
@@ -142,8 +142,8 @@ if __name__ == "__main__":
         # CB_Loss损失函数参数设置
         samples_per_cls = [class_count[0], class_count[1], class_count[2]]
         beta = 0.9
-        # loss_type = "softmax"
-        loss_type = "sigmoid"
+        loss_type = "softmax"
+        # loss_type = "sigmoid"
         no_of_classes = 3
         gamma = 2.5
         criterion = Focal_Loss(gamma=2.5, weight=weight)  # sd 增大gamma
