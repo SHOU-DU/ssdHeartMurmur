@@ -16,7 +16,7 @@ from torch.utils.data import DataLoader, WeightedRandomSampler
 from patient_information import get_locations, cal_patient_acc, single_result, location_result
 import random
 from sklearn.metrics import recall_score, f1_score
-init_seed = 10
+init_seed = 20
 torch.manual_seed(init_seed)
 torch.cuda.manual_seed(init_seed)
 torch.cuda.manual_seed_all(init_seed)
@@ -121,8 +121,8 @@ if __name__ == "__main__":
         print("DataLoader is OK")
         # 模型选择
         # model = AudioClassifierFuseODconv()  # sd Fuse ODconv gamma=2.5
-        model = AudioClassifier()
-        CBloss_model_path = r'E:\sdmurmur\ssdHeartMurmur\all_data_results\TF_SK_CBLoss_09_sigmoid_old_128'
+        model = AudioClassifierODconv()
+        CBloss_model_path = r'E:\sdmurmur\ssdHeartMurmur\all_data_results\TF_ODC_FocalLoss_1_1_1_old_128_20'
         # model_result_path = os.path.join('all_data_TF_MFCC_TDFMVCST_ODC_k3__FCCat384_25_25_5', fold_path)
         # model_result_path = os.path.join('all_data_TF_ODConv_k3_weight_25_25_5', fold_path)
         model_result_path = os.path.join(CBloss_model_path, fold)
@@ -136,8 +136,8 @@ if __name__ == "__main__":
         # scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, [5, 10, 15, 20, 25, 30], gamma=0.2)  # sd Fuse会过拟合
 
         # 设置损失函数
-        # weight = torch.tensor([1, 1, 1]).to(device)
-        weight = torch.tensor([0.35, 0.3, 0.35]).to(device)  # sd 改变权重值，增加loud权重
+        weight = torch.tensor([1, 1, 1]).to(device)
+        # weight = torch.tensor([0.35, 0.3, 0.35]).to(device)  # sd 改变权重值，增加loud权重
         # criterion = Focal_Loss(gamma=2.5, weight=weight)
         # CB_Loss损失函数参数设置
         samples_per_cls = [class_count[0], class_count[1], class_count[2]]
@@ -191,8 +191,8 @@ if __name__ == "__main__":
                 # 设置损失函数
                 outputs = model(x)
                 optimizer.zero_grad()
-                loss = CB_loss(y.long(), outputs, samples_per_cls, no_of_classes, loss_type, beta, gamma)
-                # loss = criterion(outputs, y.long())
+                # loss = CB_loss(y.long(), outputs, samples_per_cls, no_of_classes, loss_type, beta, gamma)
+                loss = criterion(outputs, y.long())
                 loss.backward()
                 optimizer.step()
 
@@ -230,8 +230,8 @@ if __name__ == "__main__":
                     z = z.to(device)
 
                     outputs = model(x)
-                    loss = CB_loss(y.long(), outputs, samples_per_cls, no_of_classes, loss_type, beta, gamma)
-                    # loss = criterion(outputs, y.long())
+                    # loss = CB_loss(y.long(), outputs, samples_per_cls, no_of_classes, loss_type, beta, gamma)
+                    loss = criterion(outputs, y.long())
                     val_loss += loss.item()
                     _, y_pred = outputs.max(1)
                     num_correct = (y_pred == y).sum().item()
