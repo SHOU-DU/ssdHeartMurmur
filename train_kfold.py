@@ -125,7 +125,7 @@ if __name__ == "__main__":
         # model = AudioClassifierFuseODconv()  # sd Fuse ODconv gamma=2.5
         model = AudioClassifier()
         # CBloss_model_path = r'E:\sdmurmur\ssdHeartMurmur\all_data_results\TF_TDF_ODC_MM_FocalLoss_25_25_5_old_192M2total_10'
-        CBloss_model_path = r'E:\sdmurmur\ssdHeartMurmur\all_data_results\TF_SK_FocalLoss_6_2_2_old_128_10'
+        CBloss_model_path = r'E:\sdmurmur\ssdHeartMurmur\all_data_results\TF_SK_FocalLoss_1_1_1_old_64_10'
         # model_result_path = os.path.join('all_data_TF_MFCC_TDFMVCST_ODC_k3__FCCat384_25_25_5', fold_path)
         # model_result_path = os.path.join('all_data_TF_ODConv_k3_weight_25_25_5', fold_path)
         model_result_path = os.path.join(CBloss_model_path, fold)
@@ -139,8 +139,8 @@ if __name__ == "__main__":
         # scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, [5, 10, 15, 20, 25, 30], gamma=0.2)  # sd Fuse会过拟合
 
         # 设置损失函数
-        # weight = torch.tensor([1, 1, 1]).to(device)
-        weight = torch.tensor([0.6, 0.2, 0.2]).to(device)  # sd 改变权重值，增加loud权重
+        weight = torch.tensor([1, 1, 1]).to(device)
+        # weight = torch.tensor([0.6, 0.2, 0.2]).to(device)  # sd 改变权重值，增加loud权重
         # criterion = Focal_Loss(gamma=2.5, weight=weight)
         # CB_Loss损失函数参数设置
         samples_per_cls = [class_count[0], class_count[1], class_count[2]]
