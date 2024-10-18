@@ -9,7 +9,7 @@ from Imbanlance_Loss import Focal_Loss, DiceLoss, PolyLoss
 from class_balanced_loss import CB_loss
 import math
 import torch.optim as optim
-from CNN import (AudioClassifier, AudioClassifierFuseODconv, AudioClassifierODconv)
+from CNN import (AudioClassifier, AudioClassifierFuseODconv, AudioClassifierODconv, AudioClassifierMMODconv)
 # from efficient_kan import KAN
 from My_Dataloader import NewDataset, TrainDataset, Dataset2, MyDataset
 from torch.utils.data import DataLoader, WeightedRandomSampler
@@ -121,9 +121,10 @@ if __name__ == "__main__":
         test_loader = DataLoader(vali_set, batch_size=test_batch_size)
         print("DataLoader is OK")
         # 模型选择
-        model = AudioClassifierFuseODconv()  # sd Fuse ODconv gamma=2.5
+        model = AudioClassifierMMODconv()  # sd multi Model ODconv gamma=2.5
+        # model = AudioClassifierFuseODconv()  # sd Fuse ODconv gamma=2.5
         # model = AudioClassifierODconv()
-        CBloss_model_path = r'E:\sdmurmur\ssdHeartMurmur\all_data_results\TF_TDF_ODC_FocalLoss_1_1_1_old_133_10'
+        CBloss_model_path = r'E:\sdmurmur\ssdHeartMurmur\all_data_results\TF_TDF_ODC_MM_FocalLoss_1_1_1_old_256_10'
         # model_result_path = os.path.join('all_data_TF_MFCC_TDFMVCST_ODC_k3__FCCat384_25_25_5', fold_path)
         # model_result_path = os.path.join('all_data_TF_ODConv_k3_weight_25_25_5', fold_path)
         model_result_path = os.path.join(CBloss_model_path, fold)
