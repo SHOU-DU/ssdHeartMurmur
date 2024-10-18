@@ -33,31 +33,34 @@ class SEBlock(nn.Module):
 class ResBlock(nn.Module):
     def __init__(self, in_channels, out_channels):
         super(ResBlock, self).__init__()
+        self.bn1 = nn.BatchNorm2d(in_channels, out_channels)
+        self.dropout1 = nn.Dropout(0.2)
         self.sepconv1 = SepConv(in_channels, out_channels)
-        self.bn1 = nn.BatchNorm2d(out_channels)
-        self.relu = nn.ReLU(inplace=True)
-        self.dropout = nn.Dropout(0.2)
-        self.sepconv2 = SepConv(out_channels, out_channels)
         self.bn2 = nn.BatchNorm2d(out_channels)
+        self.relu = nn.ReLU(inplace=True)
+        self.dropout2 = nn.Dropout(0.2)
+        self.sepconv2 = SepConv(out_channels, out_channels)
+        self.bn3 = nn.BatchNorm2d(out_channels)
         self.se = SEBlock(out_channels)
-
+        self.sepconv3 = SepConv(in_channels, out_channels)
         # 1x1 convolution to match dimensions if necessary
-        if in_channels != out_channels:
-            self.conv1x1 = nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=1)
-        else:
-            self.conv1x1 = None
+        # if in_channels != out_channels:
+        #     self.conv1x1 = nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=1)
+        # else:
+        #     self.conv1x1 = None
 
     def forward(self, x):
-        identity = x
-        out = self.bn1(self.sepconv1(x))
+        identity = self.sepconv3(x)
+        out = self.dropout1(self.bn1(x))
+        out = self.bn2(self.sepconv1(out))
         out = self.relu(out)
-        out = self.dropout(out)
-        out = self.bn2(self.sepconv2(out))
+        out = self.dropout2(out)
+        out = self.bn3(self.sepconv2(out))
         out = self.se(out)
 
         # Adjust identity dimensions if they don't match
-        if self.conv1x1 is not None:
-            identity = self.conv1x1(identity)
+        # if self.conv1x1 is not None:
+        #     identity = self.conv1x1(identity)
 
         out += identity  # Residual connection
         return out
