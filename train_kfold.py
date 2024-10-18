@@ -17,8 +17,8 @@ from torch.utils.data import DataLoader, WeightedRandomSampler
 from patient_information import get_locations, cal_patient_acc, single_result, location_result
 import random
 from sklearn.metrics import recall_score, f1_score
-init_seed = 10
-# init_seed = 20
+# init_seed = 10
+init_seed = 12
 torch.manual_seed(init_seed)
 torch.cuda.manual_seed(init_seed)
 torch.cuda.manual_seed_all(init_seed)
@@ -129,7 +129,7 @@ if __name__ == "__main__":
         model = AmgModel(resblock, 1, 3)
         # CBloss_model_path = r'E:\sdmurmur\ssdHeartMurmur\all_data_results\TF_TDF_ODC_MM_FocalLoss_25_25_5_old_192M2total_10'
         # CBloss_model_path = r'E:\sdmurmur\ssdHeartMurmur\all_data_results\TF_SK_FocalLoss_1_1_1_old_64_10'
-        CBloss_model_path = r'E:\sdmurmur\ssdHeartMurmur\all_data_results\TF_AMG_FocalLoss_1_1_1_old_64_10'
+        CBloss_model_path = r'E:\sdmurmur\ssdHeartMurmur\all_data_results\TF_AMG_FocalLoss_1_1_1_old_64_12'
         # model_result_path = os.path.join('all_data_TF_MFCC_TDFMVCST_ODC_k3__FCCat384_25_25_5', fold_path)
         # model_result_path = os.path.join('all_data_TF_ODConv_k3_weight_25_25_5', fold_path)
         model_result_path = os.path.join(CBloss_model_path, fold)
