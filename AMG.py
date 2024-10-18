@@ -86,16 +86,18 @@ class HeartSoundModel(nn.Module):
         self.fc = nn.Linear(64, num_classes)
 
     def forward(self, x):
-        x = self.relu(self.bn1(self.conv1(x)))  # First conv layer
-        x = self.resblock1(x)  # Residual blocks
-        x = self.resblock2(x)
-        x = self.resblock3(x)
-        x = self.resblock4(x)
-        x = self.gap(x)  # Global Average Pooling
-        x = torch.flatten(x, 1)
-        x = self.dropout(x)
-        x = self.fc(x)  # Fully connected layer
-        return x
+        x = x.unsqueeze(1)
+        x2 = x[:, :, : 64, :]  # 时频域
+        x2 = self.relu(self.bn1(self.conv1(x2)))  # First conv layer
+        x2 = self.resblock1(x2)  # Residual blocks
+        x2 = self.resblock2(x2)
+        x2 = self.resblock3(x2)
+        x2 = self.resblock4(x2)
+        x2 = self.gap(x2)  # Global Average Pooling
+        x2 = torch.flatten(x2, 1)
+        x2 = self.dropout(x2)
+        x2 = self.fc(x2)  # Fully connected layer
+        return x2
 
 
 if __name__ == '__main__':
