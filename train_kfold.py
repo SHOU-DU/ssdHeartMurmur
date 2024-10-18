@@ -10,7 +10,7 @@ from class_balanced_loss import CB_loss
 import math
 import torch.optim as optim
 from CNN import (AudioClassifier, AudioClassifierFuseODconv, AudioClassifierODconv, AudioClassifierMMODconv)
-from AMG import HeartSoundModel
+from AMG import HeartSoundModel, AmgModel, resblock
 # from efficient_kan import KAN
 from My_Dataloader import NewDataset, TrainDataset, Dataset2, MyDataset
 from torch.utils.data import DataLoader, WeightedRandomSampler
@@ -125,7 +125,8 @@ if __name__ == "__main__":
         # model = AudioClassifierMMODconv()  # sd multi Model ODconv gamma=2.5
         # model = AudioClassifierFuseODconv()  # sd Fuse ODconv gamma=2.5
         # model = AudioClassifier()
-        model = HeartSoundModel(num_classes=3)  # AMG model
+        # model = HeartSoundModel(num_classes=3)  # AMG model
+        model = AmgModel(resblock, 1, 3)
         # CBloss_model_path = r'E:\sdmurmur\ssdHeartMurmur\all_data_results\TF_TDF_ODC_MM_FocalLoss_25_25_5_old_192M2total_10'
         # CBloss_model_path = r'E:\sdmurmur\ssdHeartMurmur\all_data_results\TF_SK_FocalLoss_1_1_1_old_64_10'
         CBloss_model_path = r'E:\sdmurmur\ssdHeartMurmur\all_data_results\TF_AMG_FocalLoss_1_1_1_old_64_10'
