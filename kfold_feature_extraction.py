@@ -44,14 +44,16 @@ def save_kfold_feature(kfold_folder, cwt_feature, feature_folder, kfold=int):
 
         # train_feature = Log_GF_GAF(kfold_folder_train)
         # train_feature = Log_GF_CWT_PCA(kfold_folder_train, cwt_train_folder)
-        train_feature = Log_GF_TDF_CST_MV_MFCC(kfold_folder_train, tdf_train_folder)
+        # train_feature = Log_GF_TDF_CST_MV_MFCC(kfold_folder_train, tdf_train_folder)
+        train_feature = Log_mel_32(kfold_folder_train)
 
         train_label, train_location, train_id = get_label(kfold_folder_train)  # 获取各个3s片段label和听诊区位置和个体ID
         train_index = get_index(kfold_folder_train)
 
         # vali_feature = Log_GF_GAF(kfold_folder_vali)
         # vali_feature = Log_GF_CWT_PCA(kfold_folder_vali, cwt_vali_folder)
-        vali_feature = Log_GF_TDF_CST_MV_MFCC(kfold_folder_vali, tdf_vali_folder)
+        # vali_feature = Log_GF_TDF_CST_MV_MFCC(kfold_folder_vali, tdf_vali_folder)
+        vali_feature = Log_mel_32(kfold_folder_vali)
 
         vali_label, vali_location, vali_id = get_label(kfold_folder_vali)
         vali_index = get_index(kfold_folder_vali)
@@ -93,6 +95,32 @@ def Log_GF(data_directory):
                                             low_freq=25,
                                             high_freq=2000)
             fbank_feat = gSpec.T
+            fbank_feat = np.log(fbank_feat)
+            fbank_feat = feature_norm(fbank_feat)
+
+            # fbank_feat = feature_norm(fbank_feat)
+            # fbank_feat = delt_feature(fbank_feat)
+            loggamma.append(fbank_feat)
+
+        else:
+            continue
+    return np.array(loggamma)
+
+
+def Log_mel_32(data_directory):
+    loggamma = list()
+    for f in tqdm(sorted(os.listdir(data_directory)), desc=str(data_directory) + ' Log_GF feature:'):  # 加tqdm可视化特征提取过程
+        root, extension = os.path.splitext(f)
+        if extension == '.wav':
+            x, fs = librosa.load(os.path.join(data_directory, f), sr=4000)
+            x = x - np.mean(x)
+            x = x / np.max(np.abs(x))
+            frame_length = int(0.025 * fs)  # 帧长
+            hop_length = int(0.0125 * fs)  # 帧移
+            # gfreqs为经过gammatone滤波器后得到的傅里叶变换矩阵
+            gSpec = librosa.feature.melspectrogram(y=x, sr=fs, n_fft=512, hop_length=hop_length, win_length=frame_length,
+                                                   n_mels=32, window='hamming', fmax=800, power=2.0)
+            fbank_feat = gSpec[:, :-2]
             fbank_feat = np.log(fbank_feat)
             fbank_feat = feature_norm(fbank_feat)
 
@@ -481,7 +509,7 @@ def feature_norm(feat):
 if __name__ == '__main__':
     # 特征提取
     kfold_festure_in = r"E:\sdmurmur\all_data_kfold\non_scaled_all_data"  # 切割好的数据，对于present个体，只复制murmur存在的.wav文件
-    kfold_feature_folder = "all_data_feature_TF_TDF_CST_MV_MFCC_60Hz_cut_zero"  # 存储每折特征文件夹
+    kfold_feature_folder = "all_data_feature_log_mel_TF_32"  # 存储每折特征文件夹
     tdf_feature_folder = r"E:\sdmurmur\alldataEnvelopeandSE60Hz\data_kfold_cut_zero"  # 时域特征存储文件夹
     cwt_feature_folder = r"E:\sdmurmur\wavelets\data_kfold_cut_zero"  # cwt特征存储文件夹
     save_kfold_feature(kfold_festure_in, tdf_feature_folder, kfold_feature_folder, kfold=5)

@@ -18,9 +18,21 @@ if __name__ == '__main__':
     # MFCC Feature
     wavefile = r"E:\sdmurmur\ssdHeartMurmur\data_kfold_cut_zero\0_fold\train_data\9979_AV_Loud_0.wav"
     wave_data, fs = librosa.load(wavefile, sr=4000)
-    MFCC = librosa.feature.mfcc(y=wave_data, sr=fs, n_mfcc=64, n_fft=512, hop_length=50, win_length=100)
-    print(MFCC.shape)
-    librosa.display.specshow(MFCC, x_axis='s', sr=4000)
+    print(fs)
+    # 检查音频时长
+    audio_duration = len(wave_data) / fs
+    print(f"音频时长: {audio_duration} 秒")
+
+    frame_length = int(0.025 * fs)  # 帧长
+    hop_length = int(0.0125 * fs)  # 帧移
+    gSpec = librosa.feature.melspectrogram(y=wave_data, sr=fs, n_fft=512, hop_length=hop_length,
+                                           win_length=frame_length, n_mels=32, window='hamming', fmax=800, power=2.0)
+    log_gSpec = librosa.power_to_db(gSpec, ref=np.max)
+    print(log_gSpec.shape)
+    librosa.display.specshow(log_gSpec, x_axis='time', y_axis='linear', sr=fs*10, fmax=800)
+    log_gSpecT = log_gSpec[:, :-2]
+    print(log_gSpecT.shape)
+    # plt.ylim(0, 800)
     plt.colorbar()
     plt.tight_layout()
     plt.show()
