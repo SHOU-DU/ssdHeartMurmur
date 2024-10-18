@@ -521,7 +521,7 @@ class AudioClassifierMMODconv(nn.Module):
     def __init__(self):
         super().__init__()
         self.pre = self._pre(1, 16)
-        self.pre2 = self._pre(1, 16)
+        self.pre2 = self._pre(1, 8)
         self.pre3 = self._pre(1, 16)
         # self.pre2 = nn.Sequential(
         #     nn.ReLU(),
@@ -530,7 +530,7 @@ class AudioClassifierMMODconv(nn.Module):
         #     nn.ReLU(inplace=True)
         # )
         self.ODconv1 = ODConv2d(16, 16, 3, padding=1)
-        self.ODconv2 = ODConv2d(16, 16, 3, padding=1)
+        self.ODconv2 = ODConv2d(8, 8, 3, padding=1)
         self.ODconv3 = ODConv2d(16, 16, 3, padding=1)
         self.dfm = DF_Module(16, 16, reduction=False)
         self.conv1 = nn.Sequential(
@@ -558,25 +558,25 @@ class AudioClassifierMMODconv(nn.Module):
             nn.MaxPool2d(2)
         )
         self.conv21 = nn.Sequential(
-            depthwise_separable_conv(16, 16),
-            nn.BatchNorm2d(16),
+            depthwise_separable_conv(8, 8),
+            nn.BatchNorm2d(8),
             nn.ReLU(),
             nn.MaxPool2d(2)
         )
         self.conv22 = nn.Sequential(
+            depthwise_separable_conv(8, 16),
+            nn.BatchNorm2d(16),
+            nn.ReLU(),
+            nn.MaxPool2d(2)
+        )
+        self.conv23 = nn.Sequential(
             depthwise_separable_conv(16, 32),
             nn.BatchNorm2d(32),
             nn.ReLU(),
             nn.MaxPool2d(2)
         )
-        self.conv23 = nn.Sequential(
-            depthwise_separable_conv(32, 64),
-            nn.BatchNorm2d(64),
-            nn.ReLU(),
-            nn.MaxPool2d(2)
-        )
         self.conv24 = nn.Sequential(
-            depthwise_separable_conv(64, 64),
+            depthwise_separable_conv(32, 64),
             nn.BatchNorm2d(64),
             nn.ReLU(),
             nn.MaxPool2d(2)
