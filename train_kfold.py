@@ -121,9 +121,9 @@ if __name__ == "__main__":
         test_loader = DataLoader(vali_set, batch_size=test_batch_size)
         print("DataLoader is OK")
         # 模型选择
-        # model = AudioClassifierMMODconv()  # sd multi Model ODconv gamma=2.5
+        model = AudioClassifierMMODconv()  # sd multi Model ODconv gamma=2.5
         # model = AudioClassifierFuseODconv()  # sd Fuse ODconv gamma=2.5
-        model = AudioClassifier()
+        # model = AudioClassifier()
         CBloss_model_path = r'E:\sdmurmur\ssdHeartMurmur\all_data_results\TF_TDF_ODC_MM_FocalLoss_25_25_5_old_192M2total_10'
         # CBloss_model_path = r'E:\sdmurmur\ssdHeartMurmur\all_data_results\TF_SK_FocalLoss_5_25_25_old_192M2total_10'
         # model_result_path = os.path.join('all_data_TF_MFCC_TDFMVCST_ODC_k3__FCCat384_25_25_5', fold_path)
