@@ -552,8 +552,8 @@ class AudioClassifierMMODconv(nn.Module):
             nn.MaxPool2d(2)
         )
         self.conv4 = nn.Sequential(
-            depthwise_separable_conv(64, 128),
-            nn.BatchNorm2d(128),
+            depthwise_separable_conv(64, 64),
+            nn.BatchNorm2d(64),
             nn.ReLU(),
             nn.MaxPool2d(2)
         )
@@ -610,7 +610,7 @@ class AudioClassifierMMODconv(nn.Module):
         self.ap3 = nn.AdaptiveAvgPool2d(output_size=1)
         self.lin = nn.Linear(in_features=128, out_features=3)
         self.lin2 = nn.Linear(in_features=5, out_features=3)  # 时域特征判断loud
-        self.lin_fuse = nn.Linear(in_features=256, out_features=3)
+        self.lin_fuse = nn.Linear(in_features=192, out_features=3)
 
     def _pre(self, input_channel, outchannel):
         pre = nn.Sequential(nn.ReLU(),
