@@ -552,8 +552,8 @@ class AudioClassifierMMODconv(nn.Module):
             nn.MaxPool2d(2)
         )
         self.conv4 = nn.Sequential(
-            depthwise_separable_conv(64, 64),
-            nn.BatchNorm2d(64),
+            depthwise_separable_conv(64, 128),
+            nn.BatchNorm2d(128),
             nn.ReLU(),
             nn.MaxPool2d(2)
         )
@@ -576,8 +576,8 @@ class AudioClassifierMMODconv(nn.Module):
             nn.MaxPool2d(2)
         )
         self.conv24 = nn.Sequential(
-            depthwise_separable_conv(64, 128),
-            nn.BatchNorm2d(128),
+            depthwise_separable_conv(64, 64),
+            nn.BatchNorm2d(64),
             nn.ReLU(),
             nn.MaxPool2d(2)
         )
