@@ -190,11 +190,11 @@ if __name__ == "__main__":
         # train model
         no_better_epoch = 0
         torch.manual_seed(10)
-        model.train()  # sd KAN
         for epoch in range(num_epochs):
             train_loss = 0.0
             train_acc = 0.0
             all_y_pred = []
+            model.train()  # 设为训练模式
             for batch_idx, data in enumerate(train_loader):
                 x, y = data
                 x = x.to(device)
