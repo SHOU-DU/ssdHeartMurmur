@@ -213,6 +213,42 @@ def cut_copy_files(data_directory: str, patient_id: str, out_directory: str) -> 
                     end = start + 3 * fs
 
 
+def MDN_MARNN_cut_copy_files(data_directory: str, patient_id: str, out_directory: str) -> None:
+    files = os.listdir(data_directory)
+    for f in files:
+        root, extension = os.path.splitext(f)
+        if f.startswith(patient_id):
+            if extension == '.txt':
+                _ = shutil.copy(os.path.join(data_directory, f), out_directory)
+            elif extension == '.wav':
+                # 获取当前wav文件的ID 听诊区 等级
+                with open(os.path.join(data_directory, patient_id+'.txt'), 'r') as txt_f:
+                    txt_data = txt_f.read()
+                    patient_ID = txt_data.split('\n')[0].split()[0]  # 获取病人ID
+                    grade = get_grade(txt_data)
+                    location = root.split('_')[1]
+                recording, fs = librosa.load(os.path.join(data_directory, f), sr=4000)  # 加载音频数据
+                recording = librosa.resample(recording, orig_sr=4000, target_sr=2500)  # 重采样2500Hz
+                fs = 2500  # 更新采样率
+                # 计算切分参数
+                segment_length = 2 * fs  # 每个片段的长度为 2 秒
+                overlap_length = 1 * fs  # 重叠部分为 1 秒
+                num_segments = (len(recording) - overlap_length) // (segment_length - overlap_length)
+                # num_cut = len(recording) / (3 * 4000)  # 每个记录的片段数量
+                # time = len(recording)/fs
+
+                if num_segments >= 2:
+                    recording = recording[2 * fs:len(recording) - fs]
+                # 切分音频并保存
+                start = 0
+                for num in range(int(num_segments)):
+                    end = start + segment_length
+                    segment = recording[start:end]
+                    soundfile.write(os.path.join(out_directory, f'{patient_ID}_{location}_{grade}_{num}.wav'),
+                                    segment, fs)
+                    start += (segment_length - overlap_length)
+
+
 # 对于present个体，只复制murmur存在的.wav文件
 def my_cut_copy_files(data_directory: str, patient_id: str, out_directory: str) -> None:
     files = os.listdir(data_directory)

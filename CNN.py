@@ -206,7 +206,7 @@ class AudioClassifierODconv(nn.Module):
     # ----------------------------
     def forward(self, x):
         # 记录每层的输出
-        # outputs = {}
+        outputs = {}
         # Run the convolutional blocks
         x = x.unsqueeze(1)  # 为输入特征添加通道，变为(batch_size, 1, height, width)
         # outputs['input'] = x.shape
@@ -238,10 +238,10 @@ class AudioClassifierODconv(nn.Module):
 
         # Linear layer
         x_all = self.lin(x_all)
-        # outputs['output'] = x_all.shape
+        outputs['output'] = x_all.shape
 
-        # for layer_name, shape in outputs.items():
-        #     print(f'{layer_name}: {shape}')
+        for layer_name, shape in outputs.items():
+            print(f'{layer_name}: {shape}')
 
         # Final output
         return x_all
@@ -688,8 +688,8 @@ def count_parameters(model):
 
 if __name__ == "__main__":
     # model = AudioClassifierMMODconv()
-    # model = AudioClassifierODconv()
-    model = AudioClassifier()
+    model = AudioClassifierODconv()
+    # model = AudioClassifier()
     print(f"The model has {count_parameters(model):,} trainable parameters")
     X = torch.rand(10, 1, 64, 239)
     X2 = torch.rand(128, 160, 239)
