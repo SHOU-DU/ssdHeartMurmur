@@ -11,6 +11,7 @@ import math
 import torch.optim as optim
 from CNN import (AudioClassifier, AudioClassifierFuseODconv, AudioClassifierODconv, AudioClassifierMMODconv)
 from AMG import HeartSoundModel, AmgModel, resblock
+from MDN_MARNN import mdn_marnn
 # from efficient_kan import KAN
 from My_Dataloader import NewDataset, TrainDataset, Dataset2, MyDataset
 from torch.utils.data import DataLoader, WeightedRandomSampler
@@ -58,9 +59,11 @@ if __name__ == "__main__":
 
         # fold = '4_fold'  # 训练第i折
         # feature_data_path = 'all_data_feature_TF_TDF_CST_MV_MFCC_60Hz_cut_zero'  # 提取的特征和标签文件夹
-        feature_data_path = 'all_data_feature_log_mel_TF_32'  # AMG模型特征存储文件夹
+        # feature_data_path = 'all_data_feature_log_mel_TF_32'  # AMG模型特征存储文件夹
+        feature_data_path = 'all_data_feature_MDN_MARNN'  # MDN-MARNN模型特征存储文件夹
         # cut_data_kfold = r'data_kfold_cut_zero'
-        cut_data_kfold = r'E:\sdmurmur\all_data_kfold\non_scaled_all_data'  # 切分好的3s段数据
+        # cut_data_kfold = r'E:\sdmurmur\all_data_kfold\non_scaled_all_data'  # 切分好的3s段数据
+        cut_data_kfold = r'E:\sdmurmur\all_data_kfold\MDN_MARNN_all_data'  # 切分好的2s段数据
         if not test_flag:
             fold_path = os.path.join(feature_data_path, fold)
             cut_data = os.path.join(cut_data_kfold, fold, 'vali_data')
@@ -125,11 +128,11 @@ if __name__ == "__main__":
         # model = AudioClassifierMMODconv()  # sd multi Model ODconv gamma=2.5
         # model = AudioClassifierFuseODconv()  # sd Fuse ODconv gamma=2.5
         # model = AudioClassifier()
-        # model = HeartSoundModel(num_classes=3)  # AMG model
-        model = AmgModel(resblock, 1, 3)
+        # model = AmgModel(resblock, 1, 3)
+        model = mdn_marnn()
         # CBloss_model_path = r'E:\sdmurmur\ssdHeartMurmur\all_data_results\TF_TDF_ODC_MM_FocalLoss_25_25_5_old_192M2total_10'
         # CBloss_model_path = r'E:\sdmurmur\ssdHeartMurmur\all_data_results\TF_SK_FocalLoss_1_1_1_old_64_10'
-        CBloss_model_path = r'E:\sdmurmur\ssdHeartMurmur\all_data_results\TF_AMG_FocalLoss_1_1_1_old_64_10'
+        CBloss_model_path = r'E:\sdmurmur\ssdHeartMurmur\all_data_results\TF_MDN_MARNN_FocalLoss_1_1_1_old_10'
         # model_result_path = os.path.join('all_data_TF_MFCC_TDFMVCST_ODC_k3__FCCat384_25_25_5', fold_path)
         # model_result_path = os.path.join('all_data_TF_ODConv_k3_weight_25_25_5', fold_path)
         model_result_path = os.path.join(CBloss_model_path, fold)

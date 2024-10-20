@@ -104,53 +104,53 @@ class mdn_marnn(nn.Module):
                              nn.AvgPool1d(kernel_size=2, stride=2),)
 
     def forward(self, x):
-        outputs = {}
-        outputs['input'] = x.shape
+        # outputs = {}
+        # outputs['input'] = x.shape
         out = self.conv1(x)
-        outputs['conv1 shape'] = out.shape
+        # outputs['conv1 shape'] = out.shape
         out1 = self.msc1(out)
         out2 = self.msc2(out)
         out3 = self.msc3(out)
         out = torch.cat((out1, out2, out3), dim=1)
         out = self.conv2(out)
-        outputs['conv2 shape'] = out.shape
+        # outputs['conv2 shape'] = out.shape
         out = self.msdb1(out)
-        outputs['MSDB1 shape'] = out.shape
+        # outputs['MSDB1 shape'] = out.shape
         out = self.tl1(out)
-        outputs['transition Layer1 shape'] = out.shape
+        # outputs['transition Layer1 shape'] = out.shape
         out = self.msdb2(out)
-        outputs['MSDB2 shape'] = out.shape
+        # outputs['MSDB2 shape'] = out.shape
         out = self.tl2(out)
-        outputs['transition Layer2 shape'] = out.shape
+        # outputs['transition Layer2 shape'] = out.shape
         out = self.msdb3(out)
-        outputs['MSDB3 shape'] = out.shape
+        # outputs['MSDB3 shape'] = out.shape
         out = self.tl3(out)
-        outputs['transition Layer3 shape'] = out.shape
+        # outputs['transition Layer3 shape'] = out.shape
         out = self.msdb4(out)
-        outputs['MSDB4 shape'] = out.shape
+        # outputs['MSDB4 shape'] = out.shape
         out = self.tl4(out)
-        outputs['transition Layer4 shape'] = out.shape
+        # outputs['transition Layer4 shape'] = out.shape
         # 调整输入形状为 (sequence_length, batch_size, channels)
         out = out.permute(2, 0, 1)
         out = self.bigru1(out)
         # 调整输出形状为 (batch_size, sequence_length, channels)
         out = out.permute(1, 0, 2)
-        outputs['BiGRU Layer shape'] = out.shape
+        # outputs['BiGRU Layer shape'] = out.shape
         # out, attn_output_weights = self.mhsa(out, out, out)
         out, _ = self.multihead_attn(out, out, out)
-        outputs['MultiHeadSelfAttention shape'] = out.shape
+        # outputs['MultiHeadSelfAttention shape'] = out.shape
         out = self.fc_reduce(out)
-        outputs['FC shape'] = out.shape
+        # outputs['FC shape'] = out.shape
         # 调整输入形状为 (sequence_length, batch_size, channels)
         out = out.permute(1, 0, 2)
         out = self.bigru2(out)
         out = out[-1, :, :]  # Use the output from the last time step
-        outputs['BiGRU2 Layer shape'] = out.shape
+        # outputs['BiGRU2 Layer shape'] = out.shape
         out = self.fc2(out)
-        outputs['FC2 shape'] = out.shape
+        # outputs['FC2 shape'] = out.shape
 
-        for layer_name, shape in outputs.items():
-            print(f'{layer_name}: {shape}')
+        # for layer_name, shape in outputs.items():
+        #     print(f'{layer_name}: {shape}')
 
         return out
 
