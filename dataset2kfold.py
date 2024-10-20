@@ -250,7 +250,9 @@ def MDN_MARNN_cut_copy_files(data_directory: str, patient_id: str, out_directory
                         zero_s_int = int(zero_s*fs)
                         zero_e_int = int(zero_e*fs)
                         new_recording.extend(recording[zero_e_int:zero_s_int])  # 拼接标注非0的recording
-                    recording = new_recording
+                    fs = 2500  # 重采样频率
+                    recording = librosa.resample(new_recording, orig_sr=4000, target_sr=fs)
+                    # recording = new_recording
                     # 计算切分参数
                     segment_length = 2 * fs  # 每个片段的长度为 2 秒
                     overlap_length = 1 * fs  # 重叠部分为 1 秒
@@ -272,7 +274,9 @@ def MDN_MARNN_cut_copy_files(data_directory: str, patient_id: str, out_directory
                         zero_s_int = int(zero_s * fs)
                         zero_e_int = int(zero_e * fs)
                         new_recording.extend(recording[zero_e_int:zero_s_int])  # 拼接标注非0的recording
-                    recording = new_recording
+                    fs = 2500  # 重采样频率
+                    recording = librosa.resample(new_recording, orig_sr=4000, target_sr=fs)
+                    # recording = new_recording
                     # 计算切分参数
                     segment_length = 2 * fs  # 每个片段的长度为 2 秒
                     overlap_length = 1 * fs  # 重叠部分为 1 秒
