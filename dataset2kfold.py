@@ -229,7 +229,9 @@ def MDN_MARNN_cut_copy_files_zero(data_directory: str, patient_id: str, out_dire
                 with open(file_path, mode='r', encoding='utf-8') as tsv_file:
                     tsv_reader = csv.reader(tsv_file, delimiter='\t')
                     for row in tsv_reader:
-                        if row[2] == '0':
+                        third_col = float(row[2])
+                        if third_col == 0:
+                        # if row[2] == '0':
                             zero_start.append(float(row[0]))
                             zero_end.append(float(row[1]))
                 zero_start = zero_start[1:]  # 移除第一个未标注起始点
@@ -271,6 +273,7 @@ def MDN_MARNN_cut_copy_files_zero(data_directory: str, patient_id: str, out_dire
                         soundfile.write(os.path.join(out_directory, f'{patient_ID}_{location}_{grade}_{num}.wav'),
                                         segment, fs)
                         start += (segment_length - overlap_length)
+                    # print(f'{patient_ID} is OK')
                 elif location in murmur_locations:
                     recording, fs = librosa.load(os.path.join(data_directory, f), sr=4000)  # 加载数据
                     for zero_s, zero_e in zip(zero_start, zero_end):
@@ -298,6 +301,8 @@ def MDN_MARNN_cut_copy_files_zero(data_directory: str, patient_id: str, out_dire
                         soundfile.write(os.path.join(out_directory, f'{patient_ID}_{location}_{grade}_{num}.wav'),
                                         segment, fs)
                         start += (segment_length - overlap_length)
+
+                    # print(f'{patient_ID} is OK')
 
                 zero_start.clear()
                 zero_end.clear()
@@ -1128,9 +1133,12 @@ def check_tsv(data_directory: str):
                 if data.shape[1] >= 3:  # 检查是否至少有三列
                     # 读取第三列
                     third_col = data[:, 2].astype(float)  # 获取第三列并转换为浮点型
-                    all_no_zero = np.all(third_col != 0)  # 检查第三列是否全非零
+                    # all_no_zero = np.all(third_col != 0)  # 检查第三列是否全非零
+                    # 计算第三列中0的数量
+                    zero_count = np.count_nonzero(third_col == 0)
 
-                    if all_no_zero:
+                    if zero_count < 2:
+                    # if all_no_zero:
                         patient_id = root
                         wrong_list.append(patient_id)
                         print(f'patient {patient_id} heart beats order are wrong')
@@ -1172,13 +1180,19 @@ if __name__ == '__main__':
     # # 检查tsv文件是否有标记错误
     # original_dataset_folder = r"E:\sdmurmur\calibratedwithZeroStartEndAllData"
     # wrong = check_tsv(original_dataset_folder)
-    # new_wrong_list = r"E:\sdmurmur\all_data_kfold\all_data_wrong_list6.txt"
+    # new_wrong_list = r"E:\sdmurmur\all_data_kfold\all_data_wrong_list8.txt"
     # with open(new_wrong_list, 'w') as file:
     #     for item in wrong:
     #         file.write(item + '\n')
 
-    # 检查cut_copy_files_s1_s2函数是否正常工作
+    # # 检查cut_copy_files_s1_s2函数是否正常工作
     # patient_id = '14241'
     # out_directory = r'D:\shoudu\checkout14241'
     # cut_copy_files_s1_s2(original_dataset_folder, patient_id, out_directory)
+
+    # # 检查MDN_MARNN_cut_copy_files_zero函数是否正常工作
+    # original_dataset_folder = r'E:\sdmurmur\38848'
+    # patient_id = '38848'
+    # out_directory = r'E:\sdmurmur\38848output'
+    # MDN_MARNN_cut_copy_files_zero(original_dataset_folder, patient_id, out_directory)
 
