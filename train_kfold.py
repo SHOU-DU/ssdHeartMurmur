@@ -156,9 +156,9 @@ if __name__ == "__main__":
         loss_type = "sigmoid"
         no_of_classes = 3
         gamma = 2.5
-        # criterion = Focal_Loss(gamma=2.5, weight=weight)  # sd 增大gamma
+        criterion = Focal_Loss(gamma=2.5, weight=weight)  # sd 增大gamma
         # 创建交叉熵损失函数
-        criterion = nn.CrossEntropyLoss()  # AMG模型损失函数
+        # criterion = nn.CrossEntropyLoss()  # AMG模型损失函数
         # 保存验证集准确率最大时的模型
         model_path = os.path.join(model_result_path, "model")
         if not os.path.exists(model_path):
