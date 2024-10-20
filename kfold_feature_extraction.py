@@ -115,7 +115,8 @@ def MDN_MARNN_feature(data_directory):
         root, extension = os.path.splitext(f)
         if extension == '.wav':
             x, fs = librosa.load(os.path.join(data_directory, f), sr=4000)
-            mdn_feature.append(x)
+            x_2d = x.reshape(1, -1)
+            mdn_feature.append(x_2d)
 
         else:
             continue
