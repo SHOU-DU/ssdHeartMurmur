@@ -107,7 +107,7 @@ def dataset_split_kfold(data_folder, kfold_folder, kfold=int):
             os.makedirs(os.path.join(kfold_out_dir, "train_data"))
             for index in tqdm(train_idx, desc='calibrated train set cut zero:'):
                 f = pIDs[index]  # 获取patientID
-                cut_copy_files_zero(
+                MDN_MARNN_cut_copy_files(
                     data_folder,
                     f,
                     os.path.join(kfold_out_dir, "train_data/"),
@@ -118,7 +118,7 @@ def dataset_split_kfold(data_folder, kfold_folder, kfold=int):
             os.makedirs(os.path.join(kfold_out_dir, "vali_data"))
             for index in tqdm(val_idx, desc='calibrated vali set cut zero:'):
                 f = pIDs[index]  # 获取patientID
-                cut_copy_files_zero(
+                MDN_MARNN_cut_copy_files(
                     data_folder,
                     f,
                     os.path.join(kfold_out_dir, "vali_data/"),
@@ -215,38 +215,81 @@ def cut_copy_files(data_directory: str, patient_id: str, out_directory: str) -> 
 
 def MDN_MARNN_cut_copy_files(data_directory: str, patient_id: str, out_directory: str) -> None:
     files = os.listdir(data_directory)
+    zero_start = []
+    zero_end = []
+    new_recording = []
     for f in files:
         root, extension = os.path.splitext(f)
         if f.startswith(patient_id):
             if extension == '.txt':
                 _ = shutil.copy(os.path.join(data_directory, f), out_directory)
+
+            elif extension == '.tsv':  # 获取S1，S2位置
+                file_path = os.path.join(data_directory, f)
+                with open(file_path, mode='r', encoding='utf-8') as tsv_file:
+                    tsv_reader = csv.reader(tsv_file, delimiter='\t')
+                    for row in tsv_reader:
+                        if row[2] == '0':
+                            zero_start.append(float(row[0]))
+                            zero_end.append(float(row[1]))
+                zero_start = zero_start[1:]  # 移除第一个未标注起始点
+                zero_end = zero_end[:-1]  # 移除最后一个未标注终点
+
             elif extension == '.wav':
                 # 获取当前wav文件的ID 听诊区 等级
                 with open(os.path.join(data_directory, patient_id+'.txt'), 'r') as txt_f:
                     txt_data = txt_f.read()
                     patient_ID = txt_data.split('\n')[0].split()[0]  # 获取病人ID
+                    murmur = get_murmur(txt_data)
+                    murmur_locations = (get_murmur_locations(txt_data)).split("+")  # 获取murmur存在的locations
                     grade = get_grade(txt_data)
                     location = root.split('_')[1]
-                recording, fs = librosa.load(os.path.join(data_directory, f), sr=4000)  # 加载音频数据
-                recording = librosa.resample(recording, orig_sr=4000, target_sr=2500)  # 重采样2500Hz
-                fs = 2500  # 更新采样率
-                # 计算切分参数
-                segment_length = 2 * fs  # 每个片段的长度为 2 秒
-                overlap_length = 1 * fs  # 重叠部分为 1 秒
-                num_segments = (len(recording) - overlap_length) // (segment_length - overlap_length)
-                # num_cut = len(recording) / (3 * 4000)  # 每个记录的片段数量
-                # time = len(recording)/fs
+                if murmur == 'Absent':  # Absent所有.wav文件均切片3s
+                    recording, fs = librosa.load(os.path.join(data_directory, f), sr=4000)  # 加载数据
+                    for zero_s, zero_e in zip(zero_start, zero_end):
+                        zero_s_int = int(zero_s*fs)
+                        zero_e_int = int(zero_e*fs)
+                        new_recording.extend(recording[zero_e_int:zero_s_int])  # 拼接标注非0的recording
+                    recording = new_recording
+                    # 计算切分参数
+                    segment_length = 2 * fs  # 每个片段的长度为 2 秒
+                    overlap_length = 1 * fs  # 重叠部分为 1 秒
+                    num_segments = (len(recording) - overlap_length) // (segment_length - overlap_length)  # 片段数
+                    if num_segments >= 2:
+                        recording = recording[2 * fs:len(recording) - fs]
+                    # 切分音频并保存
+                    start = 0
+                    for num in range(int(num_segments)):
+                        end = start + segment_length
+                        segment = recording[start:end]
+                        soundfile.write(os.path.join(out_directory, f'{patient_ID}_{location}_{grade}_{num}.wav'),
+                                        segment, fs)
+                        start += (segment_length - overlap_length)
+                elif location in murmur_locations:
+                    recording, fs = librosa.load(os.path.join(data_directory, f), sr=4000)  # 加载数据
+                    for zero_s, zero_e in zip(zero_start, zero_end):
+                        zero_s_int = int(zero_s * fs)
+                        zero_e_int = int(zero_e * fs)
+                        new_recording.extend(recording[zero_e_int:zero_s_int])  # 拼接标注非0的recording
+                    recording = new_recording
+                    # 计算切分参数
+                    segment_length = 2 * fs  # 每个片段的长度为 2 秒
+                    overlap_length = 1 * fs  # 重叠部分为 1 秒
+                    num_segments = (len(recording) - overlap_length) // (segment_length - overlap_length)  # 片段数
+                    if num_segments >= 2:
+                        recording = recording[2 * fs:len(recording) - fs]
+                    # 切分音频并保存
+                    start = 0
+                    for num in range(int(num_segments)):
+                        end = start + segment_length
+                        segment = recording[start:end]
+                        soundfile.write(os.path.join(out_directory, f'{patient_ID}_{location}_{grade}_{num}.wav'),
+                                        segment, fs)
+                        start += (segment_length - overlap_length)
 
-                if num_segments >= 2:
-                    recording = recording[2 * fs:len(recording) - fs]
-                # 切分音频并保存
-                start = 0
-                for num in range(int(num_segments)):
-                    end = start + segment_length
-                    segment = recording[start:end]
-                    soundfile.write(os.path.join(out_directory, f'{patient_ID}_{location}_{grade}_{num}.wav'),
-                                    segment, fs)
-                    start += (segment_length - overlap_length)
+                zero_start.clear()
+                zero_end.clear()
+                new_recording.clear()
 
 
 # 对于present个体，只复制murmur存在的.wav文件
@@ -1074,7 +1117,7 @@ if __name__ == '__main__':
 
     # 进行数据分折
     original_dataset_folder = r"E:\sdmurmur\calibrated_all_data"  # 对全部数据进行分折
-    kfold_out = r"E:\sdmurmur\all_data_kfold\non_scaled_all_data"  # grade:soft和loud均匀分折。location:对于present个体，只复制murmur存在的.wav文件
+    kfold_out = r"E:\sdmurmur\all_data_kfold\MDN_MARNN_all_data"  # grade:soft和loud均匀分折。location:对于present个体，只复制murmur存在的.wav文件
     dataset_split_kfold(original_dataset_folder, kfold_out, kfold=5)
 
     # # 对测试集进行切分和s1,s1幅值缩放操作

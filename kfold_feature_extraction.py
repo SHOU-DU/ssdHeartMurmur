@@ -45,7 +45,8 @@ def save_kfold_feature(kfold_folder, cwt_feature, feature_folder, kfold=int):
         # train_feature = Log_GF_GAF(kfold_folder_train)
         # train_feature = Log_GF_CWT_PCA(kfold_folder_train, cwt_train_folder)
         # train_feature = Log_GF_TDF_CST_MV_MFCC(kfold_folder_train, tdf_train_folder)
-        train_feature = Log_mel_32(kfold_folder_train)
+        # train_feature = Log_mel_32(kfold_folder_train)
+        train_feature = MDN_MARNN_feature(kfold_folder_train)
 
         train_label, train_location, train_id = get_label(kfold_folder_train)  # 获取各个3s片段label和听诊区位置和个体ID
         train_index = get_index(kfold_folder_train)
@@ -53,7 +54,8 @@ def save_kfold_feature(kfold_folder, cwt_feature, feature_folder, kfold=int):
         # vali_feature = Log_GF_GAF(kfold_folder_vali)
         # vali_feature = Log_GF_CWT_PCA(kfold_folder_vali, cwt_vali_folder)
         # vali_feature = Log_GF_TDF_CST_MV_MFCC(kfold_folder_vali, tdf_vali_folder)
-        vali_feature = Log_mel_32(kfold_folder_vali)
+        # vali_feature = Log_mel_32(kfold_folder_vali)
+        vali_feature = MDN_MARNN_feature(kfold_folder_vali)  # MDN-MARNN模型特征提取
 
         vali_label, vali_location, vali_id = get_label(kfold_folder_vali)
         vali_index = get_index(kfold_folder_vali)
@@ -105,6 +107,22 @@ def Log_GF(data_directory):
         else:
             continue
     return np.array(loggamma)
+
+
+def MDN_MARNN_feature(data_directory):
+    mdn_feature = list()
+    for f in tqdm(sorted(os.listdir(data_directory)), desc=str(data_directory) + ' MDN_MARNN_feature:'):  # 加tqdm可视化特征提取过程
+        root, extension = os.path.splitext(f)
+        if extension == '.wav':
+            x, fs = librosa.load(os.path.join(data_directory, f), sr=2500)
+
+            fbank_feat = feature_norm(x)
+
+            mdn_feature.append(fbank_feat)
+
+        else:
+            continue
+    return np.array(mdn_feature)
 
 
 def Log_mel_32(data_directory):
@@ -508,7 +526,7 @@ def feature_norm(feat):
 
 if __name__ == '__main__':
     # 特征提取
-    kfold_festure_in = r"E:\sdmurmur\all_data_kfold\non_scaled_all_data"  # 切割好的数据，对于present个体，只复制murmur存在的.wav文件
+    kfold_festure_in = r"E:\sdmurmur\all_data_kfold\MDN_MARNN_all_data"  # 切割好的数据，对于present个体，只复制murmur存在的.wav文件
     kfold_feature_folder = "all_data_feature_log_mel_TF_32"  # 存储每折特征文件夹
     tdf_feature_folder = r"E:\sdmurmur\alldataEnvelopeandSE60Hz\data_kfold_cut_zero"  # 时域特征存储文件夹
     cwt_feature_folder = r"E:\sdmurmur\wavelets\data_kfold_cut_zero"  # cwt特征存储文件夹
