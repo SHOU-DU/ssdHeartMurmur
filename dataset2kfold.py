@@ -244,7 +244,7 @@ def MDN_MARNN_cut_copy_files(data_directory: str, patient_id: str, out_directory
                     murmur_locations = (get_murmur_locations(txt_data)).split("+")  # 获取murmur存在的locations
                     grade = get_grade(txt_data)
                     location = root.split('_')[1]
-                if murmur == 'Absent':  # Absent所有.wav文件均切片3s
+                if murmur == 'Absent':  # Absent所有.wav文件均切片2s
                     recording, fs = librosa.load(os.path.join(data_directory, f), sr=4000)  # 加载数据
                     for zero_s, zero_e in zip(zero_start, zero_end):
                         zero_s_int = int(zero_s*fs)
@@ -254,9 +254,10 @@ def MDN_MARNN_cut_copy_files(data_directory: str, patient_id: str, out_directory
                     # 计算切分参数
                     segment_length = 2 * fs  # 每个片段的长度为 2 秒
                     overlap_length = 1 * fs  # 重叠部分为 1 秒
-                    num_segments = (len(recording) - overlap_length) // (segment_length - overlap_length)  # 片段数
+                    num_segments = (len(recording) - overlap_length) / (segment_length - overlap_length)  # 片段数
                     if num_segments >= 2:
                         recording = recording[2 * fs:len(recording) - fs]
+                    num_segments = (len(recording) - overlap_length) / (segment_length - overlap_length)  # 片段数
                     # 切分音频并保存
                     start = 0
                     for num in range(int(num_segments)):
@@ -275,9 +276,10 @@ def MDN_MARNN_cut_copy_files(data_directory: str, patient_id: str, out_directory
                     # 计算切分参数
                     segment_length = 2 * fs  # 每个片段的长度为 2 秒
                     overlap_length = 1 * fs  # 重叠部分为 1 秒
-                    num_segments = (len(recording) - overlap_length) // (segment_length - overlap_length)  # 片段数
+                    num_segments = (len(recording) - overlap_length) / (segment_length - overlap_length)  # 片段数
                     if num_segments >= 2:
                         recording = recording[2 * fs:len(recording) - fs]
+                    num_segments = (len(recording) - overlap_length) / (segment_length - overlap_length)  # 片段数
                     # 切分音频并保存
                     start = 0
                     for num in range(int(num_segments)):
