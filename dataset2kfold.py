@@ -107,7 +107,7 @@ def dataset_split_kfold(data_folder, kfold_folder, kfold=int):
             os.makedirs(os.path.join(kfold_out_dir, "train_data"))
             for index in tqdm(train_idx, desc='calibrated train set cut zero:'):
                 f = pIDs[index]  # 获取patientID
-                MDN_MARNN_cut_copy_files(
+                cut_copy_files_zero(
                     data_folder,
                     f,
                     os.path.join(kfold_out_dir, "train_data/"),
@@ -118,7 +118,7 @@ def dataset_split_kfold(data_folder, kfold_folder, kfold=int):
             os.makedirs(os.path.join(kfold_out_dir, "vali_data"))
             for index in tqdm(val_idx, desc='calibrated vali set cut zero:'):
                 f = pIDs[index]  # 获取patientID
-                MDN_MARNN_cut_copy_files(
+                cut_copy_files_zero(
                     data_folder,
                     f,
                     os.path.join(kfold_out_dir, "vali_data/"),
@@ -250,8 +250,11 @@ def MDN_MARNN_cut_copy_files(data_directory: str, patient_id: str, out_directory
                         zero_s_int = int(zero_s*fs)
                         zero_e_int = int(zero_e*fs)
                         new_recording.extend(recording[zero_e_int:zero_s_int])  # 拼接标注非0的recording
+
+                    new_recording = np.array(new_recording)
                     fs = 2500  # 重采样频率
                     recording = librosa.resample(new_recording, orig_sr=4000, target_sr=fs)
+                    new_recording = new_recording.tolist()
                     # recording = new_recording
                     # 计算切分参数
                     segment_length = 2 * fs  # 每个片段的长度为 2 秒
@@ -274,8 +277,11 @@ def MDN_MARNN_cut_copy_files(data_directory: str, patient_id: str, out_directory
                         zero_s_int = int(zero_s * fs)
                         zero_e_int = int(zero_e * fs)
                         new_recording.extend(recording[zero_e_int:zero_s_int])  # 拼接标注非0的recording
+
+                    new_recording = np.array(new_recording)
                     fs = 2500  # 重采样频率
                     recording = librosa.resample(new_recording, orig_sr=4000, target_sr=fs)
+                    new_recording = new_recording.tolist()
                     # recording = new_recording
                     # 计算切分参数
                     segment_length = 2 * fs  # 每个片段的长度为 2 秒
@@ -1093,51 +1099,83 @@ def check_tsv(data_directory: str):
         if extension == '.tsv':
             file_path = os.path.join(data_directory, f)
             with open(file_path, mode='r', encoding='utf-8') as tsv_file:
-                tsv_reader = csv.reader(tsv_file, delimiter='\t')
-                last_row = '0'  # 当前行的上一行
+                # tsv_reader = csv.reader(tsv_file, delimiter='\t')
+                # last_row = '0'  # 当前行的上一行
                 # next_row = '0'  # 当前行的下一行
-                # 逐行读取文件内容
-                for row in tsv_reader:
-                    # float_row = [float(x) for x in row]
-                    # print(float_row)
-                    if row[2] == '0':
-                        last_row = '0'  # 中间可能出现标注为0的情况
-                    elif row[2] == '1' and (last_row == '4' or last_row == '0'):
-                        last_row = row[2]
-                    elif row[2] == '2' and (last_row == '1' or last_row == '0'):
-                        last_row = row[2]
-                    elif row[2] == '3' and (last_row == '2' or last_row == '0'):
-                        last_row = row[2]
-                    elif row[2] == '4' and (last_row == '3' or last_row == '0'):
-                        last_row = row[2]
-                    else:
+                # # 逐行读取文件内容
+                # for row in tsv_reader:
+                #     # float_row = [float(x) for x in row]
+                #     # print(float_row)
+                #     if row[2] == '0':
+                #         last_row = '0'  # 中间可能出现标注为0的情况
+                #     elif row[2] == '1' and (last_row == '4' or last_row == '0'):
+                #         last_row = row[2]
+                #     elif row[2] == '2' and (last_row == '1' or last_row == '0'):
+                #         last_row = row[2]
+                #     elif row[2] == '3' and (last_row == '2' or last_row == '0'):
+                #         last_row = row[2]
+                #     elif row[2] == '4' and (last_row == '3' or last_row == '0'):
+                #         last_row = row[2]
+                #     else:
+                #         patient_id = root
+                #         wrong_list.append(patient_id)
+                #         print(f'patient {patient_id} heart beats order are wrong')
+                #         last_row = '0'
+                # 检测是否从0标记开始
+                # 使用 NumPy 读取 tsv 文件
+                data = np.loadtxt(file_path, delimiter='\t')
+
+                if data.shape[1] >= 3:  # 检查是否至少有三列
+                    # 读取第三列
+                    third_col = data[:, 2].astype(float)  # 获取第三列并转换为浮点型
+                    all_no_zero = np.all(third_col != 0)  # 检查第三列是否全非零
+
+                    if all_no_zero:
                         patient_id = root
                         wrong_list.append(patient_id)
                         print(f'patient {patient_id} heart beats order are wrong')
-                        last_row = '0'
-                    # last_row = row[2]
+
+                        # 在第一行前添加一行
+                        first_row = data[0]  # 复制第一行
+                        new_first_row = np.array([0, first_row[0], 0])  # 新的第一行
+                        data = np.vstack([new_first_row, data])  # 插入新行到第一行位置
+
+                        # 在最后一行后添加两行
+                        last_row = data[-1]  # 获取最后一行
+                        # data[-1] = [last_row[0], last_row[1] - 0.001, last_row[2]]  # 修改最后一行
+                        new_last_row2 = np.array([last_row[1] - 0.001, last_row[1], 0])  # 新的最后一行
+                        data[-1] = [last_row[0], last_row[1] - 0.001, last_row[2]]  # 修改最后一行
+                        data = np.vstack([data, new_last_row2])  # 添加新的最后一行
+
+                        # 将修改后的数据写回到 tsv 文件
+                        np.savetxt(file_path, data, delimiter='\t', fmt='%.6f')
+                        # np.savetxt(file_path, data, delimiter='\t')
+
+                else:
+                    print(f'File {f} does not have enough columns.')
+
     return wrong_list
 
 
 if __name__ == '__main__':
 
-    # 进行数据分折
-    original_dataset_folder = r"E:\sdmurmur\calibrated_all_data"  # 对全部数据进行分折
-    kfold_out = r"E:\sdmurmur\all_data_kfold\MDN_MARNN_all_data"  # grade:soft和loud均匀分折。location:对于present个体，只复制murmur存在的.wav文件
-    dataset_split_kfold(original_dataset_folder, kfold_out, kfold=5)
+    # # 进行数据分折
+    # original_dataset_folder = r"E:\sdmurmur\calibrated_all_data"  # 对全部数据进行分折
+    # kfold_out = r"E:\sdmurmur\all_data_kfold\with_None_zero"  # grade:soft和loud均匀分折。location:对于present个体，只复制murmur存在的.wav文件
+    # dataset_split_kfold(original_dataset_folder, kfold_out, kfold=5)
 
     # # 对测试集进行切分和s1,s1幅值缩放操作
     # test_data_folder = r"E:\sdmurmur\calibrated_test_data"  # 校正过的测试集路径
     # scaled_test_folder = "test_data_cut_zero"  # 指定幅值缩放后的路径
     # test_dataset_scale(test_data_folder, scaled_test_folder)
 
-    # # 检查tsv文件是否有标记错误
-    # original_dataset_folder = r"D:\shoudu\the-circor-digiscope-phonocardiogram-dataset-1.0.3\test_data"
-    # wrong = check_tsv(original_dataset_folder)
-    # new_wrong_list = r"D:\shoudu\original_test_wrong_list.txt"
-    # with open(new_wrong_list, 'w') as file:
-    #     for item in wrong:
-    #         file.write(item + '\n')
+    # 检查tsv文件是否有标记错误
+    original_dataset_folder = r"E:\sdmurmur\calibratedwithZeroStartEndAllData"
+    wrong = check_tsv(original_dataset_folder)
+    new_wrong_list = r"E:\sdmurmur\all_data_kfold\all_data_wrong_list6.txt"
+    with open(new_wrong_list, 'w') as file:
+        for item in wrong:
+            file.write(item + '\n')
 
     # 检查cut_copy_files_s1_s2函数是否正常工作
     # patient_id = '14241'
