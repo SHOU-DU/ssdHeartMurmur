@@ -39,7 +39,8 @@ def save_test_feature(test_folder, test_tdf_folder, test_feature_folder):
 
     # train_feature = Log_GF_GAF(kfold_folder_train)
     # train_feature = Log_GF_CWT_PCA(kfold_folder_train, test_tdf_folder)
-    train_feature = Log_GF_TDF(test_folder, test_tdf_folder)
+    # train_feature = Log_GF_TDF(test_folder, test_tdf_folder)
+    train_feature = Log_GF(test_folder)  # 提取单时频域特征
 
     train_label, train_location, train_id = get_label(test_folder)  # 获取各个3s片段label和听诊区位置和个体ID
     train_index = get_index(test_folder)
@@ -53,6 +54,37 @@ def save_test_feature(test_folder, test_tdf_folder, test_feature_folder):
     print("test_feature shape:", train_feature.shape)  # train_feature shape: (样本数：14649, 滤波器数：64, 3s段数据帧数：239)
     print("test_label shape:", train_label.shape)
     print(f"测试集特征提取完毕")
+
+
+def Log_GF(data_directory):
+    loggamma = list()
+    for f in tqdm(sorted(os.listdir(data_directory)), desc=str(data_directory) + ' Log_GF feature:'):  # 加tqdm可视化特征提取过程
+        root, extension = os.path.splitext(f)
+        if extension == '.wav':
+            x, fs = librosa.load(os.path.join(data_directory, f), sr=4000)
+            x = x - np.mean(x)
+            x = x / np.max(np.abs(x))
+            # gfreqs为经过gammatone滤波器后得到的傅里叶变换矩阵
+            gSpec, gfreqs = erb_spectrogram(x,
+                                            fs=fs,
+                                            pre_emph=0,
+                                            pre_emph_coeff=0.97,
+                                            window=SlidingWindow(0.025, 0.0125, "hamming"),
+                                            nfilts=64,
+                                            nfft=512,
+                                            low_freq=25,
+                                            high_freq=2000)
+            fbank_feat = gSpec.T
+            fbank_feat = np.log(fbank_feat)
+            fbank_feat = feature_norm(fbank_feat)
+
+            # fbank_feat = feature_norm(fbank_feat)
+            # fbank_feat = delt_feature(fbank_feat)
+            loggamma.append(fbank_feat)
+
+        else:
+            continue
+    return np.array(loggamma)
 
 
 def Log_GF_TDF(data_directory, TDF_directory):  # 提取时频域和时域特征
@@ -180,7 +212,7 @@ def feature_norm(feat):
 if __name__ == '__main__':
     # 特征提取
     kfold_festure_in = "test_data_cut_zero"  # test set切割好的数据，对于present个体，只复制murmur存在的.wav文件
-    kfold_feature_folder = "test_feature_TF_TDF_60Hz_cut_zero"  # 存储每折特征文件夹
+    kfold_feature_folder = "test_feature_TF_cut_zero_new"  # 存储每折特征文件夹
     tdf_feature_folder = r"E:\sdmurmur\testEnvelopeandSE60Hz"  # 时域特征存储文件夹
     cwt_feature_folder = r"E:\sdmurmur\wavelets\data_kfold_cut_zero"  # cwt特征存储文件夹
     save_test_feature(kfold_festure_in, tdf_feature_folder, kfold_feature_folder)
