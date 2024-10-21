@@ -22,14 +22,14 @@ np.random.seed(init_seed)  # 用于numpy的随机数
 random.seed(init_seed)
 
 if __name__ == "__main__":
-    feature_data_path = 'test_feature_TF_TDF_CST_MV_MFCC_60Hz_cut_zero'  # 提取的特征和标签文件夹
+    feature_data_path = 'test_feature_TF_cut_zero_new'  # 提取的特征和标签文件夹
     fold_path = feature_data_path
     feature_path = os.path.join(fold_path, 'feature')
     # 单时频特征模型
     # model_folder = r'E:\sdmurmur\ssdHeartMurmur\TF_ODConv_k3_weight_2_2_6\feature_TF_TDF_cut_zero'  # 存储模型的文件夹
     # 时频域特征+时域特征模型
     # model_folder = r'E:\sdmurmur\ssdHeartMurmur\SK_TF_Result\feature_TF_TDF_CST_MV_MFCC_60Hz_cut_zero'
-    model_folder = r'E:\sdmurmur\ssdHeartMurmur\early_stop\TF_ODC_k3_001_64_150_lr_step'  # 存储模型的文件夹
+    model_folder = r'E:\sdmurmur\ssdHeartMurmur\TF_ODConv_k3_weight_2_2_6\feature_TF_TDF_cut_zero'  # 存储模型的文件夹
     # model = AudioClassifierODconv()
     label_path = os.path.join(fold_path, 'label')
 
@@ -67,7 +67,7 @@ if __name__ == "__main__":
         # 采用最后一轮的模型进行评估
         # model_result_path = os.path.join('test_result_odconv_k3_repeat_weight_2_2_6_last_model_batchsize128', fold_path, str(j) + '_fold')
         # CB_Loss_test_model_path = r'E:\sdmurmur\ssdHeartMurmur\mask\test_TF_ODC_k3_2_3_4_5'  # 保存测试结果的路径
-        mask_test_model_path = r'E:\sdmurmur\ssdHeartMurmur\early_stop\test_TF_ODC_k3_001_64_150_lr_step'  # 保存测试结果的路径
+        mask_test_model_path = r'E:\sdmurmur\ssdHeartMurmur\test_new\TF_ODConv_k3_weight_2_2_6'  # 保存测试结果的路径
         model_result_path = os.path.join(mask_test_model_path, str(j)+'_fold')
         # 设置环境变量，指定可见的 GPU 设备
         os.environ['CUDA_VISIBLE_DEVICES'] = '0'
