@@ -205,8 +205,8 @@ if __name__ == "__main__":
                 # 设置损失函数
                 outputs = model(x)
                 optimizer.zero_grad()
-                loss = CB_loss(y.long(), outputs, samples_per_cls, no_of_classes, loss_type, beta, gamma)
-                # loss = criterion(outputs, y.long())
+                # loss = CB_loss(y.long(), outputs, samples_per_cls, no_of_classes, loss_type, beta, gamma)
+                loss = criterion(outputs, y.long())
                 loss.backward()
                 optimizer.step()
 
@@ -244,8 +244,8 @@ if __name__ == "__main__":
                     z = z.to(device)
 
                     outputs = model(x)
-                    loss = CB_loss(y.long(), outputs, samples_per_cls, no_of_classes, loss_type, beta, gamma)
-                    # loss = criterion(outputs, y.long())
+                    # loss = CB_loss(y.long(), outputs, samples_per_cls, no_of_classes, loss_type, beta, gamma)
+                    loss = criterion(outputs, y.long())
                     val_loss += loss.item()
                     _, y_pred = outputs.max(1)
                     num_correct = (y_pred == y).sum().item()
