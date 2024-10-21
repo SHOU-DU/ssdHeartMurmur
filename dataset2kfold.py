@@ -1255,20 +1255,20 @@ def check_tsv(data_directory: str):
 
 if __name__ == '__main__':
 
-    # # 进行数据分折
-    # original_dataset_folder = r"E:\sdmurmur\calibratedwithZeroStartEndAllData"  # 对全部数据进行分折
-    # kfold_out = r"E:\sdmurmur\all_data_kfold\MDN_MARNN_all_data"  # grade:soft和loud均匀分折。location:对于present个体，只复制murmur存在的.wav文件
-    # dataset_split_kfold(original_dataset_folder, kfold_out, kfold=5)
+    # 进行数据分折
+    original_dataset_folder = r"E:\sdmurmur\calibrated_train_vali_new"  # 对全部数据进行分折
+    kfold_out = r"E:\sdmurmur\calibrated_train_vali_new_cut_zero"  # grade:soft和loud均匀分折。location:对于present个体，只复制murmur存在的.wav文件
+    dataset_split_kfold(original_dataset_folder, kfold_out, kfold=5)
 
-    # 对测试集进行切分和s1,s1幅值缩放操作
-    test_data_folder = r"E:\sdmurmur\calibrated_test_data_new"  # 校正过的测试集路径
-    scaled_test_folder = "test_data_cut_zero_new"  # 指定幅值缩放后的路径
-    test_dataset_scale(test_data_folder, scaled_test_folder)
+    # # 对测试集进行切分和s1,s1幅值缩放操作
+    # test_data_folder = r"E:\sdmurmur\calibrated_test_data_new"  # 校正过的测试集路径
+    # scaled_test_folder = "test_data_cut_zero_new"  # 指定幅值缩放后的路径
+    # test_dataset_scale(test_data_folder, scaled_test_folder)
 
     # # 检查tsv文件是否有标记错误
-    # original_dataset_folder = r"E:\sdmurmur\calibrated_test_data_new"
+    # original_dataset_folder = r"E:\sdmurmur\calibrated_train_vali_new"
     # wrong = check_tsv(original_dataset_folder)
-    # new_wrong_list = r"E:\sdmurmur\all_data_kfold\test_data_new_wrong_list.txt"
+    # new_wrong_list = r"E:\sdmurmur\all_data_kfold\train_vali_data_new_wrong_list.txt"
     # with open(new_wrong_list, 'w') as file:
     #     for item in wrong:
     #         file.write(item + '\n')
