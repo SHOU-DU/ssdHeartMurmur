@@ -107,7 +107,7 @@ def dataset_split_kfold(data_folder, kfold_folder, kfold=int):
             os.makedirs(os.path.join(kfold_out_dir, "train_data"))
             for index in tqdm(train_idx, desc='calibrated train set cut zero:'):
                 f = pIDs[index]  # 获取patientID
-                MDN_MARNN_cut_copy_files_zero(
+                cut_copy_files_zero(
                     data_folder,
                     f,
                     os.path.join(kfold_out_dir, "train_data/"),
@@ -118,7 +118,7 @@ def dataset_split_kfold(data_folder, kfold_folder, kfold=int):
             os.makedirs(os.path.join(kfold_out_dir, "vali_data"))
             for index in tqdm(val_idx, desc='calibrated vali set cut zero:'):
                 f = pIDs[index]  # 获取patientID
-                MDN_MARNN_cut_copy_files_zero(
+                cut_copy_files_zero(
                     data_folder,
                     f,
                     os.path.join(kfold_out_dir, "vali_data/"),
