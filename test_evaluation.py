@@ -22,7 +22,8 @@ np.random.seed(init_seed)  # 用于numpy的随机数
 random.seed(init_seed)
 
 if __name__ == "__main__":
-    feature_data_path = 'test_feature_TF_TDF_CST_cut_zero_new'  # 提取的特征和标签文件夹
+    # feature_data_path = 'test_feature_TF_TDF_CST_cut_zero_new'  # 提取的特征和标签文件夹
+    feature_data_path = 'test_feature_TF_log_mel_32_new'  # AMG模型提取的特征和标签文件夹
     fold_path = feature_data_path
     feature_path = os.path.join(fold_path, 'feature')
     # 单时频特征模型
