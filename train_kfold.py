@@ -126,15 +126,15 @@ if __name__ == "__main__":
         print("DataLoader is OK")
         # 模型选择
         # model = AudioClassifierODconv()  # sd ODconv gamma=2.5
-        # model = AudioClassifierMMODconv()  # sd multi Model ODconv gamma=2.5
+        model = AudioClassifierMMODconv()  # sd multi Model ODconv gamma=2.5
         # model = AudioClassifierFuseODconv()  # sd Fuse ODconv gamma=2.5
-        model = AudioClassifier()
+        # model = AudioClassifier()
         # model = AmgModel(resblock, 1, 3)
         # model = mdn_marnn()
 
         # CBloss_model_path = r'E:\sdmurmur\ssdHeartMurmur\all_data_results\TF_TDF_ODC_MM_FocalLoss_25_25_5_old_192M2total_10'
         # CBloss_model_path = r'E:\sdmurmur\ssdHeartMurmur\all_data_results\TF_SK_FocalLoss_1_1_1_old_64_10'
-        CBloss_model_path = r'E:\sdmurmur\ssdHeartMurmur\train_vali_new_results\TF_SK_FocalLoss_1_1_1_old'
+        CBloss_model_path = r'E:\sdmurmur\ssdHeartMurmur\train_vali_new_results\TF_TDFMVCST_MM_FocalLoss_1_1_1_old_192'
         # model_result_path = os.path.join('all_data_TF_MFCC_TDFMVCST_ODC_k3__FCCat384_25_25_5', fold_path)
         # model_result_path = os.path.join('all_data_TF_ODConv_k3_weight_25_25_5', fold_path)
         model_result_path = os.path.join(CBloss_model_path, fold)

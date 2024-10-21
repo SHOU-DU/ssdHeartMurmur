@@ -629,7 +629,7 @@ class AudioClassifierMMODconv(nn.Module):
         x = x.unsqueeze(1)  # 为输入特征添加通道，变为(batch_size, 1, height, width)
         # outputs['input'] = x.shape
         xf1 = x[:, :, :64, :]  # 时频域
-        xf2 = x[:, :, 128:160, :]  # 时域包络
+        xf2 = x[:, :, 64:, :]  # 时域包络+MV+CST
         # xf2 = x[:, :, 64:128, :]  # MFCC
         # xf3 = x[:, :, 128:, :]  # 时域包络+均值方差
         # outputs['xf1 shape'] = xf1.shape
@@ -687,8 +687,8 @@ def count_parameters(model):
 
 
 if __name__ == "__main__":
-    # model = AudioClassifierMMODconv()
-    model = AudioClassifierODconv()
+    model = AudioClassifierMMODconv()
+    # model = AudioClassifierODconv()
     # model = AudioClassifier()
     print(f"The model has {count_parameters(model):,} trainable parameters")
     X = torch.rand(10, 1, 64, 239)
