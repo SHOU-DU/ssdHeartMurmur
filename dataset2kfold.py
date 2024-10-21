@@ -700,7 +700,9 @@ def cut_copy_files_zero(data_directory: str, patient_id: str, out_directory: str
                 with open(file_path, mode='r', encoding='utf-8') as tsv_file:
                     tsv_reader = csv.reader(tsv_file, delimiter='\t')
                     for row in tsv_reader:
-                        if row[2] == '0':
+                        third_col = float(row[2])
+                        if third_col == 0:
+                        # if row[2] == '0':
                             zero_start.append(float(row[0]))
                             zero_end.append(float(row[1]))
                 zero_start = zero_start[1:]  # 移除第一个未标注起始点
@@ -1238,18 +1240,18 @@ if __name__ == '__main__':
     # kfold_out = r"E:\sdmurmur\all_data_kfold\MDN_MARNN_all_data"  # grade:soft和loud均匀分折。location:对于present个体，只复制murmur存在的.wav文件
     # dataset_split_kfold(original_dataset_folder, kfold_out, kfold=5)
 
-    # # 对测试集进行切分和s1,s1幅值缩放操作
-    # test_data_folder = r"E:\sdmurmur\calibrated_test_data"  # 校正过的测试集路径
-    # scaled_test_folder = "test_data_cut_zero_new"  # 指定幅值缩放后的路径
-    # test_dataset_scale(test_data_folder, scaled_test_folder)
+    # 对测试集进行切分和s1,s1幅值缩放操作
+    test_data_folder = r"E:\sdmurmur\calibrated_test_data_new"  # 校正过的测试集路径
+    scaled_test_folder = "test_data_cut_zero_new"  # 指定幅值缩放后的路径
+    test_dataset_scale(test_data_folder, scaled_test_folder)
 
-    # 检查tsv文件是否有标记错误
-    original_dataset_folder = r"E:\sdmurmur\calibratedwithZeroStartEndAllData"
-    wrong = check_tsv(original_dataset_folder)
-    new_wrong_list = r"E:\sdmurmur\all_data_kfold\all_data_wrong_list9.txt"
-    with open(new_wrong_list, 'w') as file:
-        for item in wrong:
-            file.write(item + '\n')
+    # # 检查tsv文件是否有标记错误
+    # original_dataset_folder = r"E:\sdmurmur\calibrated_test_data_new"
+    # wrong = check_tsv(original_dataset_folder)
+    # new_wrong_list = r"E:\sdmurmur\all_data_kfold\test_data_new_wrong_list.txt"
+    # with open(new_wrong_list, 'w') as file:
+    #     for item in wrong:
+    #         file.write(item + '\n')
 
     # # 检查cut_copy_files_s1_s2函数是否正常工作
     # patient_id = '14241'
