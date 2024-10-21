@@ -58,12 +58,12 @@ if __name__ == "__main__":
         print(f'this is {fold}')
 
         # fold = '4_fold'  # 训练第i折
-        # feature_data_path = 'all_data_feature_TF_TDF_CST_MV_MFCC_60Hz_cut_zero'  # 提取的特征和标签文件夹
+        feature_data_path = r'E:\sdmurmur\calibrated_train_vali_new_feature\TF_TDF_MV_CST_feature'  # 提取的特征和标签文件夹
         # feature_data_path = 'all_data_feature_log_mel_TF_32'  # AMG模型特征存储文件夹
-        feature_data_path = 'all_data_feature_MDN_MARNN'  # MDN-MARNN模型特征存储文件夹
+        # feature_data_path = 'all_data_feature_MDN_MARNN'  # MDN-MARNN模型特征存储文件夹
         # cut_data_kfold = r'data_kfold_cut_zero'
-        # cut_data_kfold = r'E:\sdmurmur\all_data_kfold\non_scaled_all_data'  # 切分好的3s段数据
-        cut_data_kfold = r'E:\sdmurmur\all_data_kfold\MDN_MARNN_all_data'  # 切分好的2s段数据
+        cut_data_kfold = r'E:\sdmurmur\calibrated_train_vali_new_cut_zero'  # 切分好的3s段数据
+        # cut_data_kfold = r'E:\sdmurmur\all_data_kfold\MDN_MARNN_all_data'  # 切分好的2s段数据
         if not test_flag:
             fold_path = os.path.join(feature_data_path, fold)
             cut_data = os.path.join(cut_data_kfold, fold, 'vali_data')
@@ -125,14 +125,16 @@ if __name__ == "__main__":
         test_loader = DataLoader(vali_set, batch_size=test_batch_size)
         print("DataLoader is OK")
         # 模型选择
+        model = AudioClassifierODconv()  # sd ODconv gamma=2.5
         # model = AudioClassifierMMODconv()  # sd multi Model ODconv gamma=2.5
         # model = AudioClassifierFuseODconv()  # sd Fuse ODconv gamma=2.5
         # model = AudioClassifier()
         # model = AmgModel(resblock, 1, 3)
-        model = mdn_marnn()
+        # model = mdn_marnn()
+
         # CBloss_model_path = r'E:\sdmurmur\ssdHeartMurmur\all_data_results\TF_TDF_ODC_MM_FocalLoss_25_25_5_old_192M2total_10'
         # CBloss_model_path = r'E:\sdmurmur\ssdHeartMurmur\all_data_results\TF_SK_FocalLoss_1_1_1_old_64_10'
-        CBloss_model_path = r'E:\sdmurmur\ssdHeartMurmur\all_data_results\TF_MDN_MARNN_FocalLoss_1_1_1_old_10'
+        CBloss_model_path = r'E:\sdmurmur\ssdHeartMurmur\train_vali_new_results\TF_ODC_FocalLoss_1_1_1_old'
         # model_result_path = os.path.join('all_data_TF_MFCC_TDFMVCST_ODC_k3__FCCat384_25_25_5', fold_path)
         # model_result_path = os.path.join('all_data_TF_ODConv_k3_weight_25_25_5', fold_path)
         model_result_path = os.path.join(CBloss_model_path, fold)

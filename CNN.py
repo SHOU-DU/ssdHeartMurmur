@@ -238,10 +238,10 @@ class AudioClassifierODconv(nn.Module):
 
         # Linear layer
         x_all = self.lin(x_all)
-        outputs['output'] = x_all.shape
+        # outputs['output'] = x_all.shape
 
-        for layer_name, shape in outputs.items():
-            print(f'{layer_name}: {shape}')
+        # for layer_name, shape in outputs.items():
+        #     print(f'{layer_name}: {shape}')
 
         # Final output
         return x_all
@@ -692,7 +692,7 @@ if __name__ == "__main__":
     # model = AudioClassifier()
     print(f"The model has {count_parameters(model):,} trainable parameters")
     X = torch.rand(10, 1, 64, 239)
-    X2 = torch.rand(128, 160, 239)
+    X2 = torch.rand(128, 96, 239)
     output = model(X2)
 
     # # 假设 x1 和 x2 的形状都是 [256, 3]
