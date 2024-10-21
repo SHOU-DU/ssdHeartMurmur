@@ -134,7 +134,7 @@ if __name__ == "__main__":
 
         # CBloss_model_path = r'E:\sdmurmur\ssdHeartMurmur\all_data_results\TF_TDF_ODC_MM_FocalLoss_25_25_5_old_192M2total_10'
         # CBloss_model_path = r'E:\sdmurmur\ssdHeartMurmur\all_data_results\TF_SK_FocalLoss_1_1_1_old_64_10'
-        CBloss_model_path = r'E:\sdmurmur\ssdHeartMurmur\train_vali_new_results\TF_TDFMVCST_FocalLoss_25_25_5_old_192'
+        CBloss_model_path = r'E:\sdmurmur\ssdHeartMurmur\train_vali_new_results\CBLoss\TF_TDFMVCST_CBLoss_b_09_old_192'
         # model_result_path = os.path.join('all_data_TF_MFCC_TDFMVCST_ODC_k3__FCCat384_25_25_5', fold_path)
         # model_result_path = os.path.join('all_data_TF_ODConv_k3_weight_25_25_5', fold_path)
         model_result_path = os.path.join(CBloss_model_path, fold)
@@ -205,8 +205,8 @@ if __name__ == "__main__":
                 # 设置损失函数
                 outputs = model(x)
                 optimizer.zero_grad()
-                # loss = CB_loss(y.long(), outputs, samples_per_cls, no_of_classes, loss_type, beta, gamma)
-                loss = criterion(outputs, y.long())
+                loss = CB_loss(y.long(), outputs, samples_per_cls, no_of_classes, loss_type, beta, gamma)
+                # loss = criterion(outputs, y.long())
                 loss.backward()
                 optimizer.step()
 
@@ -244,8 +244,8 @@ if __name__ == "__main__":
                     z = z.to(device)
 
                     outputs = model(x)
-                    # loss = CB_loss(y.long(), outputs, samples_per_cls, no_of_classes, loss_type, beta, gamma)
-                    loss = criterion(outputs, y.long())
+                    loss = CB_loss(y.long(), outputs, samples_per_cls, no_of_classes, loss_type, beta, gamma)
+                    # loss = criterion(outputs, y.long())
                     val_loss += loss.item()
                     _, y_pred = outputs.max(1)
                     num_correct = (y_pred == y).sum().item()
