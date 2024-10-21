@@ -390,13 +390,17 @@ def cut_copy_files_s1_s2(data_directory: str, patient_id: str, out_directory: st
                 with open(file_path, mode='r', encoding='utf-8') as tsv_file:
                     tsv_reader = csv.reader(tsv_file, delimiter='\t')
                     for row in tsv_reader:
-                        if row[2] == '1':
+                        third_col = float(row[2])
+                        if third_col == 1:
+                        # if row[2] == '1':
                             s1_start.append(float(row[0]))  # 为string类型，需要类型转换
                             s1_end.append(float(row[1]))
-                        elif row[2] == '3':
+                        elif third_col == 3:
+                        # elif row[2] == '3':
                             s2_start.append(float(row[0]))
                             s2_end.append(float(row[1]))
-                        elif row[2] == '0':
+                        elif third_col == 0:
+                        # elif row[2] == '0':
                             zero_start.append(float(row[0]))
                             zero_end.append(float(row[1]))
                 total_start = s1_start + s2_start  # 存储起始位置
@@ -500,10 +504,13 @@ def cut_copy_files_s1(data_directory: str, patient_id: str, out_directory: str) 
                 with open(file_path, mode='r', encoding='utf-8') as tsv_file:
                     tsv_reader = csv.reader(tsv_file, delimiter='\t')
                     for row in tsv_reader:
-                        if row[2] == '1':
+                        third_col = float(row[2])
+                        if third_col == 1:
+                        # if row[2] == '1':
                             s1_start.append(float(row[0]))  # 为string类型，需要类型转换
                             s1_end.append(float(row[1]))
-                        elif row[2] == '0':
+                        elif third_col == 0:
+                        # elif row[2] == '0':
                             zero_start.append(float(row[0]))
                             zero_end.append(float(row[1]))
                 zero_start = zero_start[1:]  # 移除第一个未标注起始点
@@ -601,10 +608,13 @@ def cut_copy_files_s2(data_directory: str, patient_id: str, out_directory: str) 
                 with open(file_path, mode='r', encoding='utf-8') as tsv_file:
                     tsv_reader = csv.reader(tsv_file, delimiter='\t')
                     for row in tsv_reader:
-                        if row[2] == '3':
+                        third_col = float(row[2])
+                        if third_col == 3:
+                        # if row[2] == '3':
                             s2_start.append(float(row[0]))  # 为string类型，需要类型转换
                             s2_end.append(float(row[1]))
-                        elif row[2] == '0':
+                        elif third_col == 0:
+                        # elif row[2] == '0':
                             zero_start.append(float(row[0]))
                             zero_end.append(float(row[1]))
                 zero_start = zero_start[1:]  # 移除第一个未标注起始点
@@ -795,10 +805,13 @@ def cut_copy_files_double_s2(data_directory: str, patient_id: str, out_directory
                 with open(file_path, mode='r', encoding='utf-8') as tsv_file:
                     tsv_reader = csv.reader(tsv_file, delimiter='\t')
                     for row in tsv_reader:
-                        if row[2] == '3':
+                        third_col = float(row[2])
+                        if third_col == 3:
+                        # if row[2] == '3':
                             s2_start.append(float(row[0]))  # 为string类型，需要类型转换
                             s2_end.append(float(row[1]))
-                        elif row[2] == '0':
+                        elif third_col == 0:
+                        # elif row[2] == '0':
                             zero_start.append(float(row[0]))
                             zero_end.append(float(row[1]))
                 zero_start = zero_start[1:]  # 移除第一个未标注起始点
@@ -898,10 +911,13 @@ def cut_copy_files_double_s1(data_directory: str, patient_id: str, out_directory
                 with open(file_path, mode='r', encoding='utf-8') as tsv_file:
                     tsv_reader = csv.reader(tsv_file, delimiter='\t')
                     for row in tsv_reader:
-                        if row[2] == '1':
+                        third_col = float(row[2])
+                        if third_col == 1:
+                        # if row[2] == '1':
                             s1_start.append(float(row[0]))  # 为string类型，需要类型转换
                             s1_end.append(float(row[1]))
-                        elif row[2] == '0':
+                        elif third_col == 0:
+                        # elif row[2] == '0':
                             zero_start.append(float(row[0]))
                             zero_end.append(float(row[1]))
                 zero_start = zero_start[1:]  # 移除第一个未标注起始点
@@ -1005,13 +1021,17 @@ def cut_copy_files_double_s1s2(data_directory: str, patient_id: str, out_directo
                 with open(file_path, mode='r', encoding='utf-8') as tsv_file:
                     tsv_reader = csv.reader(tsv_file, delimiter='\t')
                     for row in tsv_reader:
-                        if row[2] == '1':
+                        third_col = float(row[2])
+                        if third_col == 1:
+                        # if row[2] == '1':
                             s1_start.append(float(row[0]))  # 为string类型，需要类型转换
                             s1_end.append(float(row[1]))
-                        elif row[2] == '3':
+                        elif third_col == 3:
+                        # elif row[2] == '3':
                             s2_start.append(float(row[0]))
                             s2_end.append(float(row[1]))
-                        elif row[2] == '0':
+                        elif third_col == 0:
+                        # elif row[2] == '0':
                             zero_start.append(float(row[0]))
                             zero_end.append(float(row[1]))
                 total_start = s1_start + s2_start  # 存储起始位置
