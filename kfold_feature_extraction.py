@@ -46,7 +46,8 @@ def save_kfold_feature(kfold_folder, cwt_feature, feature_folder, kfold=int):
         # train_feature = Log_GF_CWT_PCA(kfold_folder_train, cwt_train_folder)
         # train_feature = Log_GF_TDF_CST_MV_MFCC(kfold_folder_train, tdf_train_folder)
         # train_feature = Log_mel_32(kfold_folder_train)
-        train_feature = MDN_MARNN_feature(kfold_folder_train)
+        # train_feature = MDN_MARNN_feature(kfold_folder_train)
+        train_feature = Log_GF_TDF_MV_CST(kfold_folder_train, tdf_train_folder)
 
         train_label, train_location, train_id = get_label(kfold_folder_train)  # 获取各个3s片段label和听诊区位置和个体ID
         train_index = get_index(kfold_folder_train)
@@ -55,7 +56,8 @@ def save_kfold_feature(kfold_folder, cwt_feature, feature_folder, kfold=int):
         # vali_feature = Log_GF_CWT_PCA(kfold_folder_vali, cwt_vali_folder)
         # vali_feature = Log_GF_TDF_CST_MV_MFCC(kfold_folder_vali, tdf_vali_folder)
         # vali_feature = Log_mel_32(kfold_folder_vali)
-        vali_feature = MDN_MARNN_feature(kfold_folder_vali)  # MDN-MARNN模型特征提取
+        # vali_feature = MDN_MARNN_feature(kfold_folder_vali)  # MDN-MARNN模型特征提取
+        vali_feature = Log_GF_TDF_MV_CST(kfold_folder_vali, tdf_vali_folder)
 
         vali_label, vali_location, vali_id = get_label(kfold_folder_vali)
         vali_index = get_index(kfold_folder_vali)
@@ -261,9 +263,10 @@ def Log_GF_TDF_CST_MV_MFCC(data_directory, TDF_directory):  # 提取时频域和
     return np.array(loggamma)
 
 
-def Log_GF_TDF_CST_MV(data_directory, TDF_directory):  # 提取时频域和时域特征
+def Log_GF_TDF_MV_CST(data_directory, TDF_directory):  # 提取时频域和时域特征
     loggamma = list()
-    for f in tqdm(sorted(os.listdir(data_directory)), desc=str(data_directory) + ' Log_GF, TDF, CST, MV feature 60Hz:'):  # 加tqdm可视化特征提取过程
+    # 加tqdm可视化特征提取过程
+    for f in tqdm(sorted(os.listdir(data_directory)), desc=str(data_directory) + ' Log_GF, TDF, MV, CST feature 60Hz:'):
         root, extension = os.path.splitext(f)
         if extension == '.wav':
             x, fs = librosa.load(os.path.join(data_directory, f), sr=4000)
@@ -313,8 +316,8 @@ def Log_GF_TDF_CST_MV(data_directory, TDF_directory):  # 提取时频域和时�
                 # csv_data_pad = np.pad(csv_data, ((0, 0), (0, num_cols_to_add)), mode='constant', constant_values=0)
                 csv_data_cut = csv_data[:, :-1]
                 # 拼接.wav文件特征和.csv文件数据
-                combined_feat = np.concatenate((fbank_feat, csv_data_cut, chromagram, contrast, tonnetz,
-                                                frame_means_2d, frame_variances_2d), axis=0)
+                combined_feat = np.concatenate((fbank_feat, csv_data_cut, frame_means_2d, frame_variances_2d,
+                                                chromagram, contrast, tonnetz), axis=0)
                 loggamma.append(combined_feat)
 
             else:
@@ -524,9 +527,9 @@ def feature_norm(feat):
 
 if __name__ == '__main__':
     # 特征提取
-    kfold_festure_in = r"E:\sdmurmur\all_data_kfold\MDN_MARNN_all_data"  # 切割好的数据，对于present个体，只复制murmur存在的.wav文件
-    kfold_feature_folder = "all_data_feature_MDN_MARNN"  # 存储每折特征文件夹
-    tdf_feature_folder = r"E:\sdmurmur\alldataEnvelopeandSE60Hz\data_kfold_cut_zero"  # 时域特征存储文件夹
+    kfold_festure_in = r"E:\sdmurmur\calibrated_train_vali_new_cut_zero"  # 切割好的数据，对于present个体，只复制murmur存在的.wav文件
+    kfold_feature_folder = r"E:\sdmurmur\calibrated_train_vali_new_feature\TF_TDF_MV_CST_feature"  # 存储每折特征文件夹
+    tdf_feature_folder = r"E:\sdmurmur\calibrated_train_vali_new_EnvelopeandSE60Hz\data_kfold_cut_zero"  # 时域特征存储文件夹
     cwt_feature_folder = r"E:\sdmurmur\wavelets\data_kfold_cut_zero"  # cwt特征存储文件夹
     save_kfold_feature(kfold_festure_in, tdf_feature_folder, kfold_feature_folder, kfold=5)
     print('this is feature extraction file')
