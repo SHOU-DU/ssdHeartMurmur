@@ -134,7 +134,7 @@ if __name__ == "__main__":
 
         # CBloss_model_path = r'E:\sdmurmur\ssdHeartMurmur\all_data_results\TF_TDF_ODC_MM_FocalLoss_25_25_5_old_192M2total_10'
         # CBloss_model_path = r'E:\sdmurmur\ssdHeartMurmur\all_data_results\TF_SK_FocalLoss_1_1_1_old_64_10'
-        CBloss_model_path = r'E:\sdmurmur\ssdHeartMurmur\train_vali_new_results\TF_TDF_FocalLoss_1_1_1_old_133'
+        CBloss_model_path = r'E:\sdmurmur\ssdHeartMurmur\train_vali_new_results\TF_TDFMV_FocalLoss_1_1_1_old_135'
         # model_result_path = os.path.join('all_data_TF_MFCC_TDFMVCST_ODC_k3__FCCat384_25_25_5', fold_path)
         # model_result_path = os.path.join('all_data_TF_ODConv_k3_weight_25_25_5', fold_path)
         model_result_path = os.path.join(CBloss_model_path, fold)
