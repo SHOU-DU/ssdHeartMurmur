@@ -107,7 +107,7 @@ def dataset_split_kfold(data_folder, kfold_folder, kfold=int):
             os.makedirs(os.path.join(kfold_out_dir, "train_data"))
             for index in tqdm(train_idx, desc='MDN-MARNN calibrated train set cut zero:'):
                 f = pIDs[index]  # 获取patientID
-                MDN_MARNN_cut_copy_files_zero(
+                cut_copy_files_zero(
                     data_folder,
                     f,
                     os.path.join(kfold_out_dir, "train_data/"),
@@ -118,7 +118,7 @@ def dataset_split_kfold(data_folder, kfold_folder, kfold=int):
             os.makedirs(os.path.join(kfold_out_dir, "vali_data"))
             for index in tqdm(val_idx, desc='MDN-MARNN calibrated vali set cut zero:'):
                 f = pIDs[index]  # 获取patientID
-                MDN_MARNN_cut_copy_files_zero(
+                cut_copy_files_s1_s2(
                     data_folder,
                     f,
                     os.path.join(kfold_out_dir, "vali_data/"),
@@ -366,7 +366,7 @@ def my_cut_copy_files(data_directory: str, patient_id: str, out_directory: str) 
                         end = start + 3 * fs
 
 
-# 切掉为0的部分和s1, s2部分
+# 切掉为0的部分,掩蔽s1, s2部分
 def cut_copy_files_s1_s2(data_directory: str, patient_id: str, out_directory: str) -> None:
     files = os.listdir(data_directory)
     s1_start = []
@@ -1208,10 +1208,10 @@ def check_tsv(data_directory: str):
 if __name__ == '__main__':
 
     # 进行数据分折
-    original_dataset_folder = r"E:\sdmurmur\calibrated_train_vali_new"  # 对全部数据进行分折
+    original_dataset_folder = r"E:\sdmurmur\calibrated_train_vali_new"  # 对train+vali数据进行分折
     # grade:soft和loud均匀分折。location:对于present个体，只复制murmur存在的.wav文件
     # kfold_out = r"E:\sdmurmur\calibrated_train_vali_new_cut_zero"
-    kfold_out = r'E:\sdmurmur\ssdHeartMurmur\model_compare\MDN_MARNN_cut_zero'
+    kfold_out = r'E:\sdmurmur\ssdHeartMurmur\S1S2Experiment\vali_mask_s1s2'
     dataset_split_kfold(original_dataset_folder, kfold_out, kfold=5)
 
     # # 对测试集进行切分和s1,s1幅值缩放操作
