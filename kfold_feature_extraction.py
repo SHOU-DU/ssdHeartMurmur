@@ -45,8 +45,8 @@ def save_kfold_feature(kfold_folder, cwt_feature, feature_folder, kfold=int):
         # train_feature = Log_GF_GAF(kfold_folder_train)
         # train_feature = Log_GF_CWT_PCA(kfold_folder_train, cwt_train_folder)
         # train_feature = Log_GF_TDF_CST_MV_MFCC(kfold_folder_train, tdf_train_folder)
-        train_feature = Log_mel_32(kfold_folder_train)
-        # train_feature = MDN_MARNN_feature(kfold_folder_train)
+        # train_feature = Log_mel_32(kfold_folder_train)
+        train_feature = MDN_MARNN_feature(kfold_folder_train)
         # train_feature = Log_GF_TDF_MV_CST(kfold_folder_train, tdf_train_folder)
 
         train_label, train_location, train_id = get_label(kfold_folder_train)  # 获取各个3s片段label和听诊区位置和个体ID
@@ -55,8 +55,8 @@ def save_kfold_feature(kfold_folder, cwt_feature, feature_folder, kfold=int):
         # vali_feature = Log_GF_GAF(kfold_folder_vali)
         # vali_feature = Log_GF_CWT_PCA(kfold_folder_vali, cwt_vali_folder)
         # vali_feature = Log_GF_TDF_CST_MV_MFCC(kfold_folder_vali, tdf_vali_folder)
-        vali_feature = Log_mel_32(kfold_folder_vali)
-        # vali_feature = MDN_MARNN_feature(kfold_folder_vali)  # MDN-MARNN模型特征提取
+        # vali_feature = Log_mel_32(kfold_folder_vali)
+        vali_feature = MDN_MARNN_feature(kfold_folder_vali)  # MDN-MARNN模型特征提取
         # vali_feature = Log_GF_TDF_MV_CST(kfold_folder_vali, tdf_vali_folder)
 
         vali_label, vali_location, vali_id = get_label(kfold_folder_vali)
@@ -527,8 +527,8 @@ def feature_norm(feat):
 
 if __name__ == '__main__':
     # 特征提取
-    kfold_festure_in = r"E:\sdmurmur\calibrated_train_vali_new_cut_zero"  # 切割好的数据，对于present个体，只复制murmur存在的.wav文件
-    kfold_feature_folder = r"E:\sdmurmur\calibrated_train_vali_new_feature\TF_log_mel_32_feature"  # 存储每折特征文件夹
+    kfold_festure_in = r'E:\sdmurmur\ssdHeartMurmur\model_compare\MDN_MARNN_cut_zero'  # 切割好的数据，对于present个体，只复制murmur存在的.wav文件
+    kfold_feature_folder = r"E:\sdmurmur\ssdHeartMurmur\model_compare\MDN_MARNN_feature"  # 存储每折特征文件夹
     tdf_feature_folder = r"E:\sdmurmur\calibrated_train_vali_new_EnvelopeandSE60Hz\data_kfold_cut_zero"  # 时域特征存储文件夹
     cwt_feature_folder = r"E:\sdmurmur\wavelets\data_kfold_cut_zero"  # cwt特征存储文件夹
     save_kfold_feature(kfold_festure_in, tdf_feature_folder, kfold_feature_folder, kfold=5)
