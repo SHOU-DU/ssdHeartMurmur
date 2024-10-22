@@ -129,12 +129,12 @@ if __name__ == "__main__":
         # model = AudioClassifierMMODconv()  # sd multi Model ODconv gamma=2.5
         # model = AudioClassifierFuseODconv()  # sd Fuse ODconv gamma=2.5
         # model = AudioClassifier()
-        model = AmgModel(resblock, 1, 3)
-        # model = mdn_marnn()
+        # model = AmgModel(resblock, 1, 3)
+        model = mdn_marnn()
 
         # CBloss_model_path = r'E:\sdmurmur\ssdHeartMurmur\all_data_results\TF_TDF_ODC_MM_FocalLoss_25_25_5_old_192M2total_10'
         # CBloss_model_path = r'E:\sdmurmur\ssdHeartMurmur\all_data_results\TF_SK_FocalLoss_1_1_1_old_64_10'
-        CBloss_model_path = r'E:\sdmurmur\ssdHeartMurmur\train_vali_new_results\TF_AMG_FocalLoss_1_1_1_old_128'
+        CBloss_model_path = r'E:\sdmurmur\ssdHeartMurmur\train_vali_new_results\MDN-MARNN_CELoss_old'
         # model_result_path = os.path.join('all_data_TF_MFCC_TDFMVCST_ODC_k3__FCCat384_25_25_5', fold_path)
         # model_result_path = os.path.join('all_data_TF_ODConv_k3_weight_25_25_5', fold_path)
         model_result_path = os.path.join(CBloss_model_path, fold)
@@ -158,9 +158,9 @@ if __name__ == "__main__":
         loss_type = "sigmoid"
         no_of_classes = 3
         gamma = 2.5
-        criterion = Focal_Loss(gamma=2.5, weight=weight)  # sd 增大gamma
+        # criterion = Focal_Loss(gamma=2.5, weight=weight)  # sd 增大gamma
         # 创建交叉熵损失函数
-        # criterion = nn.CrossEntropyLoss()  # AMG模型损失函数
+        criterion = nn.CrossEntropyLoss()  # AMG模型损失函数
         # 保存验证集准确率最大时的模型
         model_path = os.path.join(model_result_path, "model")
         if not os.path.exists(model_path):
