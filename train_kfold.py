@@ -59,11 +59,11 @@ if __name__ == "__main__":
 
         # fold = '4_fold'  # 训练第i折
         # feature_data_path = r'E:\sdmurmur\calibrated_train_vali_new_feature\TF_TDF_MV_CST_feature'  # 提取的特征和标签文件夹
-        feature_data_path = r'E:\sdmurmur\calibrated_train_vali_new_feature\TF_log_mel_32_feature'  # AMG模型特征存储文件夹
-        # feature_data_path = 'all_data_feature_MDN_MARNN'  # MDN-MARNN模型特征存储文件夹
+        # feature_data_path = r'E:\sdmurmur\calibrated_train_vali_new_feature\TF_log_mel_32_feature'  # AMG模型特征存储文件夹
+        feature_data_path = r'E:\sdmurmur\ssdHeartMurmur\model_compare\MDN_MARNN_feature'  # MDN-MARNN模型特征存储文件夹
         # cut_data_kfold = r'data_kfold_cut_zero'
-        cut_data_kfold = r'E:\sdmurmur\calibrated_train_vali_new_cut_zero'  # 切分好的3s段数据
-        # cut_data_kfold = r'E:\sdmurmur\all_data_kfold\MDN_MARNN_all_data'  # 切分好的2s段数据
+        # cut_data_kfold = r'E:\sdmurmur\calibrated_train_vali_new_cut_zero'  # 切分好的3s段数据
+        cut_data_kfold = r'E:\sdmurmur\ssdHeartMurmur\model_compare\MDN_MARNN_cut_zero'  # 切分好的2s段数据
         if not test_flag:
             fold_path = os.path.join(feature_data_path, fold)
             cut_data = os.path.join(cut_data_kfold, fold, 'vali_data')
