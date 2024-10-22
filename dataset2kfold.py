@@ -116,9 +116,9 @@ def dataset_split_kfold(data_folder, kfold_folder, kfold=int):
         # 第i折测试集
         if not os.path.exists(os.path.join(kfold_out_dir, "vali_data")):
             os.makedirs(os.path.join(kfold_out_dir, "vali_data"))
-            for index in tqdm(val_idx, desc='S1S2 ex calibrated vali set cut zero mask s1:'):
+            for index in tqdm(val_idx, desc='S1S2 ex calibrated vali set cut zero double s1s2:'):
                 f = pIDs[index]  # 获取patientID
-                cut_copy_files_s1(
+                cut_copy_files_double_s1s2(
                     data_folder,
                     f,
                     os.path.join(kfold_out_dir, "vali_data/"),
@@ -1211,7 +1211,7 @@ if __name__ == '__main__':
     original_dataset_folder = r"E:\sdmurmur\calibrated_train_vali_new"  # 对train+vali数据进行分折
     # grade:soft和loud均匀分折。location:对于present个体，只复制murmur存在的.wav文件
     # kfold_out = r"E:\sdmurmur\calibrated_train_vali_new_cut_zero"
-    kfold_out = r'E:\sdmurmur\ssdHeartMurmur\S1S2Experiment\vali_mask_s1'
+    kfold_out = r'E:\sdmurmur\ssdHeartMurmur\S1S2Experiment\vali_double_s1s2'
     dataset_split_kfold(original_dataset_folder, kfold_out, kfold=5)
 
     # # 对测试集进行切分和s1,s1幅值缩放操作
