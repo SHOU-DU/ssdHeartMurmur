@@ -5,6 +5,10 @@ import matplotlib.pyplot as plt
 from matplotlib import image
 import os
 from spafe.utils.converters import erb2hz
+from spafe.utils.vis import show_fbanks
+from spafe.fbanks.gammatone_fbanks import gammatone_filter_banks
+from spafe.features.gfcc import erb_spectrogram
+
 # from pyts.image import RecurrencePlot
 import pywt
 from pyts.image import GramianAngularField, RecurrencePlot
@@ -15,27 +19,108 @@ from sklearn.preprocessing import StandardScaler
 # from torchvision import transforms
 
 if __name__ == '__main__':
-    # MFCC Feature
-    wavefile = r"E:\sdmurmur\ssdHeartMurmur\data_kfold_cut_zero\0_fold\train_data\9979_AV_Loud_0.wav"
+    # Envelope Feature
+    wavefile = r"E:\sdmurmur\ssdHeartMurmur\S1S2Experiment\vali_mask_s1\0_fold\train_data\14998_TV_Absent_1.wav"
     wave_data, fs = librosa.load(wavefile, sr=4000)
-    print(fs)
-    # 检查音频时长
-    audio_duration = len(wave_data) / fs
-    print(f"音频时长: {audio_duration} 秒")
-
-    frame_length = int(0.025 * fs)  # 帧长
-    hop_length = int(0.0125 * fs)  # 帧移
-    gSpec = librosa.feature.melspectrogram(y=wave_data, sr=fs, n_fft=512, hop_length=hop_length,
-                                           win_length=frame_length, n_mels=32, window='hamming', fmax=800, power=2.0)
-    log_gSpec = librosa.power_to_db(gSpec, ref=np.max)
-    print(log_gSpec.shape)
-    librosa.display.specshow(log_gSpec, x_axis='time', y_axis='linear', sr=fs*10, fmax=800)
-    log_gSpecT = log_gSpec[:, :-2]
-    print(log_gSpecT.shape)
-    # plt.ylim(0, 800)
-    plt.colorbar()
-    plt.tight_layout()
+    wave_t = np.arange(0, len(wave_data)/fs, 1/fs)
+    fig = plt.figure(figsize=(14, 5))
+    plt.plot(wave_t, wave_data, label='heart sound wave')
+    envelopePath = (r'E:\sdmurmur\ssdHeartMurmur\S1S2Experiment\vali_mask_s1_EnvelopeandSE60Hz\data_kfold_cut_zero'
+                    r'\0_fold\train_data\14998_TV_Absent_1.csv')
+    # 读取 CSV 文件
+    envelopeData = np.genfromtxt(envelopePath, delimiter=',')
+    # 获取行数和列数
+    num_rows, num_cols = envelopeData.shape
+    t = np.arange(0, len(envelopeData[0])/80, 1/80)
+    plt.plot(t, envelopeData[0], label='homomorphic_envelope')
+    plt.plot(t, envelopeData[1], label='hilbert_envelope')
+    plt.plot(t, envelopeData[2], label='psd')
+    plt.plot(t, envelopeData[3], label='wavelet')
+    # 添加标题和标签
+    plt.title('Time Domain Features Plot')
+    plt.xlabel('time/s')
+    plt.ylabel('Amplitude')
+    # 显示图例
+    plt.legend()
+    plt.xlim(0, 3)
+    plt.savefig(r"E:\sdmurmur\ssdHeartMurmur\GraphandTable\version1\timeDomainFeatures.png")  # sd 24/10/22
+    # 显示图表
     plt.show()
+
+    # # Gammatone feature
+    # wavefile = r"E:\sdmurmur\ssdHeartMurmur\S1S2Experiment\vali_mask_s1\0_fold\train_data\33151_MV_Soft_1.wav"
+    # wave_data, fs = librosa.load(wavefile, sr=4000)
+    # nfilts = 8
+    # nfft = 512
+    # low_freq = 0
+    # high_freq = 2000
+    # # compute freqs for xaxis
+    # ghz_freqs = np.linspace(low_freq, high_freq, nfft // 2 + 1)
+    # gamma fbanks
+    # gamma_fbanks_mat, gamma_freqs = gammatone_filter_banks(nfilts=nfilts,
+    #                                                        nfft=nfft,
+    #                                                        fs=fs,
+    #                                                        low_freq=low_freq,
+    #                                                        high_freq=high_freq,
+    #                                                        scale='constant',
+    #                                                        order=4)
+    # # visualize filter bank
+    # show_fbanks(
+    #     gamma_fbanks_mat,
+    #     [erb2hz(freq) for freq in gamma_freqs],
+    #     ghz_freqs,
+    #     "Gamma Filter Bank",
+    #     ylabel="Weight",
+    #     x1label="Frequency / Hz",
+    #     x2label="Frequency / erb",
+    #     figsize=(14, 6),
+    #     fb_type="gamma")
+
+    # # compute erb spectrogram
+    # gSpec, gfreqs = erb_spectrogram(wave_data,
+    #                                 fs=fs,
+    #                                 pre_emph=0,
+    #                                 pre_emph_coeff=0.97,
+    #                                 window=SlidingWindow(0.025, 0.0125, "hamming"),
+    #                                 nfilts=64,
+    #                                 nfft=512,
+    #                                 low_freq=25,
+    #                                 high_freq=fs / 2)
+    # # visualize spectrogram
+    # show_spectrogram(gSpec.T,
+    #                  fs=fs,
+    #                  xmin=0,
+    #                  xmax=len(wave_data) / fs,
+    #                  ymin=0,
+    #                  ymax=(fs / 2) / 1000,
+    #                  dbf=80.0,
+    #                  xlabel="Time (s)",
+    #                  ylabel="Frequency (kHz)",
+    #                  title="Erb spectrogram (dB)",
+    #                  cmap="jet")
+
+
+    # # MFCC Feature
+    # wavefile = r"E:\sdmurmur\ssdHeartMurmur\data_kfold_cut_zero\0_fold\train_data\9979_AV_Loud_0.wav"
+    # wave_data, fs = librosa.load(wavefile, sr=4000)
+    # print(fs)
+    # # 检查音频时长
+    # audio_duration = len(wave_data) / fs
+    # print(f"音频时长: {audio_duration} 秒")
+    #
+    # frame_length = int(0.025 * fs)  # 帧长
+    # hop_length = int(0.0125 * fs)  # 帧移
+    # gSpec = librosa.feature.melspectrogram(y=wave_data, sr=fs, n_fft=512, hop_length=hop_length,
+    #                                        win_length=frame_length, n_mels=32, window='hamming', fmax=800, power=2.0)
+    # log_gSpec = librosa.power_to_db(gSpec, ref=np.max)
+    # print(log_gSpec.shape)
+    # librosa.display.specshow(log_gSpec, x_axis='time', y_axis='linear', sr=fs*10, fmax=800)
+    # log_gSpecT = log_gSpec[:, :-2]
+    # print(log_gSpecT.shape)
+    # # plt.ylim(0, 800)
+    # plt.colorbar()
+    # plt.tight_layout()
+    # plt.show()
     # tonnetz Feature
     # wavefile = r"E:\sdmurmur\ssdHeartMurmur\data_kfold_cut_zero\0_fold\train_data\9979_AV_Loud_0.wav"
     # wave_data, fs = librosa.load(wavefile, sr=4000)
