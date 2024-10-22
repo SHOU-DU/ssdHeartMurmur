@@ -116,7 +116,7 @@ def MDN_MARNN_feature(data_directory):
     for f in tqdm(sorted(os.listdir(data_directory)), desc=str(data_directory) + ' MDN_MARNN_feature:'):  # 加tqdm可视化特征提取过程
         root, extension = os.path.splitext(f)
         if extension == '.wav':
-            x, fs = librosa.load(os.path.join(data_directory, f), sr=4000)
+            x, fs = librosa.load(os.path.join(data_directory, f), sr=2500)  # 切分的数据已重采样2500Hz
             x_2d = x.reshape(1, -1)
             mdn_feature.append(x_2d)
 

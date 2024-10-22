@@ -105,9 +105,9 @@ def dataset_split_kfold(data_folder, kfold_folder, kfold=int):
         # 第i折训练集
         if not os.path.exists(os.path.join(kfold_out_dir, "train_data")):
             os.makedirs(os.path.join(kfold_out_dir, "train_data"))
-            for index in tqdm(train_idx, desc='calibrated train set cut zero:'):
+            for index in tqdm(train_idx, desc='MDN-MARNN calibrated train set cut zero:'):
                 f = pIDs[index]  # 获取patientID
-                cut_copy_files_zero(
+                MDN_MARNN_cut_copy_files_zero(
                     data_folder,
                     f,
                     os.path.join(kfold_out_dir, "train_data/"),
@@ -116,9 +116,9 @@ def dataset_split_kfold(data_folder, kfold_folder, kfold=int):
         # 第i折测试集
         if not os.path.exists(os.path.join(kfold_out_dir, "vali_data")):
             os.makedirs(os.path.join(kfold_out_dir, "vali_data"))
-            for index in tqdm(val_idx, desc='calibrated vali set cut zero:'):
+            for index in tqdm(val_idx, desc='MDN-MARNN calibrated vali set cut zero:'):
                 f = pIDs[index]  # 获取patientID
-                cut_copy_files_zero(
+                MDN_MARNN_cut_copy_files_zero(
                     data_folder,
                     f,
                     os.path.join(kfold_out_dir, "vali_data/"),
@@ -1199,54 +1199,6 @@ def check_tsv(data_directory: str):
                         # 将修改后的数据写回到 tsv 文件
                         np.savetxt(file_path, data, delimiter='\t', fmt='%.6f')
 
-
-                    # # 读取第三列
-                    # third_col = data[:, 2].astype(float)  # 获取第三列并转换为浮点型
-                    # # all_no_zero = np.all(third_col != 0)  # 检查第三列是否全非零
-                    # # 计算第三列中0的数量
-                    # zero_count = np.count_nonzero(third_col == 0)
-                    #
-                    # if zero_count < 2:
-                    # # if all_no_zero:
-                    #     if zero_count == 1:
-                    #         patient_id = root
-                    #         wrong_list.append(patient_id)
-                    #         print(f'patient {patient_id} heart beats order are wrong')
-                    #         first_row = data[0].astype(float)  # 复制第一行，转换为浮点数
-                    #         if first_row[2] == 0:  # 说明最后一行非零
-                    #             # 在最后一行后添加两行
-                    #             last_row = data[-1]  # 获取最后一行
-                    #             # data[-1] = [last_row[0], last_row[1] - 0.001, last_row[2]]  # 修改最后一行
-                    #             new_last_row2 = np.array([last_row[1] - 0.001, last_row[1], 0])  # 新的最后一行
-                    #             data[-1] = [last_row[0], last_row[1] - 0.001, last_row[2]]  # 修改最后一行
-                    #             data = np.vstack([data, new_last_row2])  # 添加新的最后一行
-                    #         else:  # 说明第一行非零
-                    #             # 在第一行前添加一行
-                    #             first_row = data[0]  # 复制第一行
-                    #             new_first_row = np.array([0, first_row[0], 0])  # 新的第一行
-                    #             data = np.vstack([new_first_row, data])  # 插入新行到第一行位置
-                    #
-                    #     else:  # zero_count==0
-                    #         patient_id = root
-                    #         wrong_list.append(patient_id)
-                    #         print(f'patient {patient_id} heart beats order are wrong')
-                    #
-                    #         # 在第一行前添加一行
-                    #         first_row = data[0]  # 复制第一行
-                    #         new_first_row = np.array([0, first_row[0], 0])  # 新的第一行
-                    #         data = np.vstack([new_first_row, data])  # 插入新行到第一行位置
-                    #
-                    #         # 在最后一行后添加两行
-                    #         last_row = data[-1]  # 获取最后一行
-                    #         # data[-1] = [last_row[0], last_row[1] - 0.001, last_row[2]]  # 修改最后一行
-                    #         new_last_row2 = np.array([last_row[1] - 0.001, last_row[1], 0])  # 新的最后一行
-                    #         data[-1] = [last_row[0], last_row[1] - 0.001, last_row[2]]  # 修改最后一行
-                    #         data = np.vstack([data, new_last_row2])  # 添加新的最后一行
-                    #
-                    #     # 将修改后的数据写回到 tsv 文件
-                    #     np.savetxt(file_path, data, delimiter='\t', fmt='%.6f')
-                    #     # np.savetxt(file_path, data, delimiter='\t')
-
                 else:
                     print(f'File {f} does not have enough columns.')
 
@@ -1257,7 +1209,9 @@ if __name__ == '__main__':
 
     # 进行数据分折
     original_dataset_folder = r"E:\sdmurmur\calibrated_train_vali_new"  # 对全部数据进行分折
-    kfold_out = r"E:\sdmurmur\calibrated_train_vali_new_cut_zero"  # grade:soft和loud均匀分折。location:对于present个体，只复制murmur存在的.wav文件
+    # grade:soft和loud均匀分折。location:对于present个体，只复制murmur存在的.wav文件
+    # kfold_out = r"E:\sdmurmur\calibrated_train_vali_new_cut_zero"
+    kfold_out = r'E:\sdmurmur\ssdHeartMurmur\model_compare\MDN_MARNN_cut_zero'
     dataset_split_kfold(original_dataset_folder, kfold_out, kfold=5)
 
     # # 对测试集进行切分和s1,s1幅值缩放操作
