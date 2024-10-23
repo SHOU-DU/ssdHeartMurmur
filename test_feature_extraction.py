@@ -41,8 +41,8 @@ def save_test_feature(test_folder, test_tdf_folder, test_feature_folder):
     # train_feature = Log_GF_CWT_PCA(kfold_folder_train, test_tdf_folder)
     # train_feature = Log_GF_TDF(test_folder, test_tdf_folder)
     # train_feature = Log_GF(test_folder)  # 提取单时频域特征
-    # train_feature = Log_GF_TDF_MV_CST(test_folder, test_tdf_folder)  #
-    train_feature = Log_mel_32(test_folder)
+    train_feature = Log_GF_TDF_MV_CST(test_folder, test_tdf_folder)  #
+    # train_feature = Log_mel_32(test_folder)
 
     train_label, train_location, train_id = get_label(test_folder)  # 获取各个3s片段label和听诊区位置和个体ID
     train_index = get_index(test_folder)
@@ -306,9 +306,9 @@ def feature_norm(feat):
 
 if __name__ == '__main__':
     # 特征提取
-    kfold_festure_in = "test_data_cut_zero_new"  # test set切割好的数据，对于present个体，只复制murmur存在的.wav文件
-    kfold_feature_folder = "test_feature_TF_log_mel_32_new"  # 存储每折特征文件夹
-    tdf_feature_folder = r"E:\sdmurmur\testEnvelopeandSE60Hz_new"  # 时域特征存储文件夹
+    kfold_festure_in = r"E:\sdmurmur\ssdHeartMurmur\S1S2Experiment\test_double_s1"  # test set切割好的数据，对于present个体，只复制murmur存在的.wav文件
+    kfold_feature_folder = r"E:\sdmurmur\ssdHeartMurmur\S1S2Experiment\test_double_s1_feature"  # 存储每折特征文件夹
+    tdf_feature_folder = r"E:\sdmurmur\ssdHeartMurmur\S1S2Experiment\test_double_s1_EnvelopeandSE60Hz"  # 时域特征存储文件夹
     cwt_feature_folder = r"E:\sdmurmur\wavelets\data_kfold_cut_zero"  # cwt特征存储文件夹
     save_test_feature(kfold_festure_in, tdf_feature_folder, kfold_feature_folder)
     print('this is feature extraction file')

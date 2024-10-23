@@ -171,9 +171,9 @@ def test_dataset_scale(test_data_folder, scaled_test_folder):
     if not os.path.exists(scaled_test_folder):
         os.makedirs(scaled_test_folder)
 
-    for ID in tqdm(pIDs, desc='test set mask s2:'):
+    for ID in tqdm(pIDs, desc='test set double s1s2:'):
         # print(ID)  打印ID检查
-        cut_copy_files_s2(
+        cut_copy_files_double_s1s2(
             test_data_folder,
             ID,
             scaled_test_folder,
@@ -1216,7 +1216,7 @@ if __name__ == '__main__':
 
     # 对测试集进行切分和s1,s1幅值缩放操作
     test_data_folder = r"E:\sdmurmur\calibrated_test_data_new"  # 校正过的测试集路径
-    scaled_test_folder = r"E:\sdmurmur\ssdHeartMurmur\S1S2Experiment\test_mask_s2"  # 指定幅值缩放后的路径
+    scaled_test_folder = r"E:\sdmurmur\ssdHeartMurmur\S1S2Experiment\test_double_s1s2"  # 指定幅值缩放后的路径
     test_dataset_scale(test_data_folder, scaled_test_folder)
 
     # # 检查tsv文件是否有标记错误
