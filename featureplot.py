@@ -19,37 +19,40 @@ from sklearn.preprocessing import StandardScaler
 # from torchvision import transforms
 
 if __name__ == '__main__':
-    # Envelope Feature
-    wavefile = r"E:\sdmurmur\ssdHeartMurmur\S1S2Experiment\vali_mask_s1\0_fold\train_data\14998_TV_Absent_1.wav"
-    wave_data, fs = librosa.load(wavefile, sr=4000)
-    wave_t = np.arange(0, len(wave_data)/fs, 1/fs)
-    fig = plt.figure(figsize=(14, 5))
-    plt.plot(wave_t, wave_data, label='heart sound wave')
-    envelopePath = (r'E:\sdmurmur\ssdHeartMurmur\S1S2Experiment\vali_mask_s1_EnvelopeandSE60Hz\data_kfold_cut_zero'
-                    r'\0_fold\train_data\14998_TV_Absent_1.csv')
-    # 读取 CSV 文件
-    envelopeData = np.genfromtxt(envelopePath, delimiter=',')
-    # 获取行数和列数
-    num_rows, num_cols = envelopeData.shape
-    t = np.arange(0, len(envelopeData[0])/80, 1/80)
-    plt.plot(t, envelopeData[0], label='homomorphic_envelope')
-    plt.plot(t, envelopeData[1], label='hilbert_envelope')
-    plt.plot(t, envelopeData[2], label='psd')
-    plt.plot(t, envelopeData[3], label='wavelet')
-    # 添加标题和标签
-    plt.title('Time Domain Features Plot')
-    plt.xlabel('time/s')
-    plt.ylabel('Amplitude')
-    # 显示图例
-    plt.legend()
-    plt.xlim(0, 3)
-    plt.savefig(r"E:\sdmurmur\ssdHeartMurmur\GraphandTable\version1\timeDomainFeatures.png")  # sd 24/10/22
-    # 显示图表
-    plt.show()
-
-    # # Gammatone feature
-    # wavefile = r"E:\sdmurmur\ssdHeartMurmur\S1S2Experiment\vali_mask_s1\0_fold\train_data\33151_MV_Soft_1.wav"
+    # # Envelope Feature
+    # wavefile = r"E:\sdmurmur\ssdHeartMurmur\S1S2Experiment\vali_mask_s1\0_fold\train_data\14998_TV_Absent_1.wav"
     # wave_data, fs = librosa.load(wavefile, sr=4000)
+    # wave_t = np.arange(0, len(wave_data)/fs, 1/fs)
+    # fig = plt.figure(figsize=(8, 8))
+    # # plt.plot(wave_t, wave_data, label='heart sound wave')
+    # envelopePath = (r'E:\sdmurmur\ssdHeartMurmur\S1S2Experiment\vali_mask_s1_EnvelopeandSE60Hz\data_kfold_cut_zero'
+    #                 r'\0_fold\train_data\14998_TV_Absent_1.csv')
+    # # 读取 CSV 文件
+    # envelopeData = np.genfromtxt(envelopePath, delimiter=',')
+    # # 获取行数和列数
+    # num_rows, num_cols = envelopeData.shape
+    # t = np.arange(0, len(envelopeData[0])/80, 1/80)
+    # plt.plot(t, envelopeData[0], label='homomorphic_envelope')
+    # plt.plot(t, envelopeData[1], label='hilbert_envelope')
+    # plt.plot(t, envelopeData[2], label='psd')
+    # plt.plot(t, envelopeData[3], label='wavelet')
+    # # 添加标题和标签
+    # plt.title('Time Domain Features Plot', fontsize=16)
+    # plt.xlabel('time/s', fontsize=14)
+    # plt.ylabel('Amplitude', fontsize=14)
+    # # 调整 x 轴和 y 轴刻度标签的字体大小
+    # plt.xticks(fontsize=12)
+    # plt.yticks(fontsize=12)
+    # # 显示图例
+    # plt.legend(prop={'size': 14})
+    # plt.xlim(0, 3)
+    # # plt.savefig(r"E:\sdmurmur\ssdHeartMurmur\GraphandTable\version1\timeDomainFeatures_square.png")  # sd 24/10/22
+    # # 显示图表
+    # plt.show()
+
+    # Gammatone feature
+    wavefile = r"E:\sdmurmur\ssdHeartMurmur\S1S2Experiment\vali_mask_s1\0_fold\train_data\2530_TV_Absent_0.wav"
+    wave_data, fs = librosa.load(wavefile, sr=4000)
     # nfilts = 8
     # nfft = 512
     # low_freq = 0
@@ -76,28 +79,28 @@ if __name__ == '__main__':
     #     figsize=(14, 6),
     #     fb_type="gamma")
 
-    # # compute erb spectrogram
-    # gSpec, gfreqs = erb_spectrogram(wave_data,
-    #                                 fs=fs,
-    #                                 pre_emph=0,
-    #                                 pre_emph_coeff=0.97,
-    #                                 window=SlidingWindow(0.025, 0.0125, "hamming"),
-    #                                 nfilts=64,
-    #                                 nfft=512,
-    #                                 low_freq=25,
-    #                                 high_freq=fs / 2)
-    # # visualize spectrogram
-    # show_spectrogram(gSpec.T,
-    #                  fs=fs,
-    #                  xmin=0,
-    #                  xmax=len(wave_data) / fs,
-    #                  ymin=0,
-    #                  ymax=(fs / 2) / 1000,
-    #                  dbf=80.0,
-    #                  xlabel="Time (s)",
-    #                  ylabel="Frequency (kHz)",
-    #                  title="Erb spectrogram (dB)",
-    #                  cmap="jet")
+    # compute erb spectrogram
+    gSpec, gfreqs = erb_spectrogram(wave_data,
+                                    fs=fs,
+                                    pre_emph=0,
+                                    pre_emph_coeff=0.97,
+                                    window=SlidingWindow(0.025, 0.0125, "hamming"),
+                                    nfilts=64,
+                                    nfft=512,
+                                    low_freq=25,
+                                    high_freq=fs / 2)
+    # visualize spectrogram
+    show_spectrogram(gSpec.T,
+                     fs=fs,
+                     xmin=0,
+                     xmax=len(wave_data) / fs,
+                     ymin=0,
+                     ymax=(fs / 2) / 1000,
+                     dbf=80.0,
+                     xlabel="Time (s)",
+                     ylabel="Frequency (kHz)",
+                     title="Erb spectrogram (dB)",
+                     cmap="jet")
 
 
     # # MFCC Feature

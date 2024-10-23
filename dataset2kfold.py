@@ -105,9 +105,9 @@ def dataset_split_kfold(data_folder, kfold_folder, kfold=int):
         # 第i折训练集
         if not os.path.exists(os.path.join(kfold_out_dir, "train_data")):
             os.makedirs(os.path.join(kfold_out_dir, "train_data"))
-            for index in tqdm(train_idx, desc='S1S2 ex calibrated train set cut zero:'):
+            for index in tqdm(train_idx, desc='S1S2 ex calibrated train set double s1s2:'):
                 f = pIDs[index]  # 获取patientID
-                cut_copy_files_zero(
+                cut_copy_files_double_s1s2(
                     data_folder,
                     f,
                     os.path.join(kfold_out_dir, "train_data/"),
@@ -116,7 +116,7 @@ def dataset_split_kfold(data_folder, kfold_folder, kfold=int):
         # 第i折测试集
         if not os.path.exists(os.path.join(kfold_out_dir, "vali_data")):
             os.makedirs(os.path.join(kfold_out_dir, "vali_data"))
-            for index in tqdm(val_idx, desc='S1S2 ex calibrated vali set cut zero double s1s2:'):
+            for index in tqdm(val_idx, desc='S1S2 ex calibrated vali set double s1s2:'):
                 f = pIDs[index]  # 获取patientID
                 cut_copy_files_double_s1s2(
                     data_folder,
@@ -1207,17 +1207,17 @@ def check_tsv(data_directory: str):
 
 if __name__ == '__main__':
 
-    # # 进行数据分折
-    # original_dataset_folder = r"E:\sdmurmur\calibrated_train_vali_new"  # 对train+vali数据进行分折
-    # # grade:soft和loud均匀分折。location:对于present个体，只复制murmur存在的.wav文件
-    # # kfold_out = r"E:\sdmurmur\calibrated_train_vali_new_cut_zero"
-    # kfold_out = r'E:\sdmurmur\ssdHeartMurmur\S1S2Experiment\vali_double_s1s2'
-    # dataset_split_kfold(original_dataset_folder, kfold_out, kfold=5)
+    # 进行数据分折
+    original_dataset_folder = r"E:\sdmurmur\calibrated_train_vali_new"  # 对train+vali数据进行分折
+    # grade:soft和loud均匀分折。location:对于present个体，只复制murmur存在的.wav文件
+    # kfold_out = r"E:\sdmurmur\calibrated_train_vali_new_cut_zero"
+    kfold_out = r'E:\sdmurmur\ssdHeartMurmur\S1S2Experiment\train_vali_scale\train_vali_double_s1s2'  # 存储分折后的文件路径
+    dataset_split_kfold(original_dataset_folder, kfold_out, kfold=5)
 
-    # 对测试集进行切分和s1,s1幅值缩放操作
-    test_data_folder = r"E:\sdmurmur\calibrated_test_data_new"  # 校正过的测试集路径
-    scaled_test_folder = r"E:\sdmurmur\ssdHeartMurmur\S1S2Experiment\test_double_s1s2"  # 指定幅值缩放后的路径
-    test_dataset_scale(test_data_folder, scaled_test_folder)
+    # # 对测试集进行切分和s1,s1幅值缩放操作
+    # test_data_folder = r"E:\sdmurmur\calibrated_test_data_new"  # 校正过的测试集路径
+    # scaled_test_folder = r"E:\sdmurmur\ssdHeartMurmur\S1S2Experiment\test_double_s1s2"  # 指定幅值缩放后的路径
+    # test_dataset_scale(test_data_folder, scaled_test_folder)
 
     # # 检查tsv文件是否有标记错误
     # original_dataset_folder = r"E:\sdmurmur\calibrated_train_vali_new"
