@@ -347,7 +347,7 @@ class AudioClassifierFuseODconv(nn.Module):
     # ----------------------------
     # 2024/09/24 PM 14:55 将时域特征xf2重复复制为(1,1,64,239)视作另一个模态，与xf1经过相同网络结构后进行通道层面拼接，最后进入全连接层
     # 通道层面拼接选择128+128;128+64;128+32
-    def __init__(self):
+    def  __init__(self):
         super().__init__()
         self.pre = self._pre(1, 16)
         # self.pre2 = self._pre(1, 16)
