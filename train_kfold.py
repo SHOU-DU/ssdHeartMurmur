@@ -467,6 +467,7 @@ if __name__ == "__main__":
                     plt.close()
                 else:
                     no_better_epoch = no_better_epoch + 1
+                    best_epoch = float('nan')
 
                 # 保存验证集loss最小时的模型
                 if loss_metric < best_val_loss:
