@@ -55,10 +55,10 @@ if __name__ == "__main__":
         print(f'this is {fold}')
 
         # fold = '4_fold'  # 训练第i折
-        feature_data_path = r'E:\sdmurmur\ssdHeartMurmur\S1S2Experiment\vali_scale\vali_double_s1s2_feature'  # 提取的特征和标签文件夹
+        feature_data_path = r'E:\sdmurmur\ssdHeartMurmur\S1S2Experiment\vali_scale\vali_double_s2_feature'  # 提取的特征和标签文件夹
         # feature_data_path = 'feature_TF_TDF_60Hz_cut_zero'
         # cut_data_kfold = r'data_kfold_cut_zero'
-        cut_data_kfold = r'E:\sdmurmur\ssdHeartMurmur\S1S2Experiment\vali_scale\vali_double_s1s2'  # 切分好的3s段数据
+        cut_data_kfold = r'E:\sdmurmur\ssdHeartMurmur\S1S2Experiment\vali_scale\vali_double_s2'  # 切分好的3s段数据
         if not test_flag:
             fold_path = os.path.join(feature_data_path, fold)
             cut_data = os.path.join(cut_data_kfold, fold, 'vali_data')
@@ -123,7 +123,7 @@ if __name__ == "__main__":
         # 模型选择
         model = AudioClassifierFuseODconv()  # sd Fuse ODconv gamma=2.5
         # model = AudioClassifier()  # 用SK模块
-        CBloss_model_path = r'E:\sdmurmur\ssdHeartMurmur\S1S2Experiment\train_result_s1s2\vali_TF_TDFMV_double_s1s2_1_1_1'
+        CBloss_model_path = r'E:\sdmurmur\ssdHeartMurmur\S1S2Experiment\train_result_s1s2\vali_TF_TDFMV_double_s2_1_1_1'
         # model_result_path = os.path.join('all_data_TF_MFCC_TDFMVCST_ODC_k3__FCCat384_25_25_5', fold_path)
         # model_result_path = os.path.join('all_data_TF_ODConv_k3_weight_25_25_5', fold_path)
         model_result_path = os.path.join(CBloss_model_path, fold)
