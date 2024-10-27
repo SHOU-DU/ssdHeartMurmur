@@ -24,14 +24,14 @@ random.seed(init_seed)
 if __name__ == "__main__":
     # feature_data_path = 'test_feature_TF_TDF_CST_cut_zero_new'  # 提取的特征和标签文件夹
     # feature_data_path = 'test_feature_TF_log_mel_32_new'  # AMG模型提取的特征和标签文件夹
-    feature_data_path = r"E:\sdmurmur\ssdHeartMurmur\S1S2Experiment\test_scale\test_mask_s1_feature"  # 模型提取的特征和标签文件夹
+    feature_data_path = r"E:\sdmurmur\ssdHeartMurmur\S1S2Experiment\test_scale\test_mask_s2_feature"  # 模型提取的特征和标签文件夹
     fold_path = feature_data_path
     feature_path = os.path.join(fold_path, 'feature')
     # 单时频特征模型
     # model_folder = r'E:\sdmurmur\ssdHeartMurmur\TF_ODConv_k3_weight_2_2_6\feature_TF_TDF_cut_zero'  # 存储模型的文件夹
     # 时频域特征+时域特征模型
     # model_folder = r'E:\sdmurmur\ssdHeartMurmur\SK_TF_Result\feature_TF_TDF_CST_MV_MFCC_60Hz_cut_zero'
-    model_folder = r'E:\sdmurmur\ssdHeartMurmur\S1S2Experiment\train_result_s1s2\vali_TF_TDFMV_mask_s1_1_1_1'  # 存储模型的文件夹
+    model_folder = r'E:\sdmurmur\ssdHeartMurmur\S1S2Experiment\train_result_s1s2\vali_TF_TDFMV_mask_s2_1_1_1'  # 存储模型的文件夹
     # model = AudioClassifierODconv()
     label_path = os.path.join(fold_path, 'label')
 
@@ -69,7 +69,7 @@ if __name__ == "__main__":
         # 采用最后一轮的模型进行评估
         # model_result_path = os.path.join('test_result_odconv_k3_repeat_weight_2_2_6_last_model_batchsize128', fold_path, str(j) + '_fold')
         # CB_Loss_test_model_path = r'E:\sdmurmur\ssdHeartMurmur\mask\test_TF_ODC_k3_2_3_4_5'  # 保存测试结果的路径
-        mask_test_model_path = r'E:\sdmurmur\ssdHeartMurmur\S1S2Experiment\test_result_s1s2\vali_TF_TDFMV_mask_s1_1_1_1'  # 保存测试结果的路径
+        mask_test_model_path = r'E:\sdmurmur\ssdHeartMurmur\S1S2Experiment\test_result_s1s2\vali_TF_TDFMV_mask_s2_1_1_1'  # 保存测试结果的路径
         model_result_path = os.path.join(mask_test_model_path, str(j)+'_fold')
         # 设置环境变量，指定可见的 GPU 设备
         os.environ['CUDA_VISIBLE_DEVICES'] = '0'
@@ -149,47 +149,31 @@ if __name__ == "__main__":
         # 计算混淆矩阵
         cm = confusion_matrix(y_true, y_pred)
         # 计算召回率 F1
-        Absent_num = np.sum(cm[0])
-        Soft_num = np.sum(cm[1])
-        Loud_num = np.sum(cm[2])
-        Absent_recall = cm[0][0] / Absent_num
-        Soft_recall = cm[1][1] / Soft_num
-        Loud_recall = cm[2][2] / Loud_num
-
-        PCG_UAR = (Absent_recall + Soft_recall + Loud_recall) / 3
+        PCG_UAR = (recall_per_class[0] + recall_per_class[1] + recall_per_class[2]) / 3
         # 计算五折召回率均值
-        avg_absent_recall.append(Absent_recall)
-        avg_soft_recall.append(Soft_recall)
-        avg_loud_recall.append(Loud_recall)
+        avg_absent_recall.append(recall_per_class[0])
+        avg_soft_recall.append(recall_per_class[1])
+        avg_loud_recall.append(recall_per_class[2])
         avg_uar.append(PCG_UAR)
-
-        PCG_acc_soft_aver = (acc_metric + Soft_recall) / 2  # 准确率和soft找回率均值
         print("------------------------------PCG result------------------------------")
         print("Absent_recall: %.4f, Soft_recall: %.4f, Loud_recall: %.4f,PCG_UAR: %.4f"
-              % (Absent_recall, Soft_recall, Loud_recall, PCG_UAR))
+              % (recall_per_class[0], recall_per_class[1], recall_per_class[2], PCG_UAR))
         a = np.sum(cm, 0)
-        Absent_Precision = cm[0][0] / a[0]
-        Soft_Precision = cm[1][1] / a[1]
-        Loud_Precision = cm[2][2] / a[2]
 
-        Absent_f1 = (2 * Absent_recall * Absent_Precision) / (Absent_recall + Absent_Precision)
-        Soft_f1 = (2 * Soft_recall * Soft_Precision) / (Soft_recall + Soft_Precision)
-        Loud_f1 = (2 * Loud_recall * Loud_Precision) / (Loud_recall + Loud_Precision)
-        PCG_f1 = (Absent_f1 + Soft_f1 + Loud_f1) / 3
+        PCG_f1 = (f1_per_class[0] + f1_per_class[1] + f1_per_class[2]) / 3
         # 计算五折f1分数均值
-        avg_absent_f1.append(Absent_f1)
-        avg_soft_f1.append(Soft_f1)
-        avg_loud_f1.append(Loud_f1)
+        avg_absent_f1.append(f1_per_class[0])
+        avg_soft_f1.append(f1_per_class[1])
+        avg_loud_f1.append(f1_per_class[2])
         avg_uaf.append(PCG_f1)
 
         print("Absent_F1: %.4f, Soft_F1: %.4f, Loud_F1: %.4f, PCG_F1: %.4f"
-              % (Absent_f1, Soft_f1, Loud_f1, PCG_f1))
+              % (f1_per_class[0], f1_per_class[1], f1_per_class[2], PCG_f1))
         result_path = os.path.join(model_result_path, "ResultFile")
         if not os.path.exists(result_path):
             os.makedirs(result_path)
         # 存储到.txt文件的数据
-        UAF = (Absent_f1 + Soft_f1 + Loud_f1) / 3
-        PCG_UAR = (Absent_recall + Soft_recall + Loud_recall) / 3
+        UAF = (f1_per_class[0] + f1_per_class[1] + f1_per_class[2]) / 3
 
         # PCG混淆矩阵
         # 将预测标签和真实标签转换为numpy数组
@@ -217,15 +201,15 @@ if __name__ == "__main__":
             file.write("===============================================================================" + "\n")
             file.write(str(mytime) + "\n")
             file.write("-----------------PCG_vali_recall----------------- " + "\n")
-            file.write("Absent: " + str('{:.4f}'.format(Absent_recall))
-                       + "  Soft: " + str('{:.4f}'.format(Soft_recall))
-                       + "  Loud: " + str('{:.4f}'.format(Loud_recall))
+            file.write("Absent: " + str('{:.4f}'.format(recall_per_class[0]))
+                       + "  Soft: " + str('{:.4f}'.format(recall_per_class[1]))
+                       + "  Loud: " + str('{:.4f}'.format(recall_per_class[2]))
                        + "  PCG_UAR: " + str('{:.4f}'.format(PCG_UAR))
                        + "\n")
             file.write("-------------------PCG_vali_F1------------------- " + "\n")
-            file.write("Absent: " + str('{:.4f}'.format(Absent_f1))
-                       + "  Soft: " + str('{:.4f}'.format(Soft_f1))
-                       + "  Loud: " + str('{:.4f}'.format(Loud_f1))
+            file.write("Absent: " + str('{:.4f}'.format(f1_per_class[0]))
+                       + "  Soft: " + str('{:.4f}'.format(f1_per_class[1]))
+                       + "  Loud: " + str('{:.4f}'.format(f1_per_class[2]))
                        + "  UAF: " + str('{:.4f}'.format(UAF))
                        + "\n")
             # file.write('train_acc    val_acc   train_loss    val_loss' + "\n")
