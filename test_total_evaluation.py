@@ -52,7 +52,7 @@ if __name__ == "__main__":
     model = torch.load(os.path.join(model_path, 'last_model'))
     # 采用最后一轮的模型进行评估
     # model_result_path = os.path.join('test_result_odconv_k3_repeat_weight_2_2_6_last_model_batchsize128', fold_path, str(j) + '_fold')
-    model_result_path = os.path.join('train_total_test_result_odconv_k3_tf_tdf_MM_Fcat133_last_model')
+    model_result_path = r"E:\sdmurmur\ssdHeartMurmurFiles\test_result_new\test_new_mixed\TF_TDF_ODC_1_1_1_10"
     # 设置环境变量，指定可见的 GPU 设备
     os.environ['CUDA_VISIBLE_DEVICES'] = '0'
     # 检查是否有可用的 GPU，并选择合适的计算设备
