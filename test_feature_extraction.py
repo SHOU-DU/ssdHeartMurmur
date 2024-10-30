@@ -41,8 +41,8 @@ def save_test_feature(test_folder, test_tdf_folder, test_feature_folder):
     # train_feature = Log_GF_CWT_PCA(kfold_folder_train, test_tdf_folder)
     # train_feature = Log_GF_TDF(test_folder, test_tdf_folder)
     # train_feature = Log_GF(test_folder)  # 提取单时频域特征
-    train_feature = Log_GF_TDF_MV_CST(test_folder, test_tdf_folder)  #
-    # train_feature = Log_mel_32(test_folder)
+    # train_feature = Log_GF_TDF_MV_CST(test_folder, test_tdf_folder)  #
+    train_feature = Log_mel_32(test_folder)
 
     train_label, train_location, train_id = get_label(test_folder)  # 获取各个3s片段label和听诊区位置和个体ID
     train_index = get_index(test_folder)
