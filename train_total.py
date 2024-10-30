@@ -1,18 +1,18 @@
 import os
-from sklearn.metrics import confusion_matrix
-import matplotlib.pyplot as plt
+# from sklearn.metrics import confusion_matrix
+# import matplotlib.pyplot as plt
 import torch
-import torch.nn as nn
+# import torch.nn as nn
 import numpy as np
-from datetime import datetime
+# from datetime import datetime
 from Imbanlance_Loss import Focal_Loss, DiceLoss, PolyLoss
-import math
-import torch.optim as optim
+# import math
+# import torch.optim as optim
 from CNN import (AudioClassifier, AudioClassifierFuseODconv, AudioClassifierODconv)
 # from efficient_kan import KAN
 from My_Dataloader import NewDataset, TrainDataset, Dataset2, MyDataset
 from torch.utils.data import DataLoader, WeightedRandomSampler
-from patient_information import get_locations, cal_patient_acc, single_result, location_result
+# from patient_information import get_locations, cal_patient_acc, single_result, location_result
 import random
 from sklearn.metrics import recall_score, f1_score
 
@@ -35,10 +35,10 @@ torch.backends.cudnn.deterministic = True
 # sd 2024/09/30 添加MFCC特征，进行多模态（3）特征融合
 # sd 2024/10/06 改变FocalLoss参数调整单时频域特征的结果，重跑特征拼接模型Fcat5  tdf_cat_sum
 if __name__ == "__main__":
-    # fold = '4_fold'  # 训练第i折
-    feature_data_path = 'train_total_feature_TF_TDF_60Hz_cut_zero'  # 提取的特征和标签文件夹
+
+    feature_data_path = r"E:\sdmurmur\ssdHeartMurmurFiles\calibrated_train_vali_new_mixed_data_feature\TF_TDF_MV_CST_feature"  # 提取的特征和标签文件夹
     # cut_data_kfold = r'data_kfold_out'
-    cut_data_kfold = r'data_kfold_cut_zero'
+    cut_data_kfold = r"E:\sdmurmur\ssdHeartMurmurFiles\calibrated_train_vali_new_mixed_data_feature\cut_zero"
 
     feature_path = os.path.join(feature_data_path, 'feature')
     label_path = os.path.join(feature_data_path, 'label')

@@ -6,13 +6,13 @@ import torch.nn as nn
 import numpy as np
 from datetime import datetime
 from Imbanlance_Loss import Focal_Loss, DiceLoss, PolyLoss
-import math
-import torch.optim as optim
+# import math
+# import torch.optim as optim
 from CNN import (AudioClassifier, AudioClassifierFuseODconv, AudioClassifierODconv)
 # from efficient_kan import KAN
 from My_Dataloader import NewDataset, TrainDataset, Dataset2, MyDataset
 from torch.utils.data import DataLoader, WeightedRandomSampler
-from patient_information import get_locations, cal_patient_acc, single_result, location_result
+# from patient_information import get_locations, cal_patient_acc, single_result, location_result
 import random
 from sklearn.metrics import recall_score, f1_score
 
