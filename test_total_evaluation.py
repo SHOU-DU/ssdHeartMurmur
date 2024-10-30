@@ -22,13 +22,13 @@ np.random.seed(init_seed)  # 用于numpy的随机数
 random.seed(init_seed)
 
 if __name__ == "__main__":
-    feature_data_path = 'test_feature_TF_TDF_CST_MV_MFCC_60Hz_cut_zero'  # 提取的特征和标签文件夹
+    feature_data_path = r'E:\sdmurmur\ssdHeartMurmurFiles\test_feature_TF_TDF_CST_cut_zero_new'  # 提取的特征和标签文件夹
     fold_path = feature_data_path
     feature_path = os.path.join(fold_path, 'feature')
     # 单时频特征模型
     # model_folder = r'E:\sdmurmur\ssdHeartMurmur\TF_ODConv_k3_weight_2_2_6\feature_TF_TDF_cut_zero'  # 存储模型的文件夹
     # 时频域特征+时域特征模型
-    model_folder = r'E:\sdmurmur\ssdHeartMurmur\train_total_TF_MFCC_TDFMVCST_ODC_k3_MM_FCCat133_withoutMFCC\train_total_feature_TF_TDF_60Hz_cut_zero\model'  # 存储模型的文件夹
+    model_folder = r'E:\sdmurmur\ssdHeartMurmurFiles\train_vali_new_results\train_vali_new_mixed\TF_TDF_ODC_1_1_1_10\model'  # 存储模型的文件夹
     # model = AudioClassifierODconv()
     label_path = os.path.join(fold_path, 'label')
 
@@ -59,8 +59,8 @@ if __name__ == "__main__":
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     model = model.to(device)  # 放到设备中
     # 设置损失函数
-    # weight = torch.tensor([1, 1, 1]).to(device)
-    weight = torch.tensor([0.25, 0.25, 0.50]).to(device)  # sd 改变权重值，增加loud权重
+    weight = torch.tensor([1, 1, 1]).to(device)
+    # weight = torch.tensor([0.25, 0.25, 0.50]).to(device)  # sd 改变权重值，增加loud权重
     # criterion = Focal_Loss(gamma=2.5, weight=weight)
     criterion = Focal_Loss(gamma=2.5, weight=weight)  # sd 增大gamma
 
