@@ -94,7 +94,7 @@ if __name__ == "__main__":
     # 模型选择
     model = AudioClassifierFuseODconv()  # sd Fuse ODconv gamma=2.5
     # model = AudioClassifier()
-    model_result_path = os.path.join('train_total_TF_MFCC_TDFMVCST_ODC_k3_MM_FCCat133_withoutMFCC', feature_data_path)
+    model_result_path = r"E:\sdmurmur\ssdHeartMurmurFiles\train_vali_new_results\train_vali_new_mixed\TF_TDF_ODC_1_1_1_10"
     # model_result_path = os.path.join('Aweight_TimeFreq_result', fold_path)
     os.environ['CUDA_VISIBLE_DEVICES'] = '0'
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -106,8 +106,8 @@ if __name__ == "__main__":
     # scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, [5, 10, 15, 20, 25, 30], gamma=0.2)  # sd Fuse会过拟合
 
     # 设置损失函数
-    # weight = torch.tensor([1, 1, 1]).to(device)
-    weight = torch.tensor([0.25, 0.25, 0.50]).to(device)  # sd 改变权重值，增加loud权重
+    weight = torch.tensor([1, 1, 1]).to(device)
+    # weight = torch.tensor([0.25, 0.25, 0.50]).to(device)  # sd 改变权重值，增加loud权重
     # criterion = Focal_Loss(gamma=2.5, weight=weight)
     criterion = Focal_Loss(gamma=2.5, weight=weight)  # sd 增大gamma
     # criterion = nn.CrossEntropyLoss()  # sd KAN
