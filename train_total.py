@@ -17,7 +17,7 @@ from torch.utils.data import DataLoader, WeightedRandomSampler
 import random
 from sklearn.metrics import recall_score, f1_score
 
-init_seed = 11
+init_seed = 12
 torch.manual_seed(init_seed)
 torch.cuda.manual_seed(init_seed)
 torch.cuda.manual_seed_all(init_seed)
@@ -98,8 +98,8 @@ if __name__ == "__main__":
     # model = AudioClassifierODconv()
     # model = AmgModel(resblock, 1, 3)
     # model = AudioClassifier()
-    # model_result_path = r"E:\sdmurmur\ssdHeartMurmurFiles\train_vali_new_results\train_vali_new_mixed\TF_ODC_1_1_1_11"
-    model_result_path = r"E:\sdmurmur\ssdHeartMurmurFiles\train_vali_new_results\train_vali_new_mixed\TF_TDF_ODC_1_1_1_11"
+    # model_result_path = r"E:\sdmurmur\ssdHeartMurmurFiles\train_vali_new_results\train_vali_new_mixed\TF_ODC_1_1_1_12"
+    model_result_path = r"E:\sdmurmur\ssdHeartMurmurFiles\train_vali_new_results\train_vali_new_mixed\TF_TDF_ODC_1_1_1_12"
     # model_result_path = os.path.join('Aweight_TimeFreq_result', fold_path)
     os.environ['CUDA_VISIBLE_DEVICES'] = '0'
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
