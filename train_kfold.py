@@ -10,7 +10,7 @@ from class_balanced_loss import CB_loss
 import math
 import torch.optim as optim
 from CNN import (AudioClassifier, AudioClassifierFuseODconv, AudioClassifierODconv, AudioClassifierMMODconv)
-from AMG import HeartSoundModel, AmgModel, resblock
+from AMG import AmgModel, resblock
 from MDN_MARNN import mdn_marnn
 # from efficient_kan import KAN
 from My_Dataloader import NewDataset, TrainDataset, Dataset2, MyDataset

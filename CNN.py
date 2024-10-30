@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.nn import init
-import math
+# import math
 from odconv import ODConv2d
 from dfm import DF_Module
 import numpy as np

@@ -39,7 +39,8 @@ def save_test_feature(train_folder, train_tdf_folder, train_feature_folder):
 
     # train_feature = Log_GF_GAF(kfold_folder_train)
     # train_feature = Log_GF_CWT_PCA(kfold_folder_train, test_tdf_folder)
-    train_feature = Log_GF_TDF_MV_CST(train_folder, train_tdf_folder)
+    # train_feature = Log_GF_TDF_MV_CST(train_folder, train_tdf_folder)
+    train_feature = Log_mel_32(train_folder)
 
     train_label, train_location, train_id = get_label(train_folder)  # 获取各个3s片段label和听诊区位置和个体ID
     train_index = get_index(train_folder)
@@ -116,6 +117,32 @@ def Log_GF_TDF_MV_CST(data_directory, TDF_directory):  # 提取时频域和时�
                 print(f"CSV file not found for {f}")
 
             # loggamma.append(fbank_feat)
+
+        else:
+            continue
+    return np.array(loggamma)
+
+
+def Log_mel_32(data_directory):
+    loggamma = list()
+    for f in tqdm(sorted(os.listdir(data_directory)), desc=str(data_directory) + ' Log_GF feature:'):  # 加tqdm可视化特征提取过程
+        root, extension = os.path.splitext(f)
+        if extension == '.wav':
+            x, fs = librosa.load(os.path.join(data_directory, f), sr=4000)
+            x = x - np.mean(x)
+            x = x / np.max(np.abs(x))
+            frame_length = int(0.025 * fs)  # 帧长
+            hop_length = int(0.0125 * fs)  # 帧移
+            # gfreqs为经过gammatone滤波器后得到的傅里叶变换矩阵
+            gSpec = librosa.feature.melspectrogram(y=x, sr=fs, n_fft=512, hop_length=hop_length, win_length=frame_length,
+                                                   n_mels=32, window='hamming', fmax=800, power=2.0)
+            fbank_feat = gSpec[:, :-2]
+            fbank_feat = np.log(fbank_feat)
+            fbank_feat = feature_norm(fbank_feat)
+
+            # fbank_feat = feature_norm(fbank_feat)
+            # fbank_feat = delt_feature(fbank_feat)
+            loggamma.append(fbank_feat)
 
         else:
             continue
@@ -247,7 +274,7 @@ def feature_norm(feat):
 if __name__ == '__main__':
     # 特征提取
     kfold_festure_in = r"E:\sdmurmur\ssdHeartMurmurFiles\calibrated_train_vali_new_mixed_data_feature\cut_zero"  # test set切割好的数据，对于present个体，只复制murmur存在的.wav文件
-    kfold_feature_folder = r"E:\sdmurmur\ssdHeartMurmurFiles\calibrated_train_vali_new_mixed_data_feature\TF_TDF_MV_CST_feature"
+    kfold_feature_folder = r"E:\sdmurmur\ssdHeartMurmurFiles\calibrated_train_vali_new_mixed_data_feature\TF_log_mel_32_feature"
     tdf_feature_folder = r"E:\sdmurmur\ssdHeartMurmurFiles\calibrated_train_vali_new_mixed_data_feature\EnvelopeandSE60Hz"  # 时域特征存储文件夹
     save_test_feature(kfold_festure_in, tdf_feature_folder, kfold_feature_folder)
     print('this is feature extraction file')
