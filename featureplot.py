@@ -39,11 +39,7 @@ if __name__ == '__main__':
     angles = np.linspace(0, 2 * np.pi, len(inner_labels) + 1)[:-1]
     x = np.cos(angles) * 0.5  # 调整半径
     y = np.sin(angles) * 0.5  # 调整半径
-    # 调整内环标签的位置
-    for i, text in enumerate(inner_pie[1]):
-        text.set_horizontalalignment('center')
-        text.set_verticalalignment('center')
-        text.set_position((x[i], y[i]))
+    
     # 确保饼图是圆形的
     ax.axis('equal')
     plt.show()
