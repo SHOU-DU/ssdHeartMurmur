@@ -37,8 +37,8 @@ torch.backends.cudnn.deterministic = True
 # sd 2024/10/06 改变FocalLoss参数调整单时频域特征的结果，重跑特征拼接模型Fcat5  tdf_cat_sum
 if __name__ == "__main__":
 
-    feature_data_path = r"E:\sdmurmur\ssdHeartMurmurFiles\calibrated_train_vali_new_mixed_data_feature\TF_TDF_MV_CST_feature"  # 提取的特征和标签文件夹
-    # feature_data_path = r"E:\sdmurmur\ssdHeartMurmurFiles\calibrated_train_vali_new_mixed_data_feature\TF_log_mel_32_feature"  # 提取的特征和标签文件夹
+    # feature_data_path = r"E:\sdmurmur\ssdHeartMurmurFiles\calibrated_train_vali_new_mixed_data_feature\TF_TDF_MV_CST_feature"  # 提取的特征和标签文件夹
+    feature_data_path = r"E:\sdmurmur\ssdHeartMurmurFiles\calibrated_train_vali_new_mixed_data_feature\TF_log_mel_32_feature"  # 提取的特征和标签文件夹
     # cut_data_kfold = r'data_kfold_out'
     cut_data_kfold = r"E:\sdmurmur\ssdHeartMurmurFiles\calibrated_train_vali_new_mixed_data_feature\cut_zero"
 
@@ -96,11 +96,11 @@ if __name__ == "__main__":
     # 模型选择
     # model = AudioClassifierFuseODconv()  # sd Fuse ODconv gamma=2.5
     # model = AudioClassifierODconv()
-    # model = AmgModel(resblock, 1, 3)
-    model = AudioClassifier()
+    model = AmgModel(resblock, 1, 3)
+    # model = AudioClassifier()
     # model_result_path = r"E:\sdmurmur\ssdHeartMurmurFiles\train_vali_new_results\train_vali_new_mixed\TF_TDF_ODC_1_1_1_12"
     model_result_path = (r"E:\sdmurmur\ssdHeartMurmurFiles\train_vali_new_results"
-                         r"\train_vali_new_mixed\TF_SK_1_1_1_12")
+                         r"\train_vali_new_mixed\TF_AMG_1_1_1_12")
     # model_result_path = os.path.join('Aweight_TimeFreq_result', fold_path)
     os.environ['CUDA_VISIBLE_DEVICES'] = '0'
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
