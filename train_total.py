@@ -37,10 +37,10 @@ torch.backends.cudnn.deterministic = True
 # sd 2024/10/06 改变FocalLoss参数调整单时频域特征的结果，重跑特征拼接模型Fcat5  tdf_cat_sum
 if __name__ == "__main__":
 
-    feature_data_path = r"E:\sdmurmur\ssdHeartMurmurFiles\calibrated_train_vali_new_mixed_data_feature\TF_TDF_MV_CST_feature"  # 提取的特征和标签文件夹
+    feature_data_path = r"E:\sdmurmur\ssdHeartMurmurFiles\S1S2Experiment\train_vali_mixed_scale\train_vali_double_s1_feature"  # 提取的特征和标签文件夹
     # feature_data_path = r"E:\sdmurmur\ssdHeartMurmurFiles\calibrated_train_vali_new_mixed_data_feature\TF_log_mel_32_feature"  # 提取的特征和标签文件夹
     # cut_data_kfold = r'data_kfold_out'
-    cut_data_kfold = r"E:\sdmurmur\ssdHeartMurmurFiles\calibrated_train_vali_new_mixed_data_feature\cut_zero"
+    cut_data_kfold = r"E:\sdmurmur\ssdHeartMurmurFiles\S1S2Experiment\train_vali_mixed_scale\train_vali_double_s1"
 
     feature_path = os.path.join(feature_data_path, 'feature')
     label_path = os.path.join(feature_data_path, 'label')
@@ -94,13 +94,14 @@ if __name__ == "__main__":
     # test_loader = DataLoader(vali_set, batch_size=test_batch_size)
     print("DataLoader is OK")
     # 模型选择
-    # model = AudioClassifierFuseODconv()  # sd Fuse ODconv gamma=2.5
+    model = AudioClassifierFuseODconv()  # sd Fuse ODconv gamma=2.5
     # model = AudioClassifierODconv()
     # model = AmgModel(resblock, 1, 3)
-    model = AudioClassifier()
+    # model = AudioClassifier()
     # model_result_path = r"E:\sdmurmur\ssdHeartMurmurFiles\train_vali_new_results\train_vali_new_mixed\TF_TDF_ODC_1_1_1_12"
-    model_result_path = (r"E:\sdmurmur\ssdHeartMurmurFiles\train_vali_new_results"
-                         r"\train_vali_new_mixed\TF_SK_105_1_12_12")
+    # model_result_path = (r"E:\sdmurmur\ssdHeartMurmurFiles\train_vali_new_results"
+    #                      r"\train_vali_new_mixed\TF_SK_105_1_12_12")
+    model_result_path = r"E:\sdmurmur\ssdHeartMurmurFiles\S1S2Experiment\train_result_s1s2\TF_TDFMV_double_s1_1_1_1_12"
     # model_result_path = os.path.join('Aweight_TimeFreq_result', fold_path)
     os.environ['CUDA_VISIBLE_DEVICES'] = '0'
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -112,8 +113,8 @@ if __name__ == "__main__":
     # scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, [5, 10, 15, 20, 25, 30], gamma=0.2)  # sd Fuse会过拟合
 
     # 设置损失函数
-    # weight = torch.tensor([1, 1, 1]).to(device)
-    weight = torch.tensor([1.05, 1, 1.2]).to(device)  # sd 改变权重值，增加loud权重
+    weight = torch.tensor([1, 1, 1]).to(device)
+    # weight = torch.tensor([1.05, 1, 1.2]).to(device)  # sd 改变权重值，增加loud权重
     criterion = Focal_Loss(gamma=2.5, weight=weight)
     # 创建交叉熵损失函数
     # criterion = nn.CrossEntropyLoss()  # AMG模型损失函数

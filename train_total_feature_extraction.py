@@ -39,8 +39,8 @@ def save_test_feature(train_folder, train_tdf_folder, train_feature_folder):
 
     # train_feature = Log_GF_GAF(kfold_folder_train)
     # train_feature = Log_GF_CWT_PCA(kfold_folder_train, test_tdf_folder)
-    # train_feature = Log_GF_TDF_MV_CST(train_folder, train_tdf_folder)
-    train_feature = Log_mel_32(train_folder)
+    train_feature = Log_GF_TDF_MV_CST(train_folder, train_tdf_folder)
+    # train_feature = Log_mel_32(train_folder)
 
     train_label, train_location, train_id = get_label(train_folder)  # 获取各个3s片段label和听诊区位置和个体ID
     train_index = get_index(train_folder)
@@ -273,8 +273,10 @@ def feature_norm(feat):
 
 if __name__ == '__main__':
     # 特征提取
-    kfold_festure_in = r"E:\sdmurmur\ssdHeartMurmurFiles\calibrated_train_vali_new_mixed_data_feature\cut_zero"  # test set切割好的数据，对于present个体，只复制murmur存在的.wav文件
-    kfold_feature_folder = r"E:\sdmurmur\ssdHeartMurmurFiles\calibrated_train_vali_new_mixed_data_feature\TF_log_mel_32_feature"
-    tdf_feature_folder = r"E:\sdmurmur\ssdHeartMurmurFiles\calibrated_train_vali_new_mixed_data_feature\EnvelopeandSE60Hz"  # 时域特征存储文件夹
+    kfold_festure_in = r"E:\sdmurmur\ssdHeartMurmurFiles\S1S2Experiment\train_vali_mixed_scale\train_vali_mask_s2"  # test set切割好的数据，对于present个体，只复制murmur存在的.wav文件
+    kfold_feature_folder = (r"E:\sdmurmur\ssdHeartMurmurFiles\S1S2Experiment\train_vali_mixed_scale"
+                            r"\train_vali_mask_s2_feature")  # 特征输出文件夹
+    tdf_feature_folder = (r"E:\sdmurmur\ssdHeartMurmurFiles\S1S2Experiment\train_vali_mixed_scale"
+                          r"\train_vali_mask_s2_EnvelopeandSE60Hz")  # 时域特征存储文件夹
     save_test_feature(kfold_festure_in, tdf_feature_folder, kfold_feature_folder)
     print('this is feature extraction file')
