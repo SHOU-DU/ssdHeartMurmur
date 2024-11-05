@@ -19,30 +19,30 @@ from sklearn.preprocessing import StandardScaler
 # from torchvision import transforms
 
 if __name__ == '__main__':
-    # plot circles
-    # 数据
-    outer_labels = ['Absent', 'Soft', 'Loud']
-    inner_labels = ['Absent', 'Soft', 'Loud']
-    outer_sizes = [7726, 1018, 683]
-    inner_sizes = [3569, 540, 309]
-    # 颜色
-    outer_colors = ['#ff9999', '#66b3ff', '#99ff99']
-    inner_colors = ['#ff6666', '#00b3e6', '#e6e600']
-    # 绘制外环
-    fig, ax = plt.subplots()
-    outer_pie, _ = ax.pie(outer_sizes, labels=outer_labels, colors=outer_colors,
-                          startangle=90, radius=1.3, wedgeprops=dict(width=0.3, edgecolor='w'))
-    # 绘制内环
-    inner_pie, _ = ax.pie(inner_sizes, labels=inner_labels, colors=inner_colors,
-                          startangle=90, radius=1.0, wedgeprops=dict(width=0.3, edgecolor='w'))
-    # 计算标签位置
-    angles = np.linspace(0, 2 * np.pi, len(inner_labels) + 1)[:-1]
-    x = np.cos(angles) * 0.5  # 调整半径
-    y = np.sin(angles) * 0.5  # 调整半径
-    
-    # 确保饼图是圆形的
-    ax.axis('equal')
-    plt.show()
+    # # plot circles
+    # # 数据
+    # outer_labels = ['Absent', 'Soft', 'Loud']
+    # inner_labels = ['Absent', 'Soft', 'Loud']
+    # outer_sizes = [7726, 1018, 683]
+    # inner_sizes = [3569, 540, 309]
+    # # 颜色
+    # outer_colors = ['#ff9999', '#66b3ff', '#99ff99']
+    # inner_colors = ['#ff6666', '#00b3e6', '#e6e600']
+    # # 绘制外环
+    # fig, ax = plt.subplots()
+    # outer_pie, _ = ax.pie(outer_sizes, labels=outer_labels, colors=outer_colors,
+    #                       startangle=90, radius=1.3, wedgeprops=dict(width=0.3, edgecolor='w'))
+    # # 绘制内环
+    # inner_pie, _ = ax.pie(inner_sizes, labels=inner_labels, colors=inner_colors,
+    #                       startangle=90, radius=1.0, wedgeprops=dict(width=0.3, edgecolor='w'))
+    # # 计算标签位置
+    # angles = np.linspace(0, 2 * np.pi, len(inner_labels) + 1)[:-1]
+    # x = np.cos(angles) * 0.5  # 调整半径
+    # y = np.sin(angles) * 0.5  # 调整半径
+    #
+    # # 确保饼图是圆形的
+    # ax.axis('equal')
+    # plt.show()
 
     # # Envelope Feature
     # wavefile = r"E:\sdmurmur\ssdHeartMurmur\S1S2Experiment\vali_mask_s1\0_fold\train_data\14998_TV_Absent_1.wav"
@@ -76,15 +76,15 @@ if __name__ == '__main__':
     # plt.show()
 
     # Gammatone feature
-    # wavefile = r"E:\sdmurmur\ssdHeartMurmur\S1S2Experiment\vali_mask_s1\0_fold\train_data\2530_TV_Absent_0.wav"
-    # wave_data, fs = librosa.load(wavefile, sr=4000)
-    # nfilts = 8
-    # nfft = 512
-    # low_freq = 0
-    # high_freq = 2000
-    # # compute freqs for xaxis
+    wavefile = r"E:\sdmurmur\ssdHeartMurmurFiles\S1S2Experiment\vali_scale\vali_mask_s1\0_fold\train_data\2530_TV_Absent_0.wav"
+    wave_data, fs = librosa.load(wavefile, sr=4000)
+    nfilts = 8
+    nfft = 512
+    low_freq = 0
+    high_freq = 2000
+    # compute freqs for xaxis
     # ghz_freqs = np.linspace(low_freq, high_freq, nfft // 2 + 1)
-    # gamma fbanks
+    # # gamma fbanks
     # gamma_fbanks_mat, gamma_freqs = gammatone_filter_banks(nfilts=nfilts,
     #                                                        nfft=nfft,
     #                                                        fs=fs,
@@ -105,27 +105,29 @@ if __name__ == '__main__':
     #     fb_type="gamma")
 
     # compute erb spectrogram
-    # gSpec, gfreqs = erb_spectrogram(wave_data,
-    #                                 fs=fs,
-    #                                 pre_emph=0,
-    #                                 pre_emph_coeff=0.97,
-    #                                 window=SlidingWindow(0.025, 0.0125, "hamming"),
-    #                                 nfilts=64,
-    #                                 nfft=512,
-    #                                 low_freq=25,
-    #                                 high_freq=fs / 2)
-    # # visualize spectrogram
-    # show_spectrogram(gSpec.T,
-    #                  fs=fs,
-    #                  xmin=0,
-    #                  xmax=len(wave_data) / fs,
-    #                  ymin=0,
-    #                  ymax=(fs / 2) / 1000,
-    #                  dbf=80.0,
-    #                  xlabel="Time (s)",
-    #                  ylabel="Frequency (kHz)",
-    #                  title="Erb spectrogram (dB)",
-    #                  cmap="jet")
+    gSpec, gfreqs = erb_spectrogram(wave_data,
+                                    fs=fs,
+                                    pre_emph=0,
+                                    pre_emph_coeff=0.97,
+                                    window=SlidingWindow(0.025, 0.0125, "hamming"),
+                                    nfilts=64,
+                                    nfft=512,
+                                    low_freq=25,
+                                    high_freq=fs / 2)
+    myspectram = gSpec.T
+
+    # visualize spectrogram
+    show_spectrogram(gSpec.T,
+                     fs=fs,
+                     xmin=0,
+                     xmax=len(wave_data) / fs,
+                     ymin=0,
+                     ymax=(fs / 2) / 1000,
+                     dbf=80.0,
+                     xlabel="Time (s)",
+                     ylabel="Frequency (kHz)",
+                     title="Erb spectrogram (dB)",
+                     cmap="jet")
 
 
     # # MFCC Feature
@@ -150,7 +152,9 @@ if __name__ == '__main__':
     # plt.tight_layout()
     # plt.show()
     # tonnetz Feature
-    # wavefile = r"E:\sdmurmur\ssdHeartMurmur\data_kfold_cut_zero\0_fold\train_data\9979_AV_Loud_0.wav"
+
+    # wavefile = (r"E:\sdmurmur\ssdHeartMurmurFiles\calibrated_train_vali_new_cut_zero\0_fold\train_data"
+    #             r"\9979_AV_Loud_0.wav")
     # wave_data, fs = librosa.load(wavefile, sr=4000)
     # chromagram = librosa.feature.chroma_stft(y=wave_data, sr=fs, hop_length=50, win_length=100)
     # chromagram = chromagram[:, 0:-2]
@@ -173,7 +177,6 @@ if __name__ == '__main__':
     #
     # # 绘制均值和方差的图像
     # plt.figure(figsize=(12, 6))
-    #
     # # 绘制均值图像
     # plt.subplot(2, 1, 1)
     # plt.plot(frame_means_2d.flatten(), label='Frame Means')
@@ -181,7 +184,6 @@ if __name__ == '__main__':
     # plt.xlabel('Frame Index')
     # plt.ylabel('Mean Value')
     # plt.legend()
-    #
     # # 绘制方差图像
     # plt.subplot(2, 1, 2)
     # plt.plot(frame_variances_2d.flatten(), label='Frame Variances', color='orange')
