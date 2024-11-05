@@ -34,7 +34,7 @@ if __name__ == "__main__":
     # model_folder = (r'E:\sdmurmur\ssdHeartMurmurFiles\train_vali_new_results'
     #                 r'\train_vali_new_mixed\TF_ODC_1_11_12_12\model')  # 存储模型的文件夹
     model_folder = (r'E:\sdmurmur\ssdHeartMurmurFiles\train_vali_new_results'
-                    r'\train_vali_new_mixed\TF_SK_1_1_11_12\model')  # 存储模型的文件夹
+                    r'\train_vali_new_mixed\TF_SK_105_1_12_12\model')  # 存储模型的文件夹
     # model = AudioClassifierODconv()
     label_path = os.path.join(fold_path, 'label')
 
@@ -60,7 +60,7 @@ if __name__ == "__main__":
     # model_result_path = os.path.join('test_result_odconv_k3_repeat_weight_2_2_6_last_model_batchsize128', fold_path, str(j) + '_fold')
     # model_result_path = r"E:\sdmurmur\ssdHeartMurmurFiles\test_result_new\test_new_mixed\TF_TDF_ODC_1_1_1_12"
     # model_result_path = r"E:\sdmurmur\ssdHeartMurmurFiles\test_result_new\test_new_mixed\TF_ODC_1_11_12_12"
-    model_result_path = r"E:\sdmurmur\ssdHeartMurmurFiles\test_result_new\test_new_mixed\TF_SK_1_1_11_12"
+    model_result_path = r"E:\sdmurmur\ssdHeartMurmurFiles\test_result_new\test_new_mixed\TF_SK_105_1_12_12"
     # 设置环境变量，指定可见的 GPU 设备
     os.environ['CUDA_VISIBLE_DEVICES'] = '0'
     # 检查是否有可用的 GPU，并选择合适的计算设备
@@ -129,9 +129,6 @@ if __name__ == "__main__":
     all_test_acc.append(val_acc / len(test_loader))
     all_test_loss.append(val_loss / len(test_loader))
 
-    acc_metric = val_acc / len(test_loader)
-    loss_metric = val_loss / len(test_loader)
-
     # test set 结果统计，PCG分类性能
     # 将预测标签和真实标签转换为numpy数组
     y_pred = np.array(all_y_pred_label)
@@ -147,7 +144,7 @@ if __name__ == "__main__":
     Loud_recall = cm[2][2] / Loud_num
 
     PCG_UAR = (Absent_recall + Soft_recall + Loud_recall) / 3
-    PCG_acc_soft_aver = (acc_metric + Soft_recall) / 2  # 准确率和soft找回率均值
+
     print("------------------------------PCG result------------------------------")
     print("Absent_recall: %.4f, Soft_recall: %.4f, Loud_recall: %.4f,PCG_UAR: %.4f"
           % (Absent_recall, Soft_recall, Loud_recall, PCG_UAR))
@@ -188,7 +185,7 @@ if __name__ == "__main__":
     # 保存历史loss到txt文件
     np_val_acc = np.array(all_test_acc).reshape((len(all_test_acc), 1))  # reshape是为了能够跟别的信息组成矩阵一起存储
     np_val_loss = np.array(all_test_loss).reshape((len(all_test_loss), 1))
-    np_out = np.concatenate([np_val_acc, np_val_loss], axis=1)
+
     f = result_path + "/save_result.txt"
     mytime = datetime.now()
     with open(f, "a") as file:

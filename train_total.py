@@ -100,7 +100,7 @@ if __name__ == "__main__":
     model = AudioClassifier()
     # model_result_path = r"E:\sdmurmur\ssdHeartMurmurFiles\train_vali_new_results\train_vali_new_mixed\TF_TDF_ODC_1_1_1_12"
     model_result_path = (r"E:\sdmurmur\ssdHeartMurmurFiles\train_vali_new_results"
-                         r"\train_vali_new_mixed\TF_SK_1_1_11_12")
+                         r"\train_vali_new_mixed\TF_SK_105_1_12_12")
     # model_result_path = os.path.join('Aweight_TimeFreq_result', fold_path)
     os.environ['CUDA_VISIBLE_DEVICES'] = '0'
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -113,7 +113,7 @@ if __name__ == "__main__":
 
     # 设置损失函数
     # weight = torch.tensor([1, 1, 1]).to(device)
-    weight = torch.tensor([1, 1, 1.1]).to(device)  # sd 改变权重值，增加loud权重
+    weight = torch.tensor([1.05, 1, 1.2]).to(device)  # sd 改变权重值，增加loud权重
     criterion = Focal_Loss(gamma=2.5, weight=weight)
     # 创建交叉熵损失函数
     # criterion = nn.CrossEntropyLoss()  # AMG模型损失函数
