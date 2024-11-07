@@ -37,10 +37,12 @@ torch.backends.cudnn.deterministic = True
 # sd 2024/10/06 改变FocalLoss参数调整单时频域特征的结果，重跑特征拼接模型Fcat5  tdf_cat_sum
 if __name__ == "__main__":
 
-    feature_data_path = r"E:\sdmurmur\ssdHeartMurmurFiles\S1S2Experiment\train_vali_mixed_scale\train_vali_mask_s2_feature"  # 提取的特征和标签文件夹
-    # feature_data_path = r"E:\sdmurmur\ssdHeartMurmurFiles\calibrated_train_vali_new_mixed_data_feature\TF_log_mel_32_feature"  # 提取的特征和标签文件夹
+    # 提取的特征和标签文件夹
+    feature_data_path = r"E:\sdmurmur\ssdHeartMurmurFiles\normalized_train_vali_mixed_feature\TF_TDFMV_feature"
+    # 提取的特征和标签文件夹
+    # feature_data_path = r"E:\sdmurmur\ssdHeartMurmurFiles\calibrated_train_vali_new_mixed_data_feature\TF_log_mel_32_feature"
     # cut_data_kfold = r'data_kfold_out'
-    cut_data_kfold = r"E:\sdmurmur\ssdHeartMurmurFiles\S1S2Experiment\train_vali_mixed_scale\train_vali_mask_s2"
+    cut_data_kfold = r"E:\sdmurmur\ssdHeartMurmurFiles\calibrated_train_vali_new_mixed_data_feature\cut_zero"
 
     feature_path = os.path.join(feature_data_path, 'feature')
     label_path = os.path.join(feature_data_path, 'label')
@@ -82,10 +84,6 @@ if __name__ == "__main__":
     num_epochs = 20
     # num_epochs = 30  # sd Fuse
     # num_epochs = 60  # sd KAN 会过拟合
-    img_size = (32, 240)
-    patch_size = (8, 20)
-    encoders = 1
-    num_heads = 12
 
     # ========================/ dataloader /========================== #
     # DataLoader输入的dataset应该实现__len__()和__getitem__()方法，分别返回数据集的长度和获取单个样本的方法
@@ -101,7 +99,7 @@ if __name__ == "__main__":
     # model_result_path = r"E:\sdmurmur\ssdHeartMurmurFiles\train_vali_new_results\train_vali_new_mixed\TF_TDF_ODC_1_1_1_12"
     # model_result_path = (r"E:\sdmurmur\ssdHeartMurmurFiles\train_vali_new_results"
     #                      r"\train_vali_new_mixed\TF_SK_105_1_12_12")
-    model_result_path = r"E:\sdmurmur\ssdHeartMurmurFiles\S1S2Experiment\train_result_s1s2\TF_TDFMV_mask_s2_1_1_1_12"
+    model_result_path = r"E:\sdmurmur\ssdHeartMurmurFiles\normalized_train_vali_mixed_feature\n_train_result\TF_TDFMV_ODC_1_1_1_12"
     # model_result_path = os.path.join('Aweight_TimeFreq_result', fold_path)
     os.environ['CUDA_VISIBLE_DEVICES'] = '0'
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
