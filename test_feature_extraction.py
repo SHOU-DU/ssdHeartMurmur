@@ -137,8 +137,8 @@ def Log_GF_TDF_MV(data_directory, TDF_directory):  # 提取时频域和时域特
             # 将均值和方差转换成1x帧数的二维数组
             frame_means_2d = frame_means.reshape(1, -1)
             frame_variances_2d = frame_variances.reshape(1, -1)
-            x = x - np.mean(x)
-            x = x / np.max(np.abs(x))  # 归一化为[-1, 1]
+            # x = x - np.mean(x)
+            # x = x / np.max(np.abs(x))  # 归一化为[-1, 1]
             # gfreqs为经过gammatone滤波器后得到的傅里叶变换矩阵
             gSpec, gfreqs = erb_spectrogram(x,
                                             fs=fs,
@@ -149,7 +149,8 @@ def Log_GF_TDF_MV(data_directory, TDF_directory):  # 提取时频域和时域特
                                             nfft=512,
                                             low_freq=25,
                                             high_freq=2000)
-            fbank_feat = gSpec.T
+            fbank_feat = gSpec.T + 0.0000000001  # +一个极小值避免出现负无穷
+            # fbank_feat = gSpec.T
             fbank_feat = np.log(fbank_feat)
             fbank_feat = feature_norm(fbank_feat)
 
@@ -230,11 +231,11 @@ def feature_norm(feat):
 if __name__ == '__main__':
     # 特征提取
     # test set切割好的数据，对于present个体，只复制murmur存在的.wav文件
-    kfold_feature_in = r"E:\sdmurmur\ssdHeartMurmurFiles\test_data_cut_zero_new"
+    kfold_feature_in = r"E:\sdmurmur\ssdHeartMurmurFiles\S1S2Experiment\test_scale\test_mask_s2"
     # 存储每折特征文件夹
-    kfold_feature_folder = r"E:\sdmurmur\ssdHeartMurmurFiles\normalized_test_mixed_feature\TF_TDFMV_feature_afterMV"
+    kfold_feature_folder = r"E:\sdmurmur\ssdHeartMurmurFiles\normalized_S1S2Experiment\test_scale\mask_s2_feature"
     # 时域特征存储文件夹
-    tdf_feature_folder = r"E:\sdmurmur\ssdHeartMurmurFiles\normalized_test_mixed_feature\EnvelopeandSE60Hz"
+    tdf_feature_folder = r"E:\sdmurmur\ssdHeartMurmurFiles\normalized_S1S2Experiment\test_scale\mask_s2_EnvelopeandSE60Hz"
 
     save_test_feature(kfold_feature_in, tdf_feature_folder, kfold_feature_folder)
     print('this is feature extraction file')

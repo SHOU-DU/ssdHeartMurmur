@@ -18,6 +18,17 @@ from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 # from torchvision import transforms
 
+
+# 对得到的特征进行归一化
+def feature_norm(feat):
+    normalized_feat = (feat - feat.min()) / (feat.max() - feat.min())
+    # mean = np.mean(data)
+    # std = np.std(data)
+    # # 使用z-score方法进行归一化
+    # normalized_data = (data - mean) / std
+    return normalized_feat
+
+
 if __name__ == '__main__':
     # # plot circles
     # # 数据
@@ -76,8 +87,10 @@ if __name__ == '__main__':
     # plt.show()
 
     # Gammatone feature
-    wavefile = r"E:\sdmurmur\ssdHeartMurmurFiles\S1S2Experiment\vali_scale\vali_mask_s1\0_fold\train_data\2530_TV_Absent_0.wav"
+    wavefile = r"E:\sdmurmur\ssdHeartMurmurFiles\S1S2Experiment\train_vali_mixed_scale\train_vali_mask_s1\2530_AV_Absent_0.wav"
     wave_data, fs = librosa.load(wavefile, sr=4000)
+    # wave_data = wave_data - np.mean(wave_data)
+    # wave_data = wave_data / np.max(np.abs(wave_data))
     nfilts = 8
     nfft = 512
     low_freq = 0
@@ -114,10 +127,10 @@ if __name__ == '__main__':
                                     nfft=512,
                                     low_freq=25,
                                     high_freq=fs / 2)
-    myspectram = gSpec.T
+    myspectram = gSpec + 0.0000000001
 
     # visualize spectrogram
-    show_spectrogram(gSpec.T,
+    show_spectrogram(myspectram.T,
                      fs=fs,
                      xmin=0,
                      xmax=len(wave_data) / fs,
@@ -129,6 +142,12 @@ if __name__ == '__main__':
                      title="Erb spectrogram (dB)",
                      cmap="jet")
 
+    fbank_feat = myspectram.T
+    print(fbank_feat)
+    fbank_feat = np.log(fbank_feat)
+    # print(fbank_feat)
+    fbank_feat = feature_norm(fbank_feat)
+    print(fbank_feat)
 
     # # MFCC Feature
     # wavefile = r"E:\sdmurmur\ssdHeartMurmur\data_kfold_cut_zero\0_fold\train_data\9979_AV_Loud_0.wav"
