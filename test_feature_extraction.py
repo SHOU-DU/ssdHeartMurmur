@@ -122,8 +122,8 @@ def Log_GF_TDF_MV(data_directory, TDF_directory):  # 提取时频域和时域特
         root, extension = os.path.splitext(f)
         if extension == '.wav':
             x, fs = librosa.load(os.path.join(data_directory, f), sr=4000)
-            x = x - np.mean(x)
-            x = x / np.max(np.abs(x))  # 归一化为[-1, 1]
+            # x = x - np.mean(x)
+            # x = x / np.max(np.abs(x))  # 归一化为[-1, 1]
             # 对音频数据进行分帧
             frame_length = int(0.025 * fs)  # 帧长
             hop_length = int(0.0125 * fs)  # 帧移

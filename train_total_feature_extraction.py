@@ -63,8 +63,8 @@ def Log_GF_TDF_MV(data_directory, TDF_directory):  # 提取时频域和时域特
         root, extension = os.path.splitext(f)
         if extension == '.wav':
             x, fs = librosa.load(os.path.join(data_directory, f), sr=4000)
-            x = x - np.mean(x)
-            x = x / np.max(np.abs(x))  # 归一化为[-1, 1]
+            # x = x - np.mean(x)
+            # x = x / np.max(np.abs(x))  # 归一化为[-1, 1]
             # 对音频数据进行分帧
             frame_length = int(0.025 * fs)  # 帧长
             hop_length = int(0.0125 * fs)  # 帧移
@@ -195,11 +195,11 @@ def feature_norm(feat):
 if __name__ == '__main__':
     # 特征提取
     # train set切割好的数据，对于present个体，只复制murmur存在的.wav文件
-    kfold_feature_in = r"E:\sdmurmur\ssdHeartMurmurFiles\test_data_cut_zero_new"
+    kfold_feature_in = r"E:\sdmurmur\ssdHeartMurmurFiles\calibrated_train_vali_new_mixed_data_feature\cut_zero"
     # 特征输出文件夹
-    kfold_feature_folder = r"E:\sdmurmur\ssdHeartMurmurFiles\normalized_test_mixed_feature\TF_TDFMV_feature"
+    kfold_feature_folder = r"E:\sdmurmur\ssdHeartMurmurFiles\normalized_train_vali_mixed_feature\TF_TDFMV_feature"
     # 时域特征存储文件夹
-    tdf_feature_folder = r"E:\sdmurmur\ssdHeartMurmurFiles\normalized_test_mixed_feature\EnvelopeandSE60Hz"
+    tdf_feature_folder = r"E:\sdmurmur\ssdHeartMurmurFiles\normalized_train_vali_mixed_feature\EnvelopeandSE60Hz"
 
     save_test_feature(kfold_feature_in, tdf_feature_folder, kfold_feature_folder)
     print('this is feature extraction file')
