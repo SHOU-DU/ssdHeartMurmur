@@ -232,7 +232,7 @@ if __name__ == '__main__':
     # test set切割好的数据，对于present个体，只复制murmur存在的.wav文件
     kfold_feature_in = r"E:\sdmurmur\ssdHeartMurmurFiles\test_data_cut_zero_new"
     # 存储每折特征文件夹
-    kfold_feature_folder = r"E:\sdmurmur\ssdHeartMurmurFiles\normalized_test_mixed_feature\TF_TDFMV_feature"
+    kfold_feature_folder = r"E:\sdmurmur\ssdHeartMurmurFiles\normalized_test_mixed_feature\TF_TDFMV_feature_afterMV"
     # 时域特征存储文件夹
     tdf_feature_folder = r"E:\sdmurmur\ssdHeartMurmurFiles\normalized_test_mixed_feature\EnvelopeandSE60Hz"
 
