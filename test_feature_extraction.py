@@ -137,7 +137,8 @@ def Log_GF_TDF_MV(data_directory, TDF_directory):  # 提取时频域和时域特
             # 将均值和方差转换成1x帧数的二维数组
             frame_means_2d = frame_means.reshape(1, -1)
             frame_variances_2d = frame_variances.reshape(1, -1)
-
+            x = x - np.mean(x)
+            x = x / np.max(np.abs(x))  # 归一化为[-1, 1]
             # gfreqs为经过gammatone滤波器后得到的傅里叶变换矩阵
             gSpec, gfreqs = erb_spectrogram(x,
                                             fs=fs,
