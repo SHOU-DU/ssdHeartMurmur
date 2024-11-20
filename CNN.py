@@ -351,7 +351,6 @@ class AudioClassifierFuseODconv(nn.Module):
         super().__init__()
         self.pre = self._pre(1, 16)
         # self.pre2 = self._pre(1, 16)
-        self.pre3 = self._pre(1, 16)
         self.pre2 = nn.Sequential(
             nn.ReLU(),
             nn.Conv2d(1, 7, kernel_size=(1, 3)),
@@ -360,8 +359,6 @@ class AudioClassifierFuseODconv(nn.Module):
         )
         self.ODconv1 = ODConv2d(16, 16, 3, padding=1)
         self.ODconv2 = ODConv2d(16, 16, 3, padding=1)
-        self.ODconv3 = ODConv2d(16, 16, 3, padding=1)
-        self.dfm = DF_Module(16, 16, reduction=False)
         self.conv1 = nn.Sequential(
             depthwise_separable_conv(16, 16),
             nn.BatchNorm2d(16),
@@ -386,61 +383,10 @@ class AudioClassifierFuseODconv(nn.Module):
             nn.ReLU(),
             nn.MaxPool2d(2)
         )
-        self.conv21 = nn.Sequential(
-            depthwise_separable_conv(16, 16),
-            nn.BatchNorm2d(16),
-            nn.ReLU(),
-            nn.MaxPool2d(2)
-        )
-        self.conv22 = nn.Sequential(
-            depthwise_separable_conv(16, 32),
-            nn.BatchNorm2d(32),
-            nn.ReLU(),
-            nn.MaxPool2d(2)
-        )
-        self.conv23 = nn.Sequential(
-            depthwise_separable_conv(32, 64),
-            nn.BatchNorm2d(64),
-            nn.ReLU(),
-            nn.MaxPool2d(2)
-        )
-        self.conv24 = nn.Sequential(
-            depthwise_separable_conv(64, 128),
-            nn.BatchNorm2d(128),
-            nn.ReLU(),
-            nn.MaxPool2d(2)
-        )
-        self.conv31 = nn.Sequential(
-            depthwise_separable_conv(16, 16),
-            nn.BatchNorm2d(16),
-            nn.ReLU(),
-            nn.MaxPool2d(2)
-        )
-        self.conv32 = nn.Sequential(
-            depthwise_separable_conv(16, 32),
-            nn.BatchNorm2d(32),
-            nn.ReLU(),
-            nn.MaxPool2d(2)
-        )
-        self.conv33 = nn.Sequential(
-            depthwise_separable_conv(32, 64),
-            nn.BatchNorm2d(64),
-            nn.ReLU(),
-            nn.MaxPool2d(2)
-        )
-        self.conv34 = nn.Sequential(
-            depthwise_separable_conv(64, 128),
-            nn.BatchNorm2d(128),
-            nn.ReLU(),
-            nn.MaxPool2d(2)
-        )
+
         self.ap = nn.AdaptiveAvgPool2d(output_size=1)
         self.ap2 = nn.AdaptiveAvgPool2d(output_size=1)
-        self.ap3 = nn.AdaptiveAvgPool2d(output_size=1)
-        self.lin = nn.Linear(in_features=128, out_features=3)
-        self.lin2 = nn.Linear(in_features=5, out_features=3)  # 时域特征判断loud
         self.lin_fuse = nn.Linear(in_features=135, out_features=3)
-
 
     def _pre(self, input_channel, outchannel):
         pre = nn.Sequential(nn.ReLU(),
@@ -460,8 +406,6 @@ class AudioClassifierFuseODconv(nn.Module):
         # outputs['input'] = x.shape
         xf1 = x[:, :, :64, :]  # 时频域
         xf2 = x[:, :, 64:71, :]  # 时域包络+MV
-        # xf2 = x[:, :, 64:128, :]  # MFCC
-        # xf3 = x[:, :, 128:, :]  # 时域包络+均值方差
         # outputs['xf1 shape'] = xf1.shape
         # outputs['xf2 shape'] = xf2.shape
         xf1 = self.pre(xf1)
@@ -475,28 +419,12 @@ class AudioClassifierFuseODconv(nn.Module):
         xf1 = self.conv4(xf1)
         xf1 = self.ap(xf1)
         xf1 = xf1.view(xf1.shape[0], -1)
-        # xf1_r = self.lin(xf1)
+
         # outputs['flatten xf1'] = xf1.shape
-        # MM2MFCC
         xf2 = self.pre2(xf2)
-        # xf2 = self.ODconv2(xf2)
-        # xf2 = self.conv21(xf2)
-        # xf2 = self.conv22(xf2)
-        # xf2 = self.conv23(xf2)
-        # xf2 = self.conv24(xf2)
         xf2 = self.ap2(xf2)
         xf2 = xf2.view(xf2.shape[0], -1)
-        # MM3时域包络+均值方差
-        # xf3 = self.pre3(xf3)
-        # xf3 = self.ODconv3(xf3)
-        # xf3 = self.conv31(xf3)
-        # xf3 = self.conv32(xf3)
-        # xf3 = self.conv33(xf3)
-        # xf3 = self.conv34(xf3)
-        # xf3 = self.ap3(xf3)
-        # xf3 = xf3.view(xf3.shape[0], -1)
-        # xf2_r = self.lin2(xf2)
-        # x_sum = 0.7*xf1_r + 0.3*xf2_r
+
         # 融合
         x_cat = torch.cat((xf1, xf2), dim=1)
         # x_cat = torch.cat((xf1, xf3), dim=1)
