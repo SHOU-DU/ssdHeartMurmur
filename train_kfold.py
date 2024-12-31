@@ -38,6 +38,7 @@ torch.backends.cudnn.deterministic = True
 # sd 2024/09/30 添加MFCC特征，进行多模态（3）特征融合
 # sd 2024/10/06 改变FocalLoss参数调整单时频域特征的结果，重跑特征拼接模型Fcat5  tdf_cat_sum
 # sd 2024/10/09 添加CBloss损失函数
+# sd 2024/12/31 目前结合时域、时频域特征的ODC网络
 if __name__ == "__main__":
     kfold = 5
     test_flag = False
