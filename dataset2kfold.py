@@ -4,10 +4,10 @@ from helper_code import *
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
-from python_speech_features import logfbank
+# from python_speech_features import logfbank
 from sklearn.model_selection import StratifiedKFold
 from tqdm import tqdm
-import wave
+# import wave
 import librosa.display
 import librosa
 import soundfile
@@ -1214,15 +1214,15 @@ if __name__ == '__main__':
     # kfold_out = r'E:\sdmurmur\ssdHeartMurmur\S1S2Experiment\train_vali_scale\train_vali_double_s1s2'  # 存储分折后的文件路径
     # dataset_split_kfold(original_dataset_folder, kfold_out, kfold=5)
 
-    # # 对测试集进行切分和s1,s1幅值缩放操作
-    # test_data_folder = r"E:\sdmurmur\calibrated_test_data_new"  # 校正过的测试集路径
-    # scaled_test_folder = r"E:\sdmurmur\ssdHeartMurmur\S1S2Experiment\test_double_s1s2"  # 指定幅值缩放后的路径
-    # test_dataset_scale(test_data_folder, scaled_test_folder)
+    # 对测试集进行切分和s1,s1幅值缩放操作
+    test_data_folder = r"D:\sdmurmur\calibrateddataset2022\calibrated_test_data_new"  # 校正过的测试集路径
+    scaled_test_folder = r"D:\sdmurmur\sdMurmurFiles\calibrated_test_data_cz"  # 指定幅值缩放后的路径
+    test_dataset_scale(test_data_folder, scaled_test_folder)
 
-    # 对合并的训练和验证集进行切分和s1,s1幅值缩放操作
-    train_vali_data_folder = r"E:\sdmurmur\calibrated_train_vali_new"  # 校正过的测试集路径
-    scaled_train_vali_folder = r"E:\sdmurmur\calibrated_train_vali_new_mixed_cut_zero"  # 指定幅值缩放后的路径
-    test_dataset_scale(train_vali_data_folder, scaled_train_vali_folder)
+    # # 对合并的训练和验证集进行切分和s1,s1幅值缩放操作
+    # train_vali_data_folder = r"D:\sdmurmur\calibrateddataset2022\calibrated_train_vali_new"  # 校正过的测试集路径
+    # scaled_train_vali_folder = r"D:\sdmurmur\sdMurmurFiles\calibrated_train_vali_dataset_cz"  # 指定幅值缩放后的路径 cz for cut zero
+    # test_dataset_scale(train_vali_data_folder, scaled_train_vali_folder)
 
     # # 检查tsv文件是否有标记错误
     # original_dataset_folder = r"E:\sdmurmur\calibrated_train_vali_new"
