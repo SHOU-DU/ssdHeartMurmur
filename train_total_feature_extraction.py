@@ -24,6 +24,8 @@ from dataset2kfold import *
 # from sklearn.decomposition import PCA
 # from sklearn.preprocessing import StandardScaler
 
+# 2025/05/28 用4070s提取特征
+
 
 def save_test_feature(train_folder, train_tdf_folder, train_feature_folder):
     train_feature_out = train_feature_folder
@@ -196,11 +198,11 @@ def feature_norm(feat):
 if __name__ == '__main__':
     # 特征提取
     # train set切割好的数据，对于present个体，只复制murmur存在的.wav文件
-    kfold_feature_in = r"E:\sdmurmur\ssdHeartMurmurFiles\S1S2Experiment\train_vali_mixed_scale\train_vali_mask_s2"
+    kfold_feature_in = r"D:\sdmurmur\sdMurmurFiles\calibrated_train_vali_dataset_cz"
     # 特征输出文件夹
-    kfold_feature_folder = r"E:\sdmurmur\ssdHeartMurmurFiles\normalized_S1S2Experiment\train_vali_mixed_scale\mask_s2_feature"
+    kfold_feature_folder = r"D:\sdmurmur\sdMurmurFiles\feature\train_vali_data_cz_TF_TDF_MV"
     # 时域特征存储文件夹
-    tdf_feature_folder = r"E:\sdmurmur\ssdHeartMurmurFiles\normalized_S1S2Experiment\train_vali_mixed_scale\mask_s2_EnvelopeandSE60Hz"
+    tdf_feature_folder = r"D:\sdmurmur\sdMurmurFiles\EnandSE60Hz\calibrated_train_vali_dataset_cz"
 
     save_test_feature(kfold_feature_in, tdf_feature_folder, kfold_feature_folder)
     print('this is feature extraction file')

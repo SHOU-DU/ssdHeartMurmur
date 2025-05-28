@@ -1206,6 +1206,7 @@ def check_tsv(data_directory: str):
 
 
 if __name__ == '__main__':
+    # cz: cut zero
 
     # # 进行数据分折
     # original_dataset_folder = r"E:\sdmurmur\calibrated_train_vali_new"  # 对train+vali数据进行分折
