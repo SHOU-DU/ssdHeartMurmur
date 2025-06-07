@@ -198,11 +198,11 @@ def feature_norm(feat):
 if __name__ == '__main__':
     # 特征提取
     # train set切割好的数据，对于present个体，只复制murmur存在的.wav文件
-    kfold_feature_in = r"D:\sdmurmur\sdMurmurFiles\calibrated_train_vali_dataset_cz"
+    kfold_feature_in = r"D:\sdmurmur\sdMurmurFiles\calibrated_test_data_cz"
     # 特征输出文件夹
-    kfold_feature_folder = r"D:\sdmurmur\sdMurmurFiles\feature\train_vali_data_cz_TF_TDF_MV"
+    kfold_feature_folder = r"D:\sdmurmur\sdMurmurFiles\feature\test_data_cz_TF_TDF_MV"
     # 时域特征存储文件夹
-    tdf_feature_folder = r"D:\sdmurmur\sdMurmurFiles\EnandSE60Hz\calibrated_train_vali_dataset_cz"
+    tdf_feature_folder = r"D:\sdmurmur\sdMurmurFiles\EnandSE60Hz\calibrated_test_data_cz"
 
     save_test_feature(kfold_feature_in, tdf_feature_folder, kfold_feature_folder)
     print('this is feature extraction file')
