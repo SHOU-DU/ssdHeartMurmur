@@ -79,7 +79,7 @@ def split_audio_by_cycles(data_directory: str, patient_id: str, out_directory: s
     files = os.listdir(data_directory)
     cycles = []
     # max_cycle_duration = 0.0
-    max_cycle_samples = 7500  # 最长心音周期点数为7009
+    max_cycle_samples = 7200  # 训练集最长心音周期点数为7009，测试集最长6401
     for f in files:
         root, extension = os.path.splitext(f)
         if f.startswith(patient_id):
@@ -229,8 +229,10 @@ def get_max_cycle_samples(data_folder):
 if __name__ == "__main__":
     train_vali_data_fold = r"D:\sdmurmur\calibrateddataset2022\calibrated_train_vali_new"
     cali_train_vali_cycle_data = r"D:\sdmurmur\sdMurmurFiles\cali_train_vali_cycle_data"
+    test_data_fold = r"D:\sdmurmur\calibrateddataset2022\calibrated_test_data_new"
+    cali_test_cycle_data = r"D:\sdmurmur\sdMurmurFiles\cali_test_cycle_data"
     get_split_cycles(train_vali_data_fold, cali_train_vali_cycle_data)
     # split_audio_by_cycles(train_vali_data_fold, '36327', cali_train_vali_cycle_data)  # 测试函数用
     # print(f"成功切分并补零处理 {num_cycles} 个完整心音周期")
-    # max_cycle_samples = get_max_cycle_samples(train_vali_data_fold)
+    # max_cycle_samples = get_max_cycle_samples(test_data_fold)
     # print('max_cycle_samples: ', max_cycle_samples)

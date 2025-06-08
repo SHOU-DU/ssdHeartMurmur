@@ -48,11 +48,11 @@ def save_test_feature(train_folder, train_tdf_folder, train_feature_folder):
     train_index = get_index(train_folder)
 
     # 存储总训练集特征和标签
-    np.save(feature_dir + r'\train_loggamma.npy', train_feature)
-    np.save(label_dir + r'\train_label.npy', train_label)
-    np.save(label_dir + r'\train_location.npy', train_location)
-    np.save(label_dir + r'\train_id.npy', train_id)
-    np.save(label_dir + r'\train_index.npy', train_index)
+    np.save(feature_dir + r'\test_loggamma.npy', train_feature)
+    np.save(label_dir + r'\test_label.npy', train_label)
+    np.save(label_dir + r'\test_location.npy', train_location)
+    np.save(label_dir + r'\test_id.npy', train_id)
+    np.save(label_dir + r'\test_index.npy', train_index)
     print("train_feature shape:", train_feature.shape)  # train_feature shape: (样本数：14649, 滤波器数：64, 3s段数据帧数：239)
     print("train_label shape:", train_label.shape)
     print(f"测试集特征提取完毕")
@@ -198,11 +198,16 @@ def feature_norm(feat):
 if __name__ == '__main__':
     # 特征提取
     # train set切割好的数据，对于present个体，只复制murmur存在的.wav文件
-    kfold_feature_in = r"D:\sdmurmur\sdMurmurFiles\calibrated_test_data_cz"
+    kfold_feature_in = r"D:\sdmurmur\sdMurmurFiles\cali_test_cycle_data"
     # 特征输出文件夹
-    kfold_feature_folder = r"D:\sdmurmur\sdMurmurFiles\feature\test_data_cz_TF_TDF_MV"
+    kfold_feature_folder = r"D:\sdmurmur\sdMurmurFiles\feature\cycle_test_TF_TDF_MV"
     # 时域特征存储文件夹
-    tdf_feature_folder = r"D:\sdmurmur\sdMurmurFiles\EnandSE60Hz\calibrated_test_data_cz"
+    tdf_feature_folder = r"D:\sdmurmur\sdMurmurFiles\EnandSE60Hz\cali_test_cycle"
 
     save_test_feature(kfold_feature_in, tdf_feature_folder, kfold_feature_folder)
     print('this is feature extraction file')
+
+    # # 打印特征形状
+    # train_feature_path = r"D:\sdmurmur\sdMurmurFiles\feature\cycle_train_vali_TF_TDF_MV\feature\train_loggamma.npy"
+    # train_feature = np.load(train_feature_path)
+    # print('train_feature shape: ', train_feature.shape)
