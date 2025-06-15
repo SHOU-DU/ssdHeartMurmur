@@ -53,7 +53,7 @@ def save_test_feature(test_folder, test_tdf_folder, test_feature_folder):
     np.save(label_dir + r'\test_location.npy', train_location)
     np.save(label_dir + r'\test_id.npy', train_id)
     np.save(label_dir + r'\test_index.npy', train_index)
-    print("test_feature shape:", train_feature.shape)  # train_feature shape: (样本数：14649, 滤波器数：64, 3s段数据帧数：239)
+    print("test_feature shape:", train_feature.shape)  # train_feature shape: (样本数：, 滤波器数：64, 3s段数据帧数：239)
     print("test_label shape:", train_label.shape)
     print(f"测试集特征提取完毕")
 
@@ -118,7 +118,7 @@ def Log_GF(data_directory):
 def Log_GF_TDF_MV(data_directory, TDF_directory):  # 提取时频域和时域特征
     loggamma = list()
     # 加tqdm可视化特征提取过程
-    for f in tqdm(sorted(os.listdir(data_directory)), desc=str(data_directory) + ' Log_GF, TDF, MV, CST feature 60Hz:'):
+    for f in tqdm(sorted(os.listdir(data_directory)), desc=str(data_directory) + ' Log_GF, TDF, MV feature 60Hz:'):
         root, extension = os.path.splitext(f)
         if extension == '.wav':
             x, fs = librosa.load(os.path.join(data_directory, f), sr=4000)
@@ -128,17 +128,17 @@ def Log_GF_TDF_MV(data_directory, TDF_directory):  # 提取时频域和时域特
             frame_length = int(0.025 * fs)  # 帧长
             hop_length = int(0.0125 * fs)  # 帧移
             frames = librosa.util.frame(x, frame_length=frame_length, hop_length=hop_length)
-            # 计算每一帧的均值和方差,通过/2操作为后面s1,s2幅值加倍做归一化
-            frame_means = np.mean(frames, axis=0) / 2.0
-            frame_variances = np.var(frames, axis=0) / 2.0
-            # # 计算每一帧的均值和方差
-            # frame_means = np.mean(frames, axis=0)
-            # frame_variances = np.var(frames, axis=0)
+            # # 计算每一帧的均值和方差,通过/2操作为后面s1,s2幅值加倍做归一化
+            # frame_means = np.mean(frames, axis=0) / 2.0
+            # frame_variances = np.var(frames, axis=0) / 2.0
+            # 计算每一帧的均值和方差
+            frame_means = np.mean(frames, axis=0)
+            frame_variances = np.var(frames, axis=0)
             # 将均值和方差转换成1x帧数的二维数组
             frame_means_2d = frame_means.reshape(1, -1)
             frame_variances_2d = frame_variances.reshape(1, -1)
-            # x = x - np.mean(x)
-            # x = x / np.max(np.abs(x))  # 归一化为[-1, 1]
+            x = x - np.mean(x)
+            x = x / np.max(np.abs(x))  # 归一化为[-1, 1]
             # gfreqs为经过gammatone滤波器后得到的傅里叶变换矩阵
             gSpec, gfreqs = erb_spectrogram(x,
                                             fs=fs,
@@ -148,7 +148,7 @@ def Log_GF_TDF_MV(data_directory, TDF_directory):  # 提取时频域和时域特
                                             nfilts=64,
                                             nfft=512,
                                             low_freq=25,
-                                            high_freq=2000)
+                                            high_freq=800)
             fbank_feat = gSpec.T + 0.0000000001  # +一个极小值避免出现负无穷
             # fbank_feat = gSpec.T
             fbank_feat = np.log(fbank_feat)
@@ -231,11 +231,11 @@ def feature_norm(feat):
 if __name__ == '__main__':
     # 特征提取
     # test set切割好的数据，对于present个体，只复制murmur存在的.wav文件
-    kfold_feature_in = r"E:\sdmurmur\ssdHeartMurmurFiles\S1S2Experiment\test_scale\test_mask_s2"
+    kfold_feature_in = r"E:\sdmurmur\ssdHeartMurmurFiles\test_data_cut_zero_new"
     # 存储每折特征文件夹
-    kfold_feature_folder = r"E:\sdmurmur\ssdHeartMurmurFiles\normalized_S1S2Experiment\test_scale\mask_s2_feature"
+    kfold_feature_folder = r"E:\sdmurmur\ssdHeartMurmurFiles\band_filter_800Hz\test_TTF_TDF_MV_cz_feature"
     # 时域特征存储文件夹
-    tdf_feature_folder = r"E:\sdmurmur\ssdHeartMurmurFiles\normalized_S1S2Experiment\test_scale\mask_s2_EnvelopeandSE60Hz"
+    tdf_feature_folder = r"E:\sdmurmur\ssdHeartMurmurFiles\normalized_test_mixed_feature\EnvelopeandSE60Hz"
 
     save_test_feature(kfold_feature_in, tdf_feature_folder, kfold_feature_folder)
     print('this is feature extraction file')
