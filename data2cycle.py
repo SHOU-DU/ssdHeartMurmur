@@ -190,6 +190,7 @@ def split_audio_by_cycles(data_directory: str, patient_id: str, out_directory: s
 def get_max_cycle_samples(data_folder):
     sample_rate = 4000
     max_samples = 0
+    min_samples = 0
     cycles = []
     files = os.listdir(data_folder)
     for f in tqdm(files):
@@ -221,8 +222,8 @@ def get_max_cycle_samples(data_folder):
                             continue
         if cycles:
             max_samples = max(cycle[2] for cycle in cycles)
-
-    return max_samples
+            min_samples = min(cycle[2] for cycle in cycles)
+    return max_samples, min_samples
 
 
 # 使用示例
@@ -231,8 +232,8 @@ if __name__ == "__main__":
     cali_train_vali_cycle_data = r"D:\sdmurmur\sdMurmurFiles\cali_train_vali_cycle_data"
     test_data_fold = r"D:\sdmurmur\calibrateddataset2022\calibrated_test_data_new"
     cali_test_cycle_data = r"D:\sdmurmur\sdMurmurFiles\cali_test_cycle_data"
-    get_split_cycles(train_vali_data_fold, cali_train_vali_cycle_data)
+    # get_split_cycles(train_vali_data_fold, cali_train_vali_cycle_data)
     # split_audio_by_cycles(train_vali_data_fold, '36327', cali_train_vali_cycle_data)  # 测试函数用
     # print(f"成功切分并补零处理 {num_cycles} 个完整心音周期")
-    # max_cycle_samples = get_max_cycle_samples(test_data_fold)
-    # print('max_cycle_samples: ', max_cycle_samples)
+    max_cycle_samples, min_cycle_samples = get_max_cycle_samples(train_vali_data_fold)
+    print('max_cycle_samples: %d, min_cycle_samples: %d' % (max_cycle_samples,min_cycle_samples))

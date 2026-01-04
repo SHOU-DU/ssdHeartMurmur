@@ -41,13 +41,13 @@ torch.backends.cudnn.deterministic = True
 if __name__ == "__main__":
 
     # 提取的特征和标签文件夹
-    train_feature_data_path = r"D:\sdmurmur\sdMurmurFiles\feature\train_vali_data_cz_TF_TDF_MV"
-    test_feature_data_path = r"D:\sdmurmur\sdMurmurFiles\feature\test_data_cz_TF_TDF_MV"
+    train_feature_data_path = r"D:\sdmurmur\sdMurmurFiles\feature\cycle_train_vali_TF_TDF_MV"
+    test_feature_data_path = r"D:\sdmurmur\sdMurmurFiles\feature\cycle_test_TF_TDF_MV"
     # 提取的特征和标签文件夹
     # feature_data_path = r"E:\sdmurmur\ssdHeartMurmurFiles\calibrated_train_vali_new_mixed_data_feature\TF_log_mel_32_feature"
     # 剪切后的数据文件夹
     # cut_data_kfold = r'data_kfold_out'
-    cut_data_kfold = r"D:\sdmurmur\sdMurmurFiles\calibrated_train_vali_dataset_cz"
+    # cut_data_kfold = r"D:\sdmurmur\sdMurmurFiles\calibrated_train_vali_dataset_cz"
 
     train_feature_path = os.path.join(train_feature_data_path, 'feature')
     train_label_path = os.path.join(train_feature_data_path, 'label')
@@ -106,7 +106,7 @@ if __name__ == "__main__":
     # model_result_path = r"E:\sdmurmur\ssdHeartMurmurFiles\train_vali_new_results\train_vali_new_mixed\TF_TDF_ODC_1_1_1_12"
     # model_result_path = (r"E:\sdmurmur\ssdHeartMurmurFiles\train_vali_new_results"
     #                      r"\train_vali_new_mixed\TF_SK_105_1_12_12")
-    model_result_path = r"D:\sdmurmur\sdMurmurFiles\result\ODC_TF_TDF_MV"
+    model_result_path = r"D:\sdmurmur\sdMurmurFiles\result\cycle_ODC_TF_TDF_MV"
     # model_result_path = os.path.join('Aweight_TimeFreq_result', fold_path)
     os.environ['CUDA_VISIBLE_DEVICES'] = '0'
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
