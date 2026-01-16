@@ -28,8 +28,6 @@ def balance_dataset(up: str, bp: str, max_absent=2000) ->None:
     print(f"找到 {len(label_files)} 个标签文件")
     print("开始筛选数据...")
 
-    absent_count = 0
-    skipped_absent_count = 0
     soft_count = 0
     loud_count = 0
     for label_file in label_files:
@@ -53,24 +51,7 @@ def balance_dataset(up: str, bp: str, max_absent=2000) ->None:
             if line.startswith("#Murmur grading:"):
                 murmur_grading = line.replace("#Murmur grading:", "").strip()
 
-        if murmur_grading == "Absent" and (absent_count < max_absent):
-            shutil.copy2(label_file, bp)
-            # 在源目录中搜索.wav文件
-            wav_files_found = []
-            for wav_file in source_path.glob("*.wav"):
-                if patient_id in wav_file.name:
-                    wav_files_found.append(wav_file)
-
-            for wav_file in wav_files_found:
-                shutil.copy2(wav_file, bp)
-
-            if wav_files_found:
-                print(f"  找到 {len(wav_files_found)} 个.wav文件")
-                absent_count += len(wav_files_found)
-            else:
-                print(f"  警告: 未找到{patient_id}的.wav文件")
-
-        elif murmur_grading == "Soft":
+        if murmur_grading == "Soft":
             soft_count += 1
             print(f"Soft [{soft_count}]: {patient_id}")
             shutil.copy2(label_file, bp)
@@ -109,15 +90,12 @@ def balance_dataset(up: str, bp: str, max_absent=2000) ->None:
     print("数据筛选完成!")
     print(f"总共处理了 {len(label_files)} 个标签文件")
     print(f"筛选结果:")
-    print(f"  Absent: {absent_count} 条 (限制前{max_absent}条)")
     print(f"  Soft: {soft_count} 条")
     print(f"  Loud: {loud_count} 条")
-    print(f"  总计: {absent_count + soft_count + loud_count} 条")
-    print(f"  跳过的Absent数据: {skipped_absent_count} 条")
 
 
 if __name__ == '__main__':
-    unbalance_data_path = r"D:\sdmurmur\Qwen2Audio\calibrated_train_vali_16kHz"
-    balance_data_path = r"D:\sdmurmur\Qwen2Audio\bp_calibrated_train_vali_16kHz"
-    balance_dataset(unbalance_data_path, balance_data_path)
+    with_absent_data_path = r"D:\sdmurmur\Qwen2Audio\bp_calibrated_train_vali_16kHz"
+    without_absent_data_path = r"D:\sdmurmur\Qwen2Audio\bp_calibrated_train_vali_16kHz_soft_loud"
+    balance_dataset(with_absent_data_path, without_absent_data_path)
 
