@@ -95,7 +95,7 @@ def balance_dataset(up: str, bp: str, max_absent=2000) ->None:
 
 
 if __name__ == '__main__':
-    with_absent_data_path = r"D:\sdmurmur\Qwen2Audio\bp_calibrated_train_vali_16kHz"
-    without_absent_data_path = r"D:\sdmurmur\Qwen2Audio\bp_calibrated_train_vali_16kHz_soft_loud"
+    with_absent_data_path = r"D:\sdmurmur\Qwen2Audio\murmur_data\train_vali_ad_16k"
+    without_absent_data_path = r"D:\sdmurmur\Qwen2Audio\murmur_data\train_vali_ad_16k_Soft_Loud"
     balance_dataset(with_absent_data_path, without_absent_data_path)
 

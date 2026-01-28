@@ -175,16 +175,17 @@ def test_dataset_scale(test_data_folder, scaled_test_folder):
     if not os.path.exists(scaled_test_folder):
         os.makedirs(scaled_test_folder)
 
-    for ID in tqdm(pIDs, desc='test set cut zero:'):
+    file_str = str(scaled_test_folder)
+    for ID in tqdm(pIDs, desc=file_str):
         # print(ID)  打印ID检查
-        cut_copy_files_zero_resample16Hz(
+        cut_copy_files_16k(
             test_data_folder,
             ID,
             scaled_test_folder,
         )
 
 
-def cut_copy_files(data_directory: str, patient_id: str, out_directory: str) -> None:
+def cut_copy_files_16k(data_directory: str, patient_id: str, out_directory: str) -> None:
     files = os.listdir(data_directory)
     for f in files:
         root, extension = os.path.splitext(f)
@@ -211,7 +212,8 @@ def cut_copy_files(data_directory: str, patient_id: str, out_directory: str) -> 
                 num_cut = len(recording) / (3 * 4000)
                 for num in range(int(num_cut)):  # 将每个片段写入对应的听诊区文件夹,int()小数部分被截断
                     small = recording[start:end]
-                    cut.append(small)
+                    small_16k = librosa.resample(small, orig_sr=fs, target_sr=my_target_sr)
+                    cut.append(small_16k)
                     soundfile.write(out_directory + '/' + patient_ID + '_'+str(location)+'_' + str(grade) + '_' + str(num) + '.wav', cut[num], fs)
                     start += 3 * fs
                     end = start + 3 * fs
@@ -1313,14 +1315,14 @@ if __name__ == '__main__':
     # kfold_out = r'E:\sdmurmur\ssdHeartMurmur\S1S2Experiment\train_vali_scale\train_vali_double_s1s2'  # 存储分折后的文件路径
     # dataset_split_kfold(original_dataset_folder, kfold_out, kfold=5)
 
-    # # 对测试集进行切分和s1,s1幅值缩放操作
+    # # 对测试集进行切分和s1,s1幅值缩放,重采样等操作
     # test_data_folder = r"D:\sdmurmur\calibrateddataset2022\calibrated_test_data_new"  # 校正过的测试集路径
-    # scaled_test_folder = r"D:\sdmurmur\sdMurmurFiles\calibrated_test_data_cz"  # 指定幅值缩放后的路径
+    # scaled_test_folder = r"D:\sdmurmur\Qwen2Audio\murmur_data\test_ad_16k"  # 指定幅值缩放后的路径
     # test_dataset_scale(test_data_folder, scaled_test_folder)
 
-    # 对合并的训练和验证集进行切分和s1,s1幅值缩放操作
-    train_vali_data_folder = r"D:\sdmurmur\calibrateddataset2022\calibrated_test_data_new"  # 校正过的测试集路径
-    scaled_train_vali_folder = r"D:\sdmurmur\Qwen2Audio\calibrated_test_16kHz"  # 指定幅值缩放后的路径 cz for cut zero
+    # 对合并的训练和验证集进行切分和s1,s1幅值缩放，重采样等操作
+    train_vali_data_folder = r"D:\sdmurmur\calibrateddataset2022\calibrated_train_vali_new"  # 校正过的测试集路径
+    scaled_train_vali_folder = r"D:\sdmurmur\Qwen2Audio\murmur_data\train_vali_ad_16k"  # 指定幅值缩放后的路径 cz for cut zero
     test_dataset_scale(train_vali_data_folder, scaled_train_vali_folder)
 
     # # 检查tsv文件是否有标记错误
